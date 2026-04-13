@@ -7,6 +7,7 @@ import AdminRoute     from '@/components/layout/AdminRoute'
 
 /* auth */
 import LoginPage      from '@/pages/auth/LoginPage'
+import RegisterPage   from '@/pages/auth/RegisterPage'
 /* dashboard */
 import DashboardPage  from '@/pages/dashboard/DashboardPage'
 /* market */
@@ -34,7 +35,8 @@ export default function App() {
       <TooltipProvider delayDuration={300}>
         <Routes>
           {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected — all inside AppShell */}
           <Route
