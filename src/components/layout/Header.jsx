@@ -1,5 +1,6 @@
-import { Bell, LogOut, User } from 'lucide-react'
+import { Bell, LogOut, User, Sun, Moon } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import { useAlertStream } from '@/hooks/useAlertStream'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -11,8 +12,9 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 
 export default function Header({ title }) {
-  const { user, logout } = useAuth()
-  const { lastAlert }    = useAlertStream()
+  const { user, logout }    = useAuth()
+  const { isDark, toggleTheme } = useTheme()
+  const { lastAlert }       = useAlertStream()
   const navigate         = useNavigate()
   const prevAlert        = useRef(null)
 
@@ -34,6 +36,17 @@ export default function Header({ title }) {
       </h1>
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="text-[--color-subtle] hover:text-[--color-primary-text]"
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        </Button>
+
         {/* Alerts bell */}
         <Button
           variant="ghost"
