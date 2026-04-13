@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { authApi } from '@/api/auth'
 
 const AuthContext = createContext(null)
+export { AuthContext }
+
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
