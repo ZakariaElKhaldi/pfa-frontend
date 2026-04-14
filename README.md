@@ -1,73 +1,93 @@
-# React + TypeScript + Vite
+# CrowdSignal Frontend — "The Sentient Terminal"
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+CrowdSignal is an advanced, AI-powered financial sentiment intelligence platform. This frontend implements a sophisticated, editorial-style design philosophy called **"The Quantified Pulse,"** moving away from classic heavy-dashboard aesthetics to focus on depth, ambient shadows, and a "no-line" structural philosophy.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🏗️ Architecture & Tech Stack
 
-## React Compiler
+This project is built using a modern, deeply optimized React stack:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Core:** React 19 + TypeScript
+- **Build Tool:** Vite 8
+- **Styling:** Custom Vanilla CSS Design System + **Tailwind CSS v4** (`@tailwindcss/vite`)
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (Headless Radix UI + Tailwind)
+- **Data Visualization:** D3.js (`d3`)
+- **Component Workbench & Testing:** Storybook v10 (Integrated with Vitest & Playwright)
+- **Routing & State:** *(To be implemented based on PRD)*
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🎨 Design System: "The Quantified Pulse"
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+The custom design system logic overrides default boilerplate and establishes a premium, data-heavy terminal interface with the following rules:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **The No-Line Rule:** Boundaries are created through background color shifts in a 6-level tonal stack (`surface-container-lowest` to `surface-bright`), not borders.
+2. **Ghost Borders:** Occasional subtle separation using 15%-opacity `outline-variant`.
+3. **Dual Typography:**
+   - **Inter:** For editorial UI text, nav, and body.
+   - **JetBrains Mono:** Exclusively for quantitative financial data, numbers, timestamps, and percentages.
+4. **Sentiment & Signal Colors:** Semantic color mappings designed for light mode:
+   - `Primary`: Luminous Indigo
+   - `Secondary / Bullish / Buy`: Deep Green (`hsl(158, 60%, 35%)`)
+   - `Tertiary / Bearish / Sell`: Crimson Red (`hsl(4, 68%, 50%)`)
+   - `Warning / Neutral / Hold`: Amber (`hsl(38, 88%, 46%)`)
+5. **Glassmorphism:** Contextual menus and tooltips use deeply blurred, semi-transparent surfaces.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+*(See the living design system showcase by spinning up the app).*
+
+---
+
+## 📦 What's Been Built So Far (Project History)
+
+### Phase 1: Foundation & Specs
+- Exhaustive backend audit and feature alignment to create a comprehensive Frontend PRD.
+- Defined the "Sentient Terminal" design system, token scale, and motion curves.
+
+### Phase 2: Design Token & Global Styles Engine
+- Built a massive `src/index.css` serving custom variables (spacing, typography scale, radii, motion) for 32 component classes including: sentiment-bars, gauges, accuracy rings, social-feed cards, and badges.
+- Mirrored all CSS variables into a strongly-typed TypeScript structure (`src/design-system/tokens.ts`).
+- Created a fully responsive **Kitchen Sink Showcase** inside `App.tsx` displaying every UI primitive and metric chart.
+
+### Phase 3: Toolchain Integration
+Seamlessly integrated necessary libraries on top of the generic Vite/React setup:
+1. **Tailwind CSS v4:** Integrated via Vite plugin, configured precisely within PostCSS rules to coexist dynamically with the custom vanilla CSS variables.
+2. **shadcn/ui:** Resolved TypeScript path aliases (`@/*`) and installed essential interactive components: `card`, `button`, `input`, `badge`, `dialog`, `dropdown-menu`, `sonner`.
+3. **D3.js:** Added full D3 library and TypeScript typings to prepare for complex financial indicator rendering.
+4. **Storybook v10:** Initialized Storybook to act as an isolated component workbench, fully wired with Vitest runner and Playwright headless browser automation.
+
+---
+
+## 🚀 Development Scripts
+
+Start the local vite dev server (App Kitchen Sink):
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Build the project for production:
+```bash
+npm run build
+```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Run the Storybook interactive component workbench:
+```bash
+npm run storybook
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Lint the codebase:
+```bash
+npm run lint
+```
+
+## 📂 Directory Structure
+
+```text
+/src
+ ├── /components
+ │    └── /ui             # shadcn interactive components
+ ├── /design-system       # TypeScript design tokens (mirrors CSS)
+ ├── App.tsx              # Sentient Terminal Kitchen Sink Showcase
+ ├── index.css            # Tailwind import + Custom Design Variables
+ └── main.tsx             # React DOM root
 ```
