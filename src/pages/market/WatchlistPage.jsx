@@ -15,29 +15,29 @@ function WatchlistRow({ item, onRemove }) {
   return (
     <div
       onClick={() => navigate(`/market/${item.symbol}`)}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-[--color-container] hover:bg-[--color-container] cursor-pointer transition-colors"
+      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-container hover:bg-container cursor-pointer transition-colors"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-mono font-semibold text-sm text-[--color-max-text]">{item.symbol}</span>
-          <span className="text-xs text-[--color-subtle] truncate">{item.name}</span>
+          <span className="font-mono font-semibold text-sm text-max-text">{item.symbol}</span>
+          <span className="text-xs text-subtle truncate">{item.name}</span>
         </div>
-        <span className="text-[10px] text-[--color-muted]">
+        <span className="text-[10px] text-muted">
           Added {item.added_at ? formatDistanceToNow(new Date(item.added_at), { addSuffix: true }) : ''}
         </span>
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
         {quote ? (
-          <span className="font-data text-sm font-medium text-[--color-primary-text]">
+          <span className="font-data text-sm font-medium text-primary-text">
             ${formatPrice(quote.price)}
           </span>
         ) : (
-          <span className="font-data text-sm text-[--color-muted]">—</span>
+          <span className="font-data text-sm text-muted">—</span>
         )}
         <button
           onClick={(e) => { e.stopPropagation(); onRemove(item.symbol) }}
-          className="text-[--color-muted] hover:text-[--color-signal-sell] transition-colors"
+          className="text-muted hover:text-signal-sell transition-colors"
           title="Remove from watchlist"
         >
           <StarOff size={15} />

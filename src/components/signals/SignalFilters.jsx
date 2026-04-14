@@ -10,10 +10,10 @@ export default function SignalFilters({ filters, onChange }) {
         value={filters.signal ?? 'all'}
         onValueChange={(v) => onChange({ ...filters, signal: v === 'all' ? undefined : v })}
       >
-        <SelectTrigger className="w-28 h-8 text-xs bg-[--color-container] border-[--color-container]">
+        <SelectTrigger className="w-28 h-8 text-xs bg-container border-container">
           <SelectValue placeholder="Signal" />
         </SelectTrigger>
-        <SelectContent className="bg-[--color-container] border-[--color-container]">
+        <SelectContent className="bg-container border-container">
           <SelectItem value="all">All</SelectItem>
           <SelectItem value="BUY">BUY</SelectItem>
           <SelectItem value="SELL">SELL</SelectItem>
@@ -25,10 +25,10 @@ export default function SignalFilters({ filters, onChange }) {
         value={filters.period ?? '1d'}
         onValueChange={(v) => onChange({ ...filters, period: v })}
       >
-        <SelectTrigger className="w-24 h-8 text-xs bg-[--color-container] border-[--color-container]">
+        <SelectTrigger className="w-24 h-8 text-xs bg-container border-container">
           <SelectValue placeholder="Period" />
         </SelectTrigger>
-        <SelectContent className="bg-[--color-container] border-[--color-container]">
+        <SelectContent className="bg-container border-container">
           <SelectItem value="1h">1 hour</SelectItem>
           <SelectItem value="1d">Today</SelectItem>
           <SelectItem value="7d">7 days</SelectItem>

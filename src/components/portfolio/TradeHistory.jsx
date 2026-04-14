@@ -16,8 +16,8 @@ function SidePill({ side }) {
     <span className={cn(
       'inline-flex items-center font-mono font-semibold text-[10px] uppercase tracking-wider rounded-full px-2 py-0.5',
       isBuy
-        ? 'text-[--color-signal-buy] bg-[--color-signal-buy-container] border border-[--color-signal-buy-border]'
-        : 'text-[--color-signal-sell] bg-[--color-signal-sell-container] border border-[--color-signal-sell-border]',
+        ? 'text-signal-buy bg-signal-buy-container border border-signal-buy-border'
+        : 'text-signal-sell bg-signal-sell-container border border-signal-sell-border',
     )}>
       {isBuy ? '▲' : '▼'} {side}
     </span>
@@ -27,10 +27,10 @@ function SidePill({ side }) {
 /* ─── Skeleton ───────────────────────────────────────── */
 function TradeSkeleton() {
   return Array.from({ length: 6 }).map((_, i) => (
-    <TableRow key={i} className="border-[--color-container]">
+    <TableRow key={i} className="border-container">
       {Array.from({ length: 6 }).map((_, j) => (
         <TableCell key={j}>
-          <Skeleton className="h-3.5 w-full bg-[--color-container]" />
+          <Skeleton className="h-3.5 w-full bg-container" />
         </TableCell>
       ))}
     </TableRow>
@@ -52,16 +52,16 @@ export default function TradeHistory() {
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-[--color-container]">
+    <div className="rounded-lg overflow-hidden bg-container">
       <Table>
         <TableHeader>
-          <TableRow className="border-[--color-container] hover:bg-transparent">
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold">Date</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold">Ticker</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold">Side</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold text-right">Qty</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold text-right">Price</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-[--color-muted] font-semibold text-right">Total</TableHead>
+          <TableRow className="border-container hover:bg-transparent">
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Date</TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Ticker</TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Side</TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Qty</TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Price</TableHead>
+            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,26 +69,26 @@ export default function TradeHistory() {
             trades.map((trade, i) => {
               const total = (trade.quantity ?? 0) * (trade.price ?? 0)
               return (
-                <TableRow key={trade.id ?? i} className="border-[--color-container] hover:bg-[--color-container] transition-colors">
-                  <TableCell className="text-[10px] text-[--color-muted]">
+                <TableRow key={trade.id ?? i} className="border-container hover:bg-container transition-colors">
+                  <TableCell className="text-[10px] text-muted">
                     <div>{trade.executed_at ? format(new Date(trade.executed_at), 'MMM d, yyyy') : '—'}</div>
-                    <div className="text-[9px] text-[--color-muted] opacity-60">
+                    <div className="text-[9px] text-muted opacity-60">
                       {trade.executed_at ? formatDistanceToNow(new Date(trade.executed_at), { addSuffix: true }) : ''}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-mono font-semibold text-sm text-[--color-max-text]">
+                    <span className="font-mono font-semibold text-sm text-max-text">
                       {trade.ticker ?? trade.symbol ?? '—'}
                     </span>
                   </TableCell>
                   <TableCell><SidePill side={trade.side} /></TableCell>
-                  <TableCell className="font-data text-sm text-right text-[--color-primary-text]">
+                  <TableCell className="font-data text-sm text-right text-primary-text">
                     {trade.quantity ?? '—'}
                   </TableCell>
-                  <TableCell className="font-data text-sm text-right text-[--color-primary-text]">
+                  <TableCell className="font-data text-sm text-right text-primary-text">
                     ${formatPrice(trade.price)}
                   </TableCell>
-                  <TableCell className="font-data text-sm text-right font-semibold text-[--color-max-text]">
+                  <TableCell className="font-data text-sm text-right font-semibold text-max-text">
                     ${formatPrice(total)}
                   </TableCell>
                 </TableRow>

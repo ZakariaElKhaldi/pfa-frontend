@@ -20,22 +20,22 @@ function TradeHistoryTable({ trades }) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="border-[--color-surface-low] hover:bg-transparent">
+        <TableRow className="border-surface-low hover:bg-transparent">
           {['Symbol', 'Side', 'Qty', 'Price', 'When'].map((h) => (
-            <TableHead key={h} className="text-[10px] font-medium text-[--color-muted] uppercase tracking-wider">{h}</TableHead>
+            <TableHead key={h} className="text-[10px] font-medium text-muted uppercase tracking-wider">{h}</TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody>
         {trades.map((t, i) => (
-          <TableRow key={t.id ?? i} className="border-[--color-surface-low] hover:bg-[--color-container]">
-            <TableCell className="font-mono font-semibold text-sm text-[--color-max-text]">{t.symbol}</TableCell>
-            <TableCell className={t.side === 'buy' ? 'text-xs text-[--color-signal-buy]' : 'text-xs text-[--color-signal-sell]'}>
+          <TableRow key={t.id ?? i} className="border-surface-low hover:bg-container">
+            <TableCell className="font-mono font-semibold text-sm text-max-text">{t.symbol}</TableCell>
+            <TableCell className={t.side === 'buy' ? 'text-xs text-signal-buy' : 'text-xs text-signal-sell'}>
               {t.side.toUpperCase()}
             </TableCell>
-            <TableCell className="font-data text-xs text-[--color-secondary]">{t.quantity}</TableCell>
-            <TableCell className="font-data text-xs text-[--color-secondary]">${formatPrice(t.price)}</TableCell>
-            <TableCell className="text-[10px] text-[--color-muted]">
+            <TableCell className="font-data text-xs text-secondary">{t.quantity}</TableCell>
+            <TableCell className="font-data text-xs text-secondary">${formatPrice(t.price)}</TableCell>
+            <TableCell className="text-[10px] text-muted">
               {t.executed_at ? formatDistanceToNow(new Date(t.executed_at), { addSuffix: true }) : '—'}
             </TableCell>
           </TableRow>

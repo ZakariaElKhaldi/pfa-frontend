@@ -31,67 +31,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[--color-void] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-void flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Brand */}
         <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-[--color-action] flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-action flex items-center justify-center shadow-lg">
             <BarChart2 size={22} className="text-white" />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-[--color-max-text]">CrowdSignal</h1>
-            <p className="text-xs text-[--color-subtle] mt-0.5">Social sentiment trading platform</p>
+            <h1 className="text-xl font-semibold text-max-text">CrowdSignal</h1>
+            <p className="text-xs text-subtle mt-0.5">Social sentiment trading platform</p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-[--color-container] rounded-xl p-6 flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-[--color-primary-text]">Sign in</h2>
+        <div className="bg-container rounded-xl p-6 flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-primary-text">Sign in</h2>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-[--color-signal-sell-container] border border-[--color-signal-sell-border]">
-              <AlertCircle size={14} className="text-[--color-signal-sell] shrink-0" />
-              <p className="text-xs text-[--color-signal-sell]">{error}</p>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-signal-sell-container border border-signal-sell-border">
+              <AlertCircle size={14} className="text-signal-sell shrink-0" />
+              <p className="text-xs text-signal-sell">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-[--color-subtle]">Username</Label>
+              <Label className="text-xs text-subtle">Username</Label>
               <Input
                 autoFocus
                 value={form.username}
                 onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
                 placeholder="your_username"
                 required
-                className="h-10 bg-[--color-surface] border-[--color-container] text-[--color-primary-text] placeholder:text-[--color-muted]"
+                className="h-10 bg-surface border-container text-primary-text placeholder:text-muted"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-[--color-subtle]">Password</Label>
+              <Label className="text-xs text-subtle">Password</Label>
               <Input
                 type="password"
                 value={form.password}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 placeholder="••••••••"
                 required
-                className="h-10 bg-[--color-surface] border-[--color-container] text-[--color-primary-text]"
+                className="h-10 bg-surface border-container text-primary-text"
               />
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="h-10 bg-[--color-action] hover:bg-[--color-action-hover] text-white font-medium"
+              className="h-10 bg-action hover:bg-action-hover text-white font-medium"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
 
-          <p className="text-center text-xs text-[--color-muted] mt-0">
+          <p className="text-center text-xs text-muted mt-0">
             Don't have an account?{' '}
-            <a href="/register" className="text-[--color-action] hover:underline">
+            <a href="/register" className="text-action hover:underline">
               Sign up
             </a>
           </p>

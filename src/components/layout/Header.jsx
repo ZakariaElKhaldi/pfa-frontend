@@ -30,8 +30,8 @@ export default function Header({ title }) {
     : 'CS'
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 border-b border-[--color-surface-low] bg-[--color-surface] shrink-0">
-      <h1 className="text-sm font-semibold text-[--color-primary-text] tracking-wide">
+    <header className="h-14 flex items-center justify-between px-4 border-b border-surface-low bg-surface shrink-0">
+      <h1 className="text-sm font-semibold text-primary-text tracking-wide">
         {title}
       </h1>
 
@@ -42,7 +42,7 @@ export default function Header({ title }) {
           size="icon"
           onClick={toggleTheme}
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="text-[--color-subtle] hover:text-[--color-primary-text]"
+          className="text-subtle hover:text-primary-text"
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </Button>
@@ -52,11 +52,11 @@ export default function Header({ title }) {
           variant="ghost"
           size="icon"
           onClick={() => navigate('/alerts')}
-          className="relative text-[--color-subtle] hover:text-[--color-primary-text]"
+          className="relative text-subtle hover:text-primary-text"
         >
           <Bell size={18} />
           {lastAlert && (
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[--color-signal-sell]" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-signal-sell" />
           )}
         </Button>
 
@@ -65,22 +65,22 @@ export default function Header({ title }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="w-7 h-7">
-                <AvatarFallback className="text-xs bg-[--color-action-container] text-[--color-action-hover]">
+                <AvatarFallback className="text-xs bg-action-container text-action-hover">
                   {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44 bg-[--color-surface-low] border-[--color-container]">
-            <div className="px-2 py-1.5 text-xs text-[--color-subtle]">{user?.username}</div>
+          <DropdownMenuContent align="end" className="w-44 bg-surface-low border-container">
+            <div className="px-2 py-1.5 text-xs text-subtle">{user?.username}</div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 text-[--color-secondary] cursor-pointer">
+            <DropdownMenuItem className="gap-2 text-secondary cursor-pointer">
               <User size={14} /> Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={logout}
-              className="gap-2 text-[--color-error] cursor-pointer focus:text-[--color-error]"
+              className="gap-2 text-error cursor-pointer focus:text-error"
             >
               <LogOut size={14} /> Log out
             </DropdownMenuItem>

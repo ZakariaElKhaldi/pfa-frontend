@@ -33,11 +33,11 @@ export default function AppShell() {
   const title = usePageTitle()
 
   return (
-    <div className="flex h-screen bg-[--color-void] overflow-hidden">
+    <div className="flex h-screen bg-void overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0">
         <Header title={title} />
-        <main className="flex-1 overflow-auto bg-[--color-surface] p-4">
+        <main className="flex-1 overflow-auto bg-surface p-4">
           <Outlet />
         </main>
       </div>

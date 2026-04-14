@@ -39,7 +39,7 @@ function ExecutionLog({ strategyId }) {
 
   if (isLoading) return <LoadingSpinner size={16} className="mx-auto my-4" />
   if (!executions?.length) return (
-    <p className="text-xs text-[--color-muted] text-center py-4">No executions yet</p>
+    <p className="text-xs text-muted text-center py-4">No executions yet</p>
   )
 
   return (
@@ -50,15 +50,15 @@ function ExecutionLog({ strategyId }) {
           className={cn(
             'flex items-center justify-between px-3 py-2 rounded text-xs',
             ex.success
-              ? 'bg-[--color-signal-buy-container] text-[--color-signal-buy]'
-              : 'bg-[--color-signal-sell-container] text-[--color-signal-sell]'
+              ? 'bg-signal-buy-container text-signal-buy'
+              : 'bg-signal-sell-container text-signal-sell'
           )}
         >
           <div className="flex items-center gap-2">
             <Play size={10} />
             <span className="font-mono">{ex.event_type}</span>
           </div>
-          <span className="text-[--color-muted]">
+          <span className="text-muted">
             {formatDistanceToNow(new Date(ex.triggered_at), { addSuffix: true })}
           </span>
         </div>
@@ -76,46 +76,46 @@ function StrategyRow({ strategy }) {
   const { name, description, is_active, conditions, actions, tickers, created_at } = strategy
 
   return (
-    <div className="rounded-lg bg-[--color-container] overflow-hidden">
+    <div className="rounded-lg bg-container overflow-hidden">
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 py-3">
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="text-[--color-muted] hover:text-[--color-subtle] shrink-0"
+          className="text-muted hover:text-subtle shrink-0"
         >
           {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[--color-max-text]">{name}</span>
+            <span className="text-sm font-semibold text-max-text">{name}</span>
             {tickers?.map((t) => (
               <Badge
                 key={t.symbol ?? t}
                 variant="outline"
-                className="text-[10px] px-1.5 py-0 font-mono border-[--color-container] text-[--color-subtle]"
+                className="text-[10px] px-1.5 py-0 font-mono border-container text-subtle"
               >
                 {t.symbol ?? t}
               </Badge>
             ))}
           </div>
           {description && (
-            <p className="text-xs text-[--color-subtle] mt-0.5 truncate">{description}</p>
+            <p className="text-xs text-subtle mt-0.5 truncate">{description}</p>
           )}
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-[10px] text-[--color-muted] hidden sm:block">
+          <span className="text-[10px] text-muted hidden sm:block">
             {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true }) : ''}
           </span>
           <Switch
             checked={is_active}
             onCheckedChange={() => toggle.mutate(strategy.id)}
-            className="data-[state=checked]:bg-[--color-signal-buy]"
+            className="data-[state=checked]:bg-signal-buy"
           />
           <button
             onClick={() => remove.mutate(strategy.id)}
-            className="text-[--color-muted] hover:text-[--color-signal-sell] transition-colors"
+            className="text-muted hover:text-signal-sell transition-colors"
           >
             <Trash2 size={14} />
           </button>
@@ -124,22 +124,22 @@ function StrategyRow({ strategy }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-[--color-void] px-4 py-3 flex flex-col gap-4">
+        <div className="border-t border-void px-4 py-3 flex flex-col gap-4">
           {/* Conditions */}
           {conditions?.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[--color-muted] uppercase tracking-wider mb-2">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
                 Conditions
               </p>
               <div className="flex flex-col gap-1">
                 {conditions.map((c, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     {i > 0 && (
-                      <span className="text-[10px] font-mono font-bold text-[--color-action]">
+                      <span className="text-[10px] font-mono font-bold text-action">
                         {c.logical_op}
                       </span>
                     )}
-                    <span className="font-mono text-[--color-secondary] bg-[--color-container] px-2 py-0.5 rounded">
+                    <span className="font-mono text-secondary bg-container px-2 py-0.5 rounded">
                       {c.field} {c.operator} {c.value}
                     </span>
                   </div>
@@ -151,14 +151,14 @@ function StrategyRow({ strategy }) {
           {/* Actions */}
           {actions?.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[--color-muted] uppercase tracking-wider mb-2">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
                 Actions
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {actions.map((a, i) => (
                   <span
                     key={i}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-[--color-action-container] text-[--color-action-hover] font-medium"
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-action-container text-action-hover font-medium"
                   >
                     {ACTION_LABELS[a.action_type] ?? a.action_type}
                   </span>
@@ -169,7 +169,7 @@ function StrategyRow({ strategy }) {
 
           {/* Execution log */}
           <div>
-            <p className="text-[10px] font-semibold text-[--color-muted] uppercase tracking-wider mb-1">
+            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
               Recent Executions
             </p>
             <ExecutionLog strategyId={strategy.id} />
@@ -240,56 +240,56 @@ function CreateStrategyDialog({ onClose }) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
       {/* Name */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs text-[--color-subtle]">Strategy name</Label>
+        <Label className="text-xs text-subtle">Strategy name</Label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="My strategy"
           required
-          className="h-9 text-sm bg-[--color-surface] border-[--color-container]"
+          className="h-9 text-sm bg-surface border-container"
         />
       </div>
 
       {/* Description */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs text-[--color-subtle]">Description (optional)</Label>
+        <Label className="text-xs text-subtle">Description (optional)</Label>
         <Input
           value={description}
           onChange={(e) => setDesc(e.target.value)}
           placeholder="Trigger when…"
-          className="h-9 text-sm bg-[--color-surface] border-[--color-container]"
+          className="h-9 text-sm bg-surface border-container"
         />
       </div>
 
       {/* Conditions */}
       <div className="flex flex-col gap-2">
-        <Label className="text-xs text-[--color-subtle]">Conditions</Label>
+        <Label className="text-xs text-subtle">Conditions</Label>
         {conditions.map((c, i) => (
           <div key={i} className="flex items-center gap-1.5 flex-wrap">
             {i > 0 && (
               <Select value={c.logical_op} onValueChange={(v) => updateCondition(i, 'logical_op', v)}>
-                <SelectTrigger className="w-16 h-8 text-xs bg-[--color-surface] border-[--color-container]">
+                <SelectTrigger className="w-16 h-8 text-xs bg-surface border-container">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[--color-container] border-[--color-container]">
+                <SelectContent className="bg-container border-container">
                   <SelectItem value="AND">AND</SelectItem>
                   <SelectItem value="OR">OR</SelectItem>
                 </SelectContent>
               </Select>
             )}
             <Select value={c.field} onValueChange={(v) => updateCondition(i, 'field', v)}>
-              <SelectTrigger className="w-40 h-8 text-xs bg-[--color-surface] border-[--color-container]">
+              <SelectTrigger className="w-40 h-8 text-xs bg-surface border-container">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-container] border-[--color-container]">
+              <SelectContent className="bg-container border-container">
                 {FIELD_OPTIONS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={c.operator} onValueChange={(v) => updateCondition(i, 'operator', v)}>
-              <SelectTrigger className="w-28 h-8 text-xs bg-[--color-surface] border-[--color-container]">
+              <SelectTrigger className="w-28 h-8 text-xs bg-surface border-container">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-container] border-[--color-container]">
+              <SelectContent className="bg-container border-container">
                 {OPERATOR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -297,14 +297,14 @@ function CreateStrategyDialog({ onClose }) {
               value={c.value}
               onChange={(e) => updateCondition(i, 'value', e.target.value)}
               placeholder="value"
-              className="w-24 h-8 text-xs bg-[--color-surface] border-[--color-container] font-mono"
+              className="w-24 h-8 text-xs bg-surface border-container font-mono"
               required
             />
             {conditions.length > 1 && (
               <button
                 type="button"
                 onClick={() => setConditions((prev) => prev.filter((_, idx) => idx !== i))}
-                className="text-[--color-muted] hover:text-[--color-signal-sell]"
+                className="text-muted hover:text-signal-sell"
               >
                 <Trash2 size={13} />
               </button>
@@ -314,7 +314,7 @@ function CreateStrategyDialog({ onClose }) {
         <button
           type="button"
           onClick={() => setConditions((prev) => [...prev, { ...BLANK_CONDITION }])}
-          className="text-xs text-[--color-action] hover:text-[--color-action-hover] text-left mt-1 w-fit"
+          className="text-xs text-action hover:text-action-hover text-left mt-1 w-fit"
         >
           + Add condition
         </button>
@@ -322,12 +322,12 @@ function CreateStrategyDialog({ onClose }) {
 
       {/* Action */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs text-[--color-subtle]">Action when triggered</Label>
+        <Label className="text-xs text-subtle">Action when triggered</Label>
         <Select value={actionType} onValueChange={setActionType}>
-          <SelectTrigger className="h-9 text-sm bg-[--color-surface] border-[--color-container]">
+          <SelectTrigger className="h-9 text-sm bg-surface border-container">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[--color-container] border-[--color-container]">
+          <SelectContent className="bg-container border-container">
             {ACTION_OPTIONS.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -336,7 +336,7 @@ function CreateStrategyDialog({ onClose }) {
       <Button
         type="submit"
         disabled={create.isPending}
-        className="h-9 bg-[--color-action] hover:bg-[--color-action-hover] text-white"
+        className="h-9 bg-action hover:bg-action-hover text-white"
       >
         {create.isPending ? 'Creating…' : 'Create Strategy'}
       </Button>
@@ -361,14 +361,14 @@ export default function StrategiesPage() {
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="h-8 gap-1.5 bg-[--color-action] hover:bg-[--color-action-hover] text-white text-xs"
+                className="h-8 gap-1.5 bg-action hover:bg-action-hover text-white text-xs"
               >
                 <Plus size={13} /> New Strategy
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg bg-[--color-container] border-[--color-container]">
+            <DialogContent className="sm:max-w-lg bg-container border-container">
               <DialogHeader>
-                <DialogTitle className="text-sm text-[--color-primary-text]">
+                <DialogTitle className="text-sm text-primary-text">
                   Create Strategy
                 </DialogTitle>
               </DialogHeader>
@@ -379,11 +379,11 @@ export default function StrategiesPage() {
       >
         {/* Summary chips */}
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-[--color-subtle]">{total} strategies</span>
-          <span className="text-[--color-muted]">·</span>
+          <span className="text-xs text-subtle">{total} strategies</span>
+          <span className="text-muted">·</span>
           <span className={cn(
             'text-xs font-medium',
-            active > 0 ? 'text-[--color-signal-buy]' : 'text-[--color-muted]'
+            active > 0 ? 'text-signal-buy' : 'text-muted'
           )}>
             {active} active
           </span>

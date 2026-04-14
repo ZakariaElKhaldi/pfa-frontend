@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 
 const TYPE_COLORS = {
-  divergence:        'text-[--color-signal-hold] bg-[--color-signal-hold-container]',
-  extreme_sentiment: 'text-[--color-signal-sell] bg-[--color-signal-sell-container]',
+  divergence:        'text-signal-hold bg-signal-hold-container',
+  extreme_sentiment: 'text-signal-sell bg-signal-sell-container',
 }
 
 const TYPE_LABELS = {
@@ -25,26 +25,26 @@ export default function AlertCard({ alert }) {
     <div className={cn(
       'flex items-start gap-4 rounded-lg px-4 py-3 border',
       resolved
-        ? 'bg-[--color-surface] border-[--color-container] opacity-60'
-        : 'bg-[--color-container] border-transparent'
+        ? 'bg-surface border-container opacity-60'
+        : 'bg-container border-transparent'
     )}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono font-semibold text-sm text-[--color-max-text]">{ticker_symbol}</span>
+          <span className="font-mono font-semibold text-sm text-max-text">{ticker_symbol}</span>
           <Badge className={cn('text-[10px] px-2 py-0', TYPE_COLORS[type] ?? '')}>
             {TYPE_LABELS[type] ?? type}
           </Badge>
           {resolved && (
-            <Badge className="text-[10px] px-2 py-0 bg-[--color-surface] text-[--color-muted]">
+            <Badge className="text-[10px] px-2 py-0 bg-surface text-muted">
               Resolved
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-subtle] font-mono">
+        <div className="flex items-center gap-3 mt-1 text-[10px] text-subtle font-mono">
           <span>S: {sentiment?.toFixed(2) ?? '—'}</span>
           <span>M: {momentum?.toFixed(2) ?? '—'}</span>
           <span>C: {consistency?.toFixed(2) ?? '—'}</span>
-          <span className="text-[--color-muted]">
+          <span className="text-muted">
             {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true }) : ''}
           </span>
         </div>
@@ -54,7 +54,7 @@ export default function AlertCard({ alert }) {
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-[--color-subtle] hover:text-[--color-signal-buy] shrink-0"
+          className="w-7 h-7 text-subtle hover:text-signal-buy shrink-0"
           title="Mark resolved"
           onClick={() => resolve.mutate(id)}
           disabled={resolve.isPending}

@@ -15,9 +15,9 @@ export default function UserTable({ users = [] }) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="border-[--color-surface-low] hover:bg-transparent">
+        <TableRow className="border-surface-low hover:bg-transparent">
           {['Username', 'Email', 'Role', 'Joined', 'Actions'].map((h) => (
-            <TableHead key={h} className="text-[10px] text-[--color-muted] uppercase tracking-wider">
+            <TableHead key={h} className="text-[10px] text-muted uppercase tracking-wider">
               {h}
             </TableHead>
           ))}
@@ -25,23 +25,23 @@ export default function UserTable({ users = [] }) {
       </TableHeader>
       <TableBody>
         {users.map((u) => (
-          <TableRow key={u.id} className="border-[--color-surface-low] hover:bg-[--color-surface-low]">
-            <TableCell className="text-sm font-medium text-[--color-primary-text]">{u.username}</TableCell>
-            <TableCell className="text-xs text-[--color-subtle]">{u.email}</TableCell>
+          <TableRow key={u.id} className="border-surface-low hover:bg-surface-low">
+            <TableCell className="text-sm font-medium text-primary-text">{u.username}</TableCell>
+            <TableCell className="text-xs text-subtle">{u.email}</TableCell>
             <TableCell>
               <Badge
                 variant="outline"
                 className={cn(
                   'text-[10px] px-1.5 py-0 border',
                   u.role === 'admin'
-                    ? 'text-[--color-signal-hold] border-[--color-signal-hold-border]'
-                    : 'text-[--color-subtle] border-[--color-container]'
+                    ? 'text-signal-hold border-signal-hold-border'
+                    : 'text-subtle border-container'
                 )}
               >
                 {u.role}
               </Badge>
             </TableCell>
-            <TableCell className="text-xs text-[--color-muted]">
+            <TableCell className="text-xs text-muted">
               {new Date(u.date_joined).toLocaleDateString()}
             </TableCell>
             <TableCell>
@@ -49,7 +49,7 @@ export default function UserTable({ users = [] }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-7 h-7 text-[--color-subtle] hover:text-[--color-signal-hold]"
+                  className="w-7 h-7 text-subtle hover:text-signal-hold"
                   onClick={() => updateUser.mutate({ id: u.id, role: u.role === 'admin' ? 'user' : 'admin' })}
                 >
                   <ShieldCheck size={13} />
@@ -57,7 +57,7 @@ export default function UserTable({ users = [] }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-7 h-7 text-[--color-subtle] hover:text-[--color-signal-sell]"
+                  className="w-7 h-7 text-subtle hover:text-signal-sell"
                   onClick={() => deleteUser.mutate(u.id)}
                 >
                   <Trash2 size={13} />

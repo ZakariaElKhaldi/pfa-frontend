@@ -2,9 +2,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 
 const SENTIMENT_COLORS = {
-  bullish: 'text-[--color-signal-buy] bg-[--color-signal-buy-container]',
-  bearish: 'text-[--color-signal-sell] bg-[--color-signal-sell-container]',
-  neutral: 'text-[--color-subtle] bg-[--color-container]',
+  bullish: 'text-signal-buy bg-signal-buy-container',
+  bearish: 'text-signal-sell bg-signal-sell-container',
+  neutral: 'text-subtle bg-container',
 }
 
 const SOURCE_LABELS = { reddit: 'Reddit', stocktwits: 'StockTwits' }
@@ -14,9 +14,9 @@ export default function PostCard({ post }) {
   const text = title || content
 
   return (
-    <div className="flex flex-col gap-2 p-4 rounded-lg bg-[--color-container] hover:bg-[--color-container] transition-colors">
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-container hover:bg-container transition-colors">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-medium text-[--color-muted] uppercase tracking-wider">
+        <span className="text-[10px] font-medium text-muted uppercase tracking-wider">
           {SOURCE_LABELS[source] ?? source}
         </span>
         <span className={cn(
@@ -32,15 +32,15 @@ export default function PostCard({ post }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[--color-primary-text] leading-relaxed hover:text-[--color-action] transition-colors line-clamp-3"
+          className="text-xs text-primary-text leading-relaxed hover:text-action transition-colors line-clamp-3"
         >
           {text}
         </a>
       ) : (
-        <p className="text-xs text-[--color-primary-text] leading-relaxed line-clamp-3">{text}</p>
+        <p className="text-xs text-primary-text leading-relaxed line-clamp-3">{text}</p>
       )}
 
-      <span className="text-[10px] text-[--color-muted] text-right">
+      <span className="text-[10px] text-muted text-right">
         {posted_at ? formatDistanceToNow(new Date(posted_at), { addSuffix: true }) : '—'}
       </span>
     </div>

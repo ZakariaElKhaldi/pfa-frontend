@@ -11,9 +11,9 @@ function IndicatorRow({ label, value, format = 'number', decimals = 2 }) {
         : String(value)
 
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-[--color-void] last:border-0">
-      <span className="text-xs text-[--color-subtle]">{label}</span>
-      <span className="font-data text-xs font-medium text-[--color-primary-text]">{display}</span>
+    <div className="flex items-center justify-between py-1.5 border-b border-void last:border-0">
+      <span className="text-xs text-subtle">{label}</span>
+      <span className="font-data text-xs font-medium text-primary-text">{display}</span>
     </div>
   )
 }
@@ -23,7 +23,7 @@ export default function IndicatorsPanel({ indicators, isLoading }) {
     <div className="flex justify-center py-6"><LoadingSpinner size={18} /></div>
   )
   if (!indicators) return (
-    <p className="text-xs text-[--color-muted] text-center py-4">No indicator data</p>
+    <p className="text-xs text-muted text-center py-4">No indicator data</p>
   )
 
   const { rsi_14, sma_20, ema_12, bollinger_bands, macd, volatility } = indicators

@@ -68,12 +68,12 @@ export default function SignalsPage() {
       )}
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-sm font-semibold text-[--color-primary-text]">Signals</h2>
+        <h2 className="text-sm font-semibold text-primary-text">Signals</h2>
         <Input
           value={symbolFilter}
           onChange={(e) => setSymbolFilter(e.target.value)}
           placeholder="Filter by symbol…"
-          className="h-8 w-36 text-xs font-mono bg-[--color-container] border-[--color-container] placeholder:text-[--color-muted]"
+          className="h-8 w-36 text-xs font-mono bg-container border-container placeholder:text-muted"
         />
       </div>
 

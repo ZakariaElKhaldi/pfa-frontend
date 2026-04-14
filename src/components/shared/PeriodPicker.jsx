@@ -14,8 +14,8 @@ export default function PeriodPicker({ options, value, onChange }) {
           className={cn(
             'px-3 py-1 rounded text-xs font-mono transition-colors',
             value === opt.value
-              ? 'bg-[--color-action-container] text-[--color-action-hover]'
-              : 'text-[--color-subtle] hover:text-[--color-primary-text]'
+              ? 'bg-action-container text-action-hover'
+              : 'text-subtle hover:text-primary-text'
           )}
         >
           {opt.label}

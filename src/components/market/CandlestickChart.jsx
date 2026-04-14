@@ -90,15 +90,15 @@ export default function CandlestickChart({ symbol, data, isLoading }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono font-semibold text-[--color-max-text] uppercase">{symbol}</span>
+        <span className="text-xs font-mono font-semibold text-max-text uppercase">{symbol}</span>
         <div className="flex items-center gap-1.5">
           <LiveDot />
-          <span className="text-[10px] text-[--color-subtle]">Live</span>
+          <span className="text-[10px] text-subtle">Live</span>
         </div>
       </div>
       <div className="relative rounded-lg overflow-hidden" style={{ height: 360 }}>
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[--color-surface] z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
             <LoadingSpinner size={24} />
           </div>
         )}

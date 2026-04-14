@@ -37,6 +37,6 @@ export const WithAction = {
     icon:        Star,
     title:       'No signals yet',
     description: 'CrowdSignal will display trading signals here as they are generated.',
-    action:      <Button size="sm" className="bg-[--color-action] text-white mt-2">View Signals</Button>,
+    action:      <Button size="sm" className="bg-action text-white mt-2">View Signals</Button>,
   },
 }

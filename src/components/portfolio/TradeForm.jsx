@@ -39,12 +39,12 @@ export default function TradeForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-[--color-subtle]">Side</Label>
+          <Label className="text-xs text-subtle">Side</Label>
           <Select value={side} onValueChange={setSide}>
-            <SelectTrigger className="h-9 w-24 text-xs bg-[--color-surface] border-[--color-container]">
+            <SelectTrigger className="h-9 w-24 text-xs bg-surface border-container">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[--color-container] border-[--color-container]">
+            <SelectContent className="bg-container border-container">
               <SelectItem value="buy">Buy</SelectItem>
               <SelectItem value="sell">Sell</SelectItem>
             </SelectContent>
@@ -52,13 +52,13 @@ export default function TradeForm() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-[--color-subtle]">Symbol</Label>
+          <Label className="text-xs text-subtle">Symbol</Label>
           {watchlist?.length ? (
             <Select value={symbol} onValueChange={setSymbol}>
-              <SelectTrigger className="h-9 w-36 text-xs bg-[--color-surface] border-[--color-container] font-mono">
+              <SelectTrigger className="h-9 w-36 text-xs bg-surface border-container font-mono">
                 <SelectValue placeholder="Select…" />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-container] border-[--color-container]">
+              <SelectContent className="bg-container border-container">
                 {watchlist.map((t) => (
                   <SelectItem key={t.symbol} value={t.symbol} className="font-mono">
                     {t.symbol}
@@ -71,20 +71,20 @@ export default function TradeForm() {
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
               placeholder="AAPL"
-              className="h-9 w-28 text-xs font-mono bg-[--color-surface] border-[--color-container]"
+              className="h-9 w-28 text-xs font-mono bg-surface border-container"
             />
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-[--color-subtle]">Qty</Label>
+          <Label className="text-xs text-subtle">Qty</Label>
           <Input
             type="number"
             min="1"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             placeholder="10"
-            className="h-9 w-24 text-xs font-mono bg-[--color-surface] border-[--color-container]"
+            className="h-9 w-24 text-xs font-mono bg-surface border-container"
           />
         </div>
 
@@ -93,8 +93,8 @@ export default function TradeForm() {
           disabled={mutation.isPending}
           className={
             side === 'buy'
-              ? 'h-9 bg-[--color-signal-buy] hover:opacity-90 text-black font-semibold text-xs px-4'
-              : 'h-9 bg-[--color-signal-sell] hover:opacity-90 text-white font-semibold text-xs px-4'
+              ? 'h-9 bg-signal-buy hover:opacity-90 text-black font-semibold text-xs px-4'
+              : 'h-9 bg-signal-sell hover:opacity-90 text-white font-semibold text-xs px-4'
           }
         >
           {mutation.isPending ? '…' : side === 'buy' ? 'Buy' : 'Sell'}
@@ -102,7 +102,7 @@ export default function TradeForm() {
       </div>
 
       {error && (
-        <p className="text-xs text-[--color-signal-sell]">{error}</p>
+        <p className="text-xs text-signal-sell">{error}</p>
       )}
     </form>
   )

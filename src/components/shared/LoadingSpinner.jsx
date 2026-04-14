@@ -7,7 +7,7 @@ export default function LoadingSpinner({ fullscreen, size = 24, className }) {
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      className={cn('animate-spin text-[--color-action]', className)}
+      className={cn('animate-spin text-action', className)}
     >
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.2" />
       <path
@@ -21,7 +21,7 @@ export default function LoadingSpinner({ fullscreen, size = 24, className }) {
 
   if (fullscreen) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[--color-void]">
+      <div className="fixed inset-0 flex items-center justify-center bg-void">
         {spinner}
       </div>
     )

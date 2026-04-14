@@ -27,25 +27,25 @@ export default function TickerSearch({ onSelect, placeholder = 'Search symbol…
   return (
     <div className="relative">
       <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--color-muted]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="pl-8 h-8 text-xs bg-[--color-container] border-[--color-container] text-[--color-primary-text] placeholder:text-[--color-muted]"
+          className="pl-8 h-8 text-xs bg-container border-container text-primary-text placeholder:text-muted"
         />
       </div>
 
       {query && results?.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-20 rounded-lg border border-[--color-container] bg-[--color-container] shadow-lg overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 z-20 rounded-lg border border-container bg-container shadow-lg overflow-hidden">
           {results.map((t) => (
             <button
               key={t.symbol}
               onClick={() => handleSelect(t)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-[--color-container] transition-colors text-left"
+              className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-container transition-colors text-left"
             >
-              <span className="font-mono font-semibold text-[--color-max-text]">{t.symbol}</span>
-              <span className="text-[--color-subtle] truncate ml-2">{t.name}</span>
+              <span className="font-mono font-semibold text-max-text">{t.symbol}</span>
+              <span className="text-subtle truncate ml-2">{t.name}</span>
             </button>
           ))}
         </div>

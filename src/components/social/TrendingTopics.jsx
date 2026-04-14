@@ -11,21 +11,21 @@ export default function TrendingTopics() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <TrendingUp size={14} className="text-[--color-action]" />
-        <span className="text-xs font-semibold text-[--color-secondary]">Trending</span>
+        <TrendingUp size={14} className="text-action" />
+        <span className="text-xs font-semibold text-secondary">Trending</span>
       </div>
       <div className="flex flex-col gap-1">
         {topics.slice(0, 8).map((t, i) => (
           <button
             key={t.symbol}
             onClick={() => navigate(`/market/${t.symbol}`)}
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[--color-container] transition-colors text-left"
+            className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-container transition-colors text-left"
           >
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[--color-muted] w-4">{i + 1}</span>
-              <span className="font-mono text-xs font-semibold text-[--color-max-text]">${t.symbol}</span>
+              <span className="text-[10px] text-muted w-4">{i + 1}</span>
+              <span className="font-mono text-xs font-semibold text-max-text">${t.symbol}</span>
             </div>
-            <span className="text-[10px] text-[--color-subtle]">{t.mention_count} mentions</span>
+            <span className="text-[10px] text-subtle">{t.mention_count} mentions</span>
           </button>
         ))}
       </div>

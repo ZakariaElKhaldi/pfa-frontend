@@ -21,18 +21,18 @@ export default function SocialPage() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="lg:col-span-2 flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-[--color-primary-text]">Social Feed</h2>
+          <h2 className="text-sm font-semibold text-primary-text">Social Feed</h2>
           <Input
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             placeholder="Filter by symbol…"
-            className="h-8 w-36 text-xs font-mono bg-[--color-container] border-[--color-container] placeholder:text-[--color-muted]"
+            className="h-8 w-36 text-xs font-mono bg-container border-container placeholder:text-muted"
           />
         </div>
 
         {sentiment && activeSymbol && (
-          <Card className="bg-[--color-container] border-0 p-3">
-            <p className="text-[10px] text-[--color-muted] uppercase tracking-wider mb-2">
+          <Card className="bg-container border-0 p-3">
+            <p className="text-[10px] text-muted uppercase tracking-wider mb-2">
               {activeSymbol} Sentiment
             </p>
             <SentimentBar
@@ -56,7 +56,7 @@ export default function SocialPage() {
         )}
       </div>
 
-      <Card className="bg-[--color-container] border-0 p-4 h-fit">
+      <Card className="bg-container border-0 p-4 h-fit">
         <TrendingTopics />
       </Card>
     </div>

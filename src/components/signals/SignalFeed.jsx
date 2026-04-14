@@ -32,7 +32,7 @@ export default function SignalFeed({ limit = 20 }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 mb-1">
         <LiveDot />
-        <span className="text-xs text-[--color-subtle]">Live feed</span>
+        <span className="text-xs text-subtle">Live feed</span>
       </div>
       <ScrollArea className="h-[480px] pr-1">
         <div className="flex flex-col gap-2">

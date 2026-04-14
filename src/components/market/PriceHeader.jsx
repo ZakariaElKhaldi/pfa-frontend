@@ -10,26 +10,26 @@ export default function PriceHeader({ quote }) {
   return (
     <div className="flex items-end gap-6 flex-wrap">
       <div>
-        <p className="text-xs text-[--color-subtle] mb-0.5 uppercase tracking-wider">{symbol}</p>
-        <span className="font-data text-3xl font-semibold text-[--color-max-text]">
+        <p className="text-xs text-subtle mb-0.5 uppercase tracking-wider">{symbol}</p>
+        <span className="font-data text-3xl font-semibold text-max-text">
           ${formatPrice(price)}
         </span>
       </div>
       <div className={cn(
         'font-data text-lg font-semibold',
-        isUp ? 'text-[--color-signal-buy]' : 'text-[--color-signal-sell]'
+        isUp ? 'text-signal-buy' : 'text-signal-sell'
       )}>
         {isUp ? '+' : ''}{formatPrice(change)} ({formatPct(change_pct)})
       </div>
       <div className="flex gap-4 ml-auto text-right">
         <div>
-          <p className="text-[10px] text-[--color-muted] uppercase">Volume</p>
-          <p className="font-data text-xs text-[--color-secondary]">{formatPrice(volume, 0)}</p>
+          <p className="text-[10px] text-muted uppercase">Volume</p>
+          <p className="font-data text-xs text-secondary">{formatPrice(volume, 0)}</p>
         </div>
         {market_cap && (
           <div>
-            <p className="text-[10px] text-[--color-muted] uppercase">Mkt Cap</p>
-            <p className="font-data text-xs text-[--color-secondary]">{formatPrice(market_cap / 1e9, 2)}B</p>
+            <p className="text-[10px] text-muted uppercase">Mkt Cap</p>
+            <p className="font-data text-xs text-secondary">{formatPrice(market_cap / 1e9, 2)}B</p>
           </div>
         )}
       </div>

@@ -59,36 +59,36 @@ export default function ExportPage() {
 
   return (
     <div className="flex flex-col gap-4 max-w-lg">
-      <h2 className="text-sm font-semibold text-[--color-primary-text]">Export Data</h2>
+      <h2 className="text-sm font-semibold text-primary-text">Export Data</h2>
 
-      <Card className="bg-[--color-container] border-0 p-4">
-        <p className="text-[10px] text-[--color-muted] uppercase tracking-wider mb-3">Options</p>
+      <Card className="bg-container border-0 p-4">
+        <p className="text-[10px] text-muted uppercase tracking-wider mb-3">Options</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-[--color-subtle]">From</Label>
+            <Label className="text-xs text-subtle">From</Label>
             <Input
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="h-8 text-xs bg-[--color-surface] border-[--color-container] w-36"
+              className="h-8 text-xs bg-surface border-container w-36"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-[--color-subtle]">To</Label>
+            <Label className="text-xs text-subtle">To</Label>
             <Input
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="h-8 text-xs bg-[--color-surface] border-[--color-container] w-36"
+              className="h-8 text-xs bg-surface border-container w-36"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs text-[--color-subtle]">Format</Label>
+            <Label className="text-xs text-subtle">Format</Label>
             <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger className="h-8 w-24 text-xs bg-[--color-surface] border-[--color-container]">
+              <SelectTrigger className="h-8 w-24 text-xs bg-surface border-container">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-container] border-[--color-container]">
+              <SelectContent className="bg-container border-container">
                 <SelectItem value="csv">CSV</SelectItem>
                 <SelectItem value="json">JSON</SelectItem>
               </SelectContent>
@@ -98,20 +98,20 @@ export default function ExportPage() {
       </Card>
 
       {exports.map((e) => (
-        <Card key={e.key} className="bg-[--color-container] border-0 p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-[--color-action-container] flex items-center justify-center shrink-0">
-            <FileText size={18} className="text-[--color-action]" />
+        <Card key={e.key} className="bg-container border-0 p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-action-container flex items-center justify-center shrink-0">
+            <FileText size={18} className="text-action" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[--color-primary-text]">{e.label}</p>
-            <p className="text-xs text-[--color-subtle] mt-0.5">{e.desc}</p>
+            <p className="text-sm font-medium text-primary-text">{e.label}</p>
+            <p className="text-xs text-subtle mt-0.5">{e.desc}</p>
           </div>
           <Button
             variant="outline"
             size="sm"
             disabled={loading[e.key]}
             onClick={() => handleExport(e.key, e.fn, e.base)}
-            className="shrink-0 h-8 gap-1.5 border-[--color-container] text-[--color-secondary] text-xs"
+            className="shrink-0 h-8 gap-1.5 border-container text-secondary text-xs"
           >
             <Download size={13} />
             {loading[e.key] ? 'Exporting…' : format.toUpperCase()}

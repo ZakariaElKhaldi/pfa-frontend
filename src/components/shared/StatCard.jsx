@@ -3,26 +3,26 @@ import { Card } from '@/components/ui/card'
 
 export default function StatCard({ label, value, sub, icon: Icon, trend, className }) {
   const trendColor =
-    trend > 0 ? 'text-[--color-signal-buy]' :
-    trend < 0 ? 'text-[--color-signal-sell]' :
-    'text-[--color-subtle]'
+    trend > 0 ? 'text-signal-buy' :
+    trend < 0 ? 'text-signal-sell' :
+    'text-subtle'
 
   return (
     <Card className={cn(
-      'bg-[--color-container] border-0 p-4 flex flex-col gap-2',
+      'bg-container border-0 p-4 flex flex-col gap-2',
       className
     )}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-[--color-subtle] uppercase tracking-wider">
+        <span className="text-xs font-medium text-subtle uppercase tracking-wider">
           {label}
         </span>
         {Icon && (
-          <span className="text-[--color-muted]">
+          <span className="text-muted">
             <Icon size={16} />
           </span>
         )}
       </div>
-      <div className="font-data text-2xl font-semibold text-[--color-max-text]">
+      <div className="font-data text-2xl font-semibold text-max-text">
         {value}
       </div>
       {(sub || trend != null) && (
@@ -30,7 +30,7 @@ export default function StatCard({ label, value, sub, icon: Icon, trend, classNa
           {trend != null && (
             <span>{trend >= 0 ? '▲' : '▼'}</span>
           )}
-          <span className="text-[--color-subtle]">{sub}</span>
+          <span className="text-subtle">{sub}</span>
         </div>
       )}
     </Card>

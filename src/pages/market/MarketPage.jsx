@@ -61,15 +61,15 @@ export default function MarketPage() {
                   { label: 'Bullish', value: sentiment.bullish ?? 0 },
                   { label: 'Bearish', value: sentiment.bearish ?? 0 },
                 ].map((s) => (
-                  <div key={s.label} className="bg-[--color-container] rounded-lg p-2">
-                    <p className="font-data text-sm font-semibold text-[--color-primary-text]">{s.value}</p>
-                    <p className="text-[10px] text-[--color-muted]">{s.label}</p>
+                  <div key={s.label} className="bg-container rounded-lg p-2">
+                    <p className="font-data text-sm font-semibold text-primary-text">{s.value}</p>
+                    <p className="text-[10px] text-muted">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="text-xs text-[--color-muted]">No sentiment data</p>
+            <p className="text-xs text-muted">No sentiment data</p>
           )}
         </SectionCard>
       </div>

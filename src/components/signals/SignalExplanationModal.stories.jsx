@@ -46,7 +46,7 @@ function ModalDemo({ data }) {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="bg-[--color-action] text-white"
+        className="bg-action text-white"
       >
         Open Explanation Modal
       </Button>

@@ -8,8 +8,8 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div className="glass rounded-lg px-3 py-2 text-xs">
-      <p className="text-[--color-subtle] mb-1">{label}</p>
-      <p className="font-data font-semibold text-[--color-max-text]">
+      <p className="text-subtle mb-1">{label}</p>
+      <p className="font-data font-semibold text-max-text">
         ${formatPrice(payload[0].value)}
       </p>
     </div>

@@ -40,11 +40,11 @@ export default function AlertFeed() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-xs font-semibold text-[--color-subtle] uppercase tracking-wider">
+          <span className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Alert Feed
           </span>
           {unresolvedCount > 0 && (
-            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[--color-signal-sell-container] text-[--color-signal-sell] border border-[--color-signal-sell-border]">
+            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-signal-sell-container text-signal-sell border border-signal-sell-border">
               {unresolvedCount} unresolved
             </span>
           )}
