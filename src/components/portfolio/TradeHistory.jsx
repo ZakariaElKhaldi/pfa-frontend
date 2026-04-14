@@ -9,12 +9,12 @@ import { useTrades } from '@/hooks/usePortfolio'
 import { formatPrice, cn } from '@/lib/utils'
 import { History } from 'lucide-react'
 
-/* ─── Side pill ──────────────────────────────────────── */
+/* ─── Side tag ──────────────────────────────────────── */
 function SidePill({ side }) {
   const isBuy = side?.toUpperCase() === 'BUY'
   return (
     <span className={cn(
-      'inline-flex items-center font-mono font-semibold text-[10px] uppercase tracking-wider rounded-full px-2 py-0.5',
+      'inline-flex items-center gap-1 font-mono font-semibold text-[10px] uppercase tracking-wide leading-none rounded-md px-2 py-1',
       isBuy
         ? 'text-signal-buy bg-signal-buy-container border border-signal-buy-border'
         : 'text-signal-sell bg-signal-sell-container border border-signal-sell-border',
@@ -52,16 +52,16 @@ export default function TradeHistory() {
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-container">
+    <div className="rounded-lg overflow-hidden bg-container p-1">
       <Table>
         <TableHeader>
-          <TableRow className="border-container hover:bg-transparent">
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Date</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Ticker</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold">Side</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Qty</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Price</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Total</TableHead>
+          <TableRow className="border-ghost hover:bg-transparent">
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold py-3">Date</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold py-3">Ticker</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold py-3">Side</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold text-right py-3">Qty</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold text-right py-3">Price</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-wide text-subtle font-semibold text-right py-3">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,10 +69,10 @@ export default function TradeHistory() {
             trades.map((trade, i) => {
               const total = (trade.quantity ?? 0) * (trade.price ?? 0)
               return (
-                <TableRow key={trade.id ?? i} className="border-container hover:bg-container transition-colors">
-                  <TableCell className="text-[10px] text-muted">
+                <TableRow key={trade.id ?? i} className="border-ghost hover:bg-surface-low/50 transition-colors">
+                  <TableCell className="text-xs text-subtle py-3">
                     <div>{trade.executed_at ? format(new Date(trade.executed_at), 'MMM d, yyyy') : '—'}</div>
-                    <div className="text-[9px] text-muted opacity-60">
+                    <div className="text-[10px] text-muted mt-0.5">
                       {trade.executed_at ? formatDistanceToNow(new Date(trade.executed_at), { addSuffix: true }) : ''}
                     </div>
                   </TableCell>

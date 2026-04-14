@@ -19,7 +19,7 @@ export default function SignalCard({ signal }) {
     : null
 
   return (
-    <Card className="bg-container border border-ghost p-4 flex flex-col gap-4 hover:border-ghost-strong transition-all cursor-pointer group shadow-sm">
+    <Card className="bg-container border border-ghost p-5 flex flex-col gap-4 hover:border-ghost-strong transition-all cursor-pointer group">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-mono font-semibold text-max-text text-sm">
@@ -40,8 +40,8 @@ export default function SignalCard({ signal }) {
       </div>
 
       {confidencePct != null && (
-        <div className="flex items-center gap-3 bg-void rounded-md p-2 border border-ghost">
-          <span className="text-[10px] text-muted w-16 shrink-0 uppercase tracking-wider font-semibold">Conf</span>
+        <div className="flex items-center gap-3 bg-void/60 rounded-md p-3 border border-ghost">
+          <span className="text-[11px] text-subtle w-10 shrink-0 uppercase tracking-wide font-semibold">Conf</span>
           <div className="flex-1 h-1.5 rounded-full bg-container-high overflow-hidden">
             <div
               className={`h-full rounded-full ${type?.includes('BUY') ? 'bg-signal-buy' : type?.includes('SELL') ? 'bg-signal-sell' : 'bg-signal-hold'}`}
@@ -55,7 +55,7 @@ export default function SignalCard({ signal }) {
       )}
 
       <div className="flex items-center justify-between mt-1">
-        <div className="flex gap-4 text-[10px] font-mono text-muted">
+        <div className="flex gap-4 text-[11px] font-mono text-subtle">
           {sentiment != null && <span>S {sentiment.toFixed(2)}</span>}
           {momentum  != null && <span>M {momentum.toFixed(2)}</span>}
         </div>

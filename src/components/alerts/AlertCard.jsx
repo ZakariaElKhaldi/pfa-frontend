@@ -23,7 +23,7 @@ export default function AlertCard({ alert }) {
 
   return (
     <div className={cn(
-      'flex items-start gap-4 rounded-lg px-4 py-3 border',
+      'flex items-start gap-4 rounded-lg px-5 py-4 border',
       resolved
         ? 'bg-surface border-container opacity-60'
         : 'bg-container border-transparent'
@@ -31,16 +31,16 @@ export default function AlertCard({ alert }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono font-semibold text-sm text-max-text">{ticker_symbol}</span>
-          <Badge className={cn('text-[10px] px-2 py-0', TYPE_COLORS[type] ?? '')}>
+          <Badge className={cn('text-[10px]', TYPE_COLORS[type] ?? '')}>
             {TYPE_LABELS[type] ?? type}
           </Badge>
           {resolved && (
-            <Badge className="text-[10px] px-2 py-0 bg-surface text-muted">
+            <Badge className="text-[10px] bg-surface-low text-muted">
               Resolved
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-[10px] text-subtle font-mono">
+        <div className="flex items-center gap-3 mt-2 text-[11px] text-subtle font-mono">
           <span>S: {sentiment?.toFixed(2) ?? '—'}</span>
           <span>M: {momentum?.toFixed(2) ?? '—'}</span>
           <span>C: {consistency?.toFixed(2) ?? '—'}</span>

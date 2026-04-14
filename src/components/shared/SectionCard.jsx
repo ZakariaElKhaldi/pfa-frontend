@@ -7,11 +7,11 @@ import { Card } from '@/components/ui/card'
  */
 export default function SectionCard({ title, action, children, className }) {
   return (
-    <Card className={cn('bg-container border-0 p-5 flex flex-col gap-4', className)}>
+    <Card className={cn('bg-container border border-ghost p-6 flex flex-col gap-4', className)}>
       {(title || action) && (
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           {title && (
-            <h2 className="text-xs font-semibold text-subtle uppercase tracking-wider">
+            <h2 className="text-[11px] font-semibold text-subtle uppercase tracking-wide">
               {title}
             </h2>
           )}

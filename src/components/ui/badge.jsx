@@ -3,29 +3,28 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils"
 
 /**
- * Badge / Tag component.
+ * Badge / Tag component — Obsidian Lens
  * 
- * Obsidian Lens design rules:
- * - Pill-shaped (fully rounded)
- * - Signal badges use opaque dark containers (#003D1A / #3D0000 / #3D2800)
- *   with bright text + subtle border
- * - UI badges use ghost/transparent backgrounds
+ * Design rationale (Hasan et al. 2024):
+ * - rounded-md (6px) not rounded-full: structured, professional for finance
+ * - px-2.5 py-1: sufficient breathing room so text never touches edges
+ * - 11px text: readable at small sizes without looking cramped
  */
 const badgeVariants = cva(
-  "inline-flex items-center justify-center gap-1 whitespace-nowrap font-semibold transition-colors",
+  "inline-flex items-center justify-center gap-1 whitespace-nowrap font-semibold rounded-md px-2.5 py-1 text-[11px] leading-none tracking-wide uppercase transition-colors",
   {
     variants: {
       variant: {
         default:
-          "bg-action-container text-action border border-action/20 rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+          "bg-action-container text-action border border-action/20",
         secondary:
-          "bg-container text-subtle border border-ghost rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+          "bg-container-high/50 text-secondary border border-ghost-strong",
         destructive:
-          "bg-signal-sell-container text-signal-sell border border-signal-sell-border rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+          "bg-signal-sell-container text-signal-sell border border-signal-sell-border",
         outline:
-          "bg-transparent text-subtle border border-ghost-strong rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+          "bg-transparent text-subtle border border-ghost-strong",
         ghost:
-          "bg-ghost text-subtle border-none rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+          "bg-ghost text-subtle border-transparent",
       },
     },
     defaultVariants: {

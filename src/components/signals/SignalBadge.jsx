@@ -6,11 +6,11 @@ export default function SignalBadge({ signal, size = 'sm' }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center font-mono font-semibold rounded-full uppercase tracking-wider',
+        'inline-flex items-center font-mono font-semibold rounded-md uppercase tracking-wide leading-none',
         signalClass(signal),
-        size === 'sm' && 'px-2 py-0.5 text-[10px]',
-        size === 'md' && 'px-3 py-1 text-xs',
-        size === 'lg' && 'px-4 py-1.5 text-sm',
+        size === 'sm' && 'px-2 py-1 text-[10px]',
+        size === 'md' && 'px-2.5 py-1 text-[11px]',
+        size === 'lg' && 'px-3 py-1.5 text-xs',
       )}
     >
       {signal}
