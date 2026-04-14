@@ -11,7 +11,7 @@ export default function AdminPage() {
     <div className="flex flex-col gap-6">
       <SystemStats />
 
-      <Card className="bg-[--color-surface-low] border-0 p-4">
+      <Card className="bg-[--color-container] border-0 p-4">
         <h2 className="text-xs font-semibold text-[--color-subtle] uppercase tracking-wider mb-4">
           Users
         </h2>

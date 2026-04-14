@@ -129,7 +129,7 @@ export default function WatchlistTable({ onAdd }) {
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-[--color-surface-low]">
+    <div className="rounded-lg overflow-hidden bg-[--color-container]">
       <Table>
         <TableHeader>
           <TableRow className="border-[--color-container] hover:bg-transparent">

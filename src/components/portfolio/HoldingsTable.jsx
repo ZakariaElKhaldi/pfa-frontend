@@ -17,7 +17,7 @@ function PositionRow({ position }) {
   const isUp = pnl == null ? null : pnl >= 0
 
   return (
-    <TableRow className="border-[--color-surface-low] hover:bg-[--color-surface-low]">
+    <TableRow className="border-[--color-surface-low] hover:bg-[--color-container]">
       <TableCell className="font-mono font-semibold text-sm text-[--color-max-text]">{symbol}</TableCell>
       <TableCell className="font-data text-xs text-[--color-secondary]">{quantity}</TableCell>
       <TableCell className="font-data text-xs text-[--color-secondary]">${formatPrice(avg_price)}</TableCell>

@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
+import { AuthProvider } from '@/context/AuthContext'
+
 /* Fresh QueryClient per story so stories are isolated */
 const makeQueryClient = () =>
   new QueryClient({
@@ -37,11 +39,13 @@ const preview = {
     (Story) => (
       <MemoryRouter>
         <QueryClientProvider client={makeQueryClient()}>
-          <TooltipProvider delayDuration={300}>
-            <div className="p-6 min-w-[320px]">
-              <Story />
-            </div>
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider delayDuration={300}>
+              <div className="p-6 min-w-[320px] w-full">
+                <Story />
+              </div>
+            </TooltipProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </MemoryRouter>
     ),

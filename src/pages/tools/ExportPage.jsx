@@ -61,7 +61,7 @@ export default function ExportPage() {
     <div className="flex flex-col gap-4 max-w-lg">
       <h2 className="text-sm font-semibold text-[--color-primary-text]">Export Data</h2>
 
-      <Card className="bg-[--color-surface-low] border-0 p-4">
+      <Card className="bg-[--color-container] border-0 p-4">
         <p className="text-[10px] text-[--color-muted] uppercase tracking-wider mb-3">Options</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1.5">
@@ -88,7 +88,7 @@ export default function ExportPage() {
               <SelectTrigger className="h-8 w-24 text-xs bg-[--color-surface] border-[--color-container]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+              <SelectContent className="bg-[--color-container] border-[--color-container]">
                 <SelectItem value="csv">CSV</SelectItem>
                 <SelectItem value="json">JSON</SelectItem>
               </SelectContent>
@@ -98,7 +98,7 @@ export default function ExportPage() {
       </Card>
 
       {exports.map((e) => (
-        <Card key={e.key} className="bg-[--color-surface-low] border-0 p-4 flex items-center gap-4">
+        <Card key={e.key} className="bg-[--color-container] border-0 p-4 flex items-center gap-4">
           <div className="w-10 h-10 rounded-lg bg-[--color-action-container] flex items-center justify-center shrink-0">
             <FileText size={18} className="text-[--color-action]" />
           </div>

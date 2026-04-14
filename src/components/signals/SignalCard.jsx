@@ -19,7 +19,7 @@ export default function SignalCard({ signal }) {
     : null
 
   return (
-    <Card className="bg-[--color-surface-low] border-0 p-4 flex flex-col gap-3 hover:bg-[--color-container] transition-colors">
+    <Card className="bg-[--color-container] border border-[--color-ghost] p-4 flex flex-col gap-4 hover:border-[--color-ghost-strong] transition-all cursor-pointer group shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-mono font-semibold text-[--color-max-text] text-sm">
@@ -27,12 +27,9 @@ export default function SignalCard({ signal }) {
           </span>
           <SignalBadge signal={type} />
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {prediction_method && (
-            <Badge
-              variant="outline"
-              className="text-[10px] px-1.5 py-0 border-[--color-container] text-[--color-muted] font-mono"
-            >
+            <Badge variant="ghost" className="opacity-70 group-hover:opacity-100">
               {prediction_method === 'ml' ? 'ML' : 'Rule'}
             </Badge>
           )}
@@ -43,23 +40,28 @@ export default function SignalCard({ signal }) {
       </div>
 
       {confidencePct != null && (
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[--color-muted] w-20 shrink-0">Confidence</span>
-          <div className="flex-1 h-1.5 rounded-full bg-[--color-container] overflow-hidden">
+        <div className="flex items-center gap-3 bg-[--color-void] rounded-md p-2 border border-[--color-ghost]">
+          <span className="text-[10px] text-[--color-muted] w-16 shrink-0 uppercase tracking-wider font-semibold">Conf</span>
+          <div className="flex-1 h-1.5 rounded-full bg-[--color-container-high] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[--color-action]"
+              className={`h-full rounded-full ${type?.includes('BUY') ? 'bg-[--color-signal-buy]' : type?.includes('SELL') ? 'bg-[--color-signal-sell]' : 'bg-[--color-signal-hold]'}`}
               style={{ width: `${confidencePct}%` }}
             />
           </div>
-          <span className="text-[10px] font-mono text-[--color-subtle] w-8 text-right">
+          <span className="text-[10px] font-mono text-[--color-primary-text] w-8 text-right font-semibold">
             {confidencePct}%
           </span>
         </div>
       )}
 
-      <div className="flex gap-4 text-[10px] font-mono text-[--color-muted]">
-        {sentiment != null && <span>S {sentiment.toFixed(2)}</span>}
-        {momentum  != null && <span>M {momentum.toFixed(2)}</span>}
+      <div className="flex items-center justify-between mt-1">
+        <div className="flex gap-4 text-[10px] font-mono text-[--color-muted]">
+          {sentiment != null && <span>S {sentiment.toFixed(2)}</span>}
+          {momentum  != null && <span>M {momentum.toFixed(2)}</span>}
+        </div>
+        <button className="text-[10px] font-bold tracking-wider uppercase text-[--color-action] hover:text-[--color-action-hover] transition-colors">
+          View Details →
+        </button>
       </div>
     </Card>
   )

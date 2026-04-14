@@ -76,7 +76,7 @@ function StrategyRow({ strategy }) {
   const { name, description, is_active, conditions, actions, tickers, created_at } = strategy
 
   return (
-    <div className="rounded-lg bg-[--color-surface-low] overflow-hidden">
+    <div className="rounded-lg bg-[--color-container] overflow-hidden">
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 py-3">
         <button
@@ -271,7 +271,7 @@ function CreateStrategyDialog({ onClose }) {
                 <SelectTrigger className="w-16 h-8 text-xs bg-[--color-surface] border-[--color-container]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+                <SelectContent className="bg-[--color-container] border-[--color-container]">
                   <SelectItem value="AND">AND</SelectItem>
                   <SelectItem value="OR">OR</SelectItem>
                 </SelectContent>
@@ -281,7 +281,7 @@ function CreateStrategyDialog({ onClose }) {
               <SelectTrigger className="w-40 h-8 text-xs bg-[--color-surface] border-[--color-container]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+              <SelectContent className="bg-[--color-container] border-[--color-container]">
                 {FIELD_OPTIONS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -289,7 +289,7 @@ function CreateStrategyDialog({ onClose }) {
               <SelectTrigger className="w-28 h-8 text-xs bg-[--color-surface] border-[--color-container]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+              <SelectContent className="bg-[--color-container] border-[--color-container]">
                 {OPERATOR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -327,7 +327,7 @@ function CreateStrategyDialog({ onClose }) {
           <SelectTrigger className="h-9 text-sm bg-[--color-surface] border-[--color-container]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+          <SelectContent className="bg-[--color-container] border-[--color-container]">
             {ACTION_OPTIONS.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -366,7 +366,7 @@ export default function StrategiesPage() {
                 <Plus size={13} /> New Strategy
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg bg-[--color-surface-low] border-[--color-container]">
+            <DialogContent className="sm:max-w-lg bg-[--color-container] border-[--color-container]">
               <DialogHeader>
                 <DialogTitle className="text-sm text-[--color-primary-text]">
                   Create Strategy

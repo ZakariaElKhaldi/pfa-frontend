@@ -1,21 +1,16 @@
 import AlertCard from '@/components/alerts/AlertCard'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthContext } from '@/context/AuthContext'
 
 export default {
   title: 'Alerts/AlertCard',
   component: AlertCard,
   tags: ['autodocs'],
+  /* Global decorator already provides AuthProvider + QueryClient + Router */
   decorators: [
     (Story) => (
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        {/* Provide a mock auth context so AlertCard can read isAdmin */}
-        <AuthContext.Provider value={{ user: { username: 'trader' }, isAdmin: false, login: () => {}, logout: () => {} }}>
-          <div className="max-w-xl">
-            <Story />
-          </div>
-        </AuthContext.Provider>
-      </QueryClientProvider>
+      <div className="max-w-xl">
+        <Story />
+      </div>
     ),
   ],
 }
@@ -69,14 +64,23 @@ export const AdminView = {
   name: 'Admin View (with resolve button)',
   decorators: [
     (Story) => (
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <AuthContext.Provider value={{ user: { username: 'admin' }, isAdmin: true, login: () => {}, logout: () => {} }}>
-          <div className="max-w-xl">
-            <Story />
-          </div>
-        </AuthContext.Provider>
-      </QueryClientProvider>
+      <AuthContext.Provider value={{ user: { username: 'admin', role: 'admin' }, isAdmin: true, isAuthenticated: true, loading: false, login: () => {}, logout: () => {} }}>
+        <div className="max-w-xl">
+          <Story />
+        </div>
+      </AuthContext.Provider>
     ),
   ],
   args: { alert: divergenceAlert },
+}
+
+export const AllAlerts = {
+  name: 'All Alert Types',
+  render: () => (
+    <div className="flex flex-col gap-3 max-w-xl">
+      <AlertCard alert={divergenceAlert} />
+      <AlertCard alert={extremeAlert} />
+      <AlertCard alert={resolvedAlert} />
+    </div>
+  ),
 }

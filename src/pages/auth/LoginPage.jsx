@@ -45,7 +45,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-[--color-surface-low] rounded-xl p-6 flex flex-col gap-4">
+        <div className="bg-[--color-container] rounded-xl p-6 flex flex-col gap-4">
           <h2 className="text-sm font-semibold text-[--color-primary-text]">Sign in</h2>
 
           {error && (

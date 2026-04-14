@@ -13,7 +13,7 @@ export default function AlertForm({ filters, onChange }) {
           <SelectTrigger className="h-8 w-40 text-xs bg-[--color-surface] border-[--color-container]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+          <SelectContent className="bg-[--color-container] border-[--color-container]">
             <SelectItem value="all">All types</SelectItem>
             <SelectItem value="divergence">Divergence</SelectItem>
             <SelectItem value="extreme_sentiment">Extreme Sentiment</SelectItem>
@@ -30,7 +30,7 @@ export default function AlertForm({ filters, onChange }) {
           <SelectTrigger className="h-8 w-36 text-xs bg-[--color-surface] border-[--color-container]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+          <SelectContent className="bg-[--color-container] border-[--color-container]">
             <SelectItem value="unresolved">Unresolved</SelectItem>
             <SelectItem value="resolved">Resolved</SelectItem>
             <SelectItem value="all">All</SelectItem>

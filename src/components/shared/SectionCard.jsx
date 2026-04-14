@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
  */
 export default function SectionCard({ title, action, children, className }) {
   return (
-    <Card className={cn('bg-[--color-surface-low] border-0 p-4', className)}>
+    <Card className={cn('bg-[--color-container] border-0 p-5 flex flex-col gap-4', className)}>
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
           {title && (

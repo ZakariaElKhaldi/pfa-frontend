@@ -26,7 +26,7 @@ export default function AlertCard({ alert }) {
       'flex items-start gap-4 rounded-lg px-4 py-3 border',
       resolved
         ? 'bg-[--color-surface] border-[--color-container] opacity-60'
-        : 'bg-[--color-surface-low] border-transparent'
+        : 'bg-[--color-container] border-transparent'
     )}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">

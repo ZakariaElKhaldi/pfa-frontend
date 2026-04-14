@@ -9,7 +9,7 @@ export default function StatCard({ label, value, sub, icon: Icon, trend, classNa
 
   return (
     <Card className={cn(
-      'bg-[--color-surface-low] border-0 p-4 flex flex-col gap-2',
+      'bg-[--color-container] border-0 p-4 flex flex-col gap-2',
       className
     )}>
       <div className="flex items-center justify-between">

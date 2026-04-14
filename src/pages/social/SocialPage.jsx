@@ -26,12 +26,12 @@ export default function SocialPage() {
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             placeholder="Filter by symbol…"
-            className="h-8 w-36 text-xs font-mono bg-[--color-surface-low] border-[--color-container] placeholder:text-[--color-muted]"
+            className="h-8 w-36 text-xs font-mono bg-[--color-container] border-[--color-container] placeholder:text-[--color-muted]"
           />
         </div>
 
         {sentiment && activeSymbol && (
-          <Card className="bg-[--color-surface-low] border-0 p-3">
+          <Card className="bg-[--color-container] border-0 p-3">
             <p className="text-[10px] text-[--color-muted] uppercase tracking-wider mb-2">
               {activeSymbol} Sentiment
             </p>
@@ -56,7 +56,7 @@ export default function SocialPage() {
         )}
       </div>
 
-      <Card className="bg-[--color-surface-low] border-0 p-4 h-fit">
+      <Card className="bg-[--color-container] border-0 p-4 h-fit">
         <TrendingTopics />
       </Card>
     </div>

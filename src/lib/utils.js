@@ -24,10 +24,12 @@ export function formatPct(value, decimals = 2) {
 /** Map signal string to CSS class */
 export function signalClass(signal) {
   switch (signal?.toUpperCase()) {
-    case 'BUY':  return 'signal-buy'
-    case 'SELL': return 'signal-sell'
-    case 'HOLD': return 'signal-hold'
-    default:     return ''
+    case 'BUY':
+    case 'STRONG_BUY':  return 'signal-buy'
+    case 'SELL':
+    case 'STRONG_SELL': return 'signal-sell'
+    case 'HOLD':        return 'signal-hold'
+    default:            return ''
   }
 }
 

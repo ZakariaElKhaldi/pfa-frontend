@@ -74,7 +74,7 @@ export default function SignalExplanationModal({ symbol, open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-[--color-surface-low] border-[--color-container] max-w-lg">
+      <DialogContent className="bg-[--color-container] border-[--color-container] max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-2 flex-wrap">
             <DialogTitle className="font-mono text-[--color-max-text]">

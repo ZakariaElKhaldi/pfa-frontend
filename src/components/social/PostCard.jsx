@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 const SENTIMENT_COLORS = {
   bullish: 'text-[--color-signal-buy] bg-[--color-signal-buy-container]',
   bearish: 'text-[--color-signal-sell] bg-[--color-signal-sell-container]',
-  neutral: 'text-[--color-subtle] bg-[--color-surface-low]',
+  neutral: 'text-[--color-subtle] bg-[--color-container]',
 }
 
 const SOURCE_LABELS = { reddit: 'Reddit', stocktwits: 'StockTwits' }
@@ -14,7 +14,7 @@ export default function PostCard({ post }) {
   const text = title || content
 
   return (
-    <div className="flex flex-col gap-2 p-4 rounded-lg bg-[--color-surface-low] hover:bg-[--color-container] transition-colors">
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-[--color-container] hover:bg-[--color-container] transition-colors">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-medium text-[--color-muted] uppercase tracking-wider">
           {SOURCE_LABELS[source] ?? source}

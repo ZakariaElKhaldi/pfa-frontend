@@ -32,12 +32,12 @@ export default function TickerSearch({ onSelect, placeholder = 'Search symbol…
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="pl-8 h-8 text-xs bg-[--color-surface-low] border-[--color-container] text-[--color-primary-text] placeholder:text-[--color-muted]"
+          className="pl-8 h-8 text-xs bg-[--color-container] border-[--color-container] text-[--color-primary-text] placeholder:text-[--color-muted]"
         />
       </div>
 
       {query && results?.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-20 rounded-lg border border-[--color-container] bg-[--color-surface-low] shadow-lg overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 z-20 rounded-lg border border-[--color-container] bg-[--color-container] shadow-lg overflow-hidden">
           {results.map((t) => (
             <button
               key={t.symbol}

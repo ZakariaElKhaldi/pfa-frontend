@@ -28,7 +28,7 @@ function TradeHistoryTable({ trades }) {
       </TableHeader>
       <TableBody>
         {trades.map((t, i) => (
-          <TableRow key={t.id ?? i} className="border-[--color-surface-low] hover:bg-[--color-surface-low]">
+          <TableRow key={t.id ?? i} className="border-[--color-surface-low] hover:bg-[--color-container]">
             <TableCell className="font-mono font-semibold text-sm text-[--color-max-text]">{t.symbol}</TableCell>
             <TableCell className={t.side === 'buy' ? 'text-xs text-[--color-signal-buy]' : 'text-xs text-[--color-signal-sell]'}>
               {t.side.toUpperCase()}

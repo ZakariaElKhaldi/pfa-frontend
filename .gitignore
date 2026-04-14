@@ -22,3 +22,6 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 *.swp
+
+*storybook.log
+storybook-static

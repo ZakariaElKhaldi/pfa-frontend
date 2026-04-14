@@ -19,7 +19,7 @@ export default function TrendingTopics() {
           <button
             key={t.symbol}
             onClick={() => navigate(`/market/${t.symbol}`)}
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[--color-surface-low] transition-colors text-left"
+            className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[--color-container] transition-colors text-left"
           >
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-[--color-muted] w-4">{i + 1}</span>

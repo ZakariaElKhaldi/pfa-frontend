@@ -73,7 +73,7 @@ export default function SignalsPage() {
           value={symbolFilter}
           onChange={(e) => setSymbolFilter(e.target.value)}
           placeholder="Filter by symbol…"
-          className="h-8 w-36 text-xs font-mono bg-[--color-surface-low] border-[--color-container] placeholder:text-[--color-muted]"
+          className="h-8 w-36 text-xs font-mono bg-[--color-container] border-[--color-container] placeholder:text-[--color-muted]"
         />
       </div>
 

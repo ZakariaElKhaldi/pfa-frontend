@@ -1,23 +1,31 @@
 import * as React from "react"
 import { cva } from "class-variance-authority";
-import { Slot } from "radix-ui"
-
 import { cn } from "@/lib/utils"
 
+/**
+ * Badge / Tag component.
+ * 
+ * Obsidian Lens design rules:
+ * - Pill-shaped (fully rounded)
+ * - Signal badges use opaque dark containers (#003D1A / #3D0000 / #3D2800)
+ *   with bright text + subtle border
+ * - UI badges use ghost/transparent backgrounds
+ */
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  "inline-flex items-center justify-center gap-1 whitespace-nowrap font-semibold transition-colors",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+        default:
+          "bg-[--color-action-container] text-[--color-action] border border-[--color-action]/20 rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
         secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "bg-[--color-container] text-[--color-subtle] border border-[--color-ghost] rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
         destructive:
-          "bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+          "bg-[--color-signal-sell-container] text-[--color-signal-sell] border border-[--color-signal-sell-border] rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
         outline:
-          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 [a&]:hover:underline",
+          "bg-transparent text-[--color-subtle] border border-[--color-ghost-strong] rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
+        ghost:
+          "bg-[--color-ghost] text-[--color-subtle] border-none rounded-full px-3 py-1 text-[10px] tracking-wider uppercase",
       },
     },
     defaultVariants: {
@@ -29,13 +37,10 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "default",
-  asChild = false,
   ...props
 }) {
-  const Comp = asChild ? Slot.Root : "span"
-
   return (
-    <Comp
+    <span
       data-slot="badge"
       data-variant={variant}
       className={cn(badgeVariants({ variant }), className)}

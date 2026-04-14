@@ -15,7 +15,7 @@ function WatchlistRow({ item, onRemove }) {
   return (
     <div
       onClick={() => navigate(`/market/${item.symbol}`)}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-[--color-surface-low] hover:bg-[--color-container] cursor-pointer transition-colors"
+      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-[--color-container] hover:bg-[--color-container] cursor-pointer transition-colors"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

@@ -44,7 +44,7 @@ export default function TradeForm() {
             <SelectTrigger className="h-9 w-24 text-xs bg-[--color-surface] border-[--color-container]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+            <SelectContent className="bg-[--color-container] border-[--color-container]">
               <SelectItem value="buy">Buy</SelectItem>
               <SelectItem value="sell">Sell</SelectItem>
             </SelectContent>
@@ -58,7 +58,7 @@ export default function TradeForm() {
               <SelectTrigger className="h-9 w-36 text-xs bg-[--color-surface] border-[--color-container] font-mono">
                 <SelectValue placeholder="Select…" />
               </SelectTrigger>
-              <SelectContent className="bg-[--color-surface-low] border-[--color-container]">
+              <SelectContent className="bg-[--color-container] border-[--color-container]">
                 {watchlist.map((t) => (
                   <SelectItem key={t.symbol} value={t.symbol} className="font-mono">
                     {t.symbol}

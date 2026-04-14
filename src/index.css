@@ -1,14 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ─── Obsidian Lens Design Tokens ──────────────────────────── */
-@theme {
-  /* Surface hierarchy — Material 3 tonal elevation, no borders */
+/* ═══════════════════════════════════════════════════════════════
+   OBSIDIAN LENS — Design Tokens
+   Source of truth: .superpowers/brainstorm/obsidian-lens-final.html
+   
+   Design principles applied from academic references:
+   • Color psychology as navigational cues (Pratibodh, 2023)
+   • Visual hierarchy via tonal elevation (Hasan et al., 2024)
+   • Minimalist density: no extra information (Vlasenko et al., 2022)
+   • Usability heuristics: consistency & standards (Nielsen, 2020)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Surface Hierarchy ─────────────────────────────────────────
+   Material 3 tonal elevation.  Each level is a distinct layer.
+   L0 void      → Page canvas (deepest)
+   L1 surface   → App body / main content area
+   L2 surface-low → Sidebar, sections, headers
+   L3 container → Cards, widgets, active states
+   L4 high      → Tooltips, dropdowns, nested elements
+   Glass        → Overlays, live feeds (backdrop-blur)
+   ────────────────────────────────────────────────────────────── */
+:root {
+  /* Surface hierarchy */
   --color-void:           #080D18;
   --color-surface:        #0F172A;
   --color-surface-low:    #1F2937;
   --color-container:      #334155;
   --color-container-high: #475569;
+
+  /* Text hierarchy */
   --color-muted:          #64748B;
   --color-subtle:         #94A3B8;
   --color-secondary:      #CBD5E1;
@@ -17,66 +38,76 @@
 
   /* Signal colors — EXCLUSIVE trading semantics */
   --color-signal-buy:               #00E676;
-  --color-signal-buy-container:     rgba(0, 230, 118, 0.10);
-  --color-signal-buy-border:        rgba(0, 230, 118, 0.20);
+  --color-signal-buy-dim:           #00C853;
+  --color-signal-buy-container:     #003D1A;
+  --color-signal-buy-border:        rgba(0, 230, 118, 0.25);
   --color-signal-sell:              #FF5252;
-  --color-signal-sell-container:    rgba(255, 82, 82, 0.10);
-  --color-signal-sell-border:       rgba(255, 82, 82, 0.20);
+  --color-signal-sell-dim:          #D32F2F;
+  --color-signal-sell-container:    #3D0000;
+  --color-signal-sell-border:       rgba(255, 82, 82, 0.25);
   --color-signal-hold:              #FFB300;
-  --color-signal-hold-container:    rgba(255, 179, 0, 0.10);
-  --color-signal-hold-border:       rgba(255, 179, 0, 0.20);
+  --color-signal-hold-dim:          #F57F17;
+  --color-signal-hold-container:    #3D2800;
+  --color-signal-hold-border:       rgba(255, 179, 0, 0.25);
 
   /* Action color */
   --color-action:           #2979FF;
-  --color-action-hover:     #448AFF;
+  --color-action-hover:     #1976D2;
   --color-action-container: #00214D;
 
-  /* Semantic colors — decoupled from signals (different hue angles) */
-  --color-success:  #2DD4BF;   /* teal 170° — vs signal-green 145° */
-  --color-error:    #F472B6;   /* pink 330° — vs signal-red 0°     */
-  --color-warning:  #FB923C;   /* orange 25° — vs signal-amber 45° */
-  --color-info:     #38BDF8;   /* sky 199°  — vs action-blue 220°  */
+  /* Semantic UI colors — decoupled from signals */
+  --color-success:  #2DD4BF;
+  --color-error:    #F472B6;
+  --color-warning:  #FB923C;
+  --color-info:     #38BDF8;
 
   /* Glass surface */
   --color-glass-bg:     rgba(31, 41, 55, 0.72);
   --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-ghost:        rgba(148, 163, 184, 0.12);
+  --color-ghost-strong: rgba(148, 163, 184, 0.20);
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
 
-  /* Spacing — 8pt grid (4px base) */
-  --spacing-px: 1px;
-  --spacing-0:  0px;
-  --spacing-1:  4px;
-  --spacing-2:  8px;
-  --spacing-3:  12px;
-  --spacing-4:  16px;
-  --spacing-5:  20px;
-  --spacing-6:  24px;
-  --spacing-8:  32px;
-  --spacing-10: 40px;
-  --spacing-12: 48px;
-  --spacing-16: 64px;
-  --spacing-20: 80px;
-  --spacing-24: 96px;
-
-  /* Border radius */
+  /* Border radius — from spec */
   --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
+
+  /* Shadows — tinted ambient only, never harsh grey */
+  --shadow-ambient: 0 8px 32px rgba(218, 226, 253, 0.06);
+  --shadow-float:   0 24px 64px rgba(0, 0, 0, 0.48), 0 4px 16px rgba(0, 230, 118, 0.03);
 
   /* Sidebar widths */
   --sidebar-compact: 160px;
   --sidebar-full:    220px;
   --sidebar-icon:    52px;
 
-  /* Shadows — tonal, no harsh drop shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  /* ─── shadcn/ui CSS variable bridge ──────────────────────── */
+  --background:           221 39% 11%;
+  --foreground:           210 40% 93%;
+  --card:                 215 28% 17%;
+  --card-foreground:      210 40% 93%;
+  --popover:              215 28% 17%;
+  --popover-foreground:   210 40% 93%;
+  --primary:              220 100% 56%;
+  --primary-foreground:   0 0% 100%;
+  --secondary:            215 28% 17%;
+  --secondary-foreground: 215 16% 77%;
+  --muted:                215 25% 27%;
+  --muted-foreground:     215 16% 63%;
+  --accent:               215 25% 27%;
+  --accent-foreground:    210 40% 93%;
+  --destructive:          0 72% 65%;
+  --destructive-foreground: 0 0% 100%;
+  --border:               215 28% 20%;
+  --input:                215 28% 20%;
+  --ring:                 220 100% 56%;
+  --radius:               0.5rem;
 }
 
 /* ─── Base styles ───────────────────────────────────────────── */
@@ -92,14 +123,15 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-surface);
+  background-color: var(--color-void);
   color: var(--color-primary-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-size: 14px;
 }
 
-/* Mono for all numerical/price data */
+/* ─── Tabular mono data ─────────────────────────────────────── */
 .font-data {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -118,9 +150,13 @@ body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-ambient);
 }
 
-/* ─── Signal badge utilities ────────────────────────────────── */
+/* ─── Signal badge utilities ────────────────────────────────── 
+   These are the OPAQUE container style from obsidian-lens-final.
+   Signal semantics are EXCLUSIVE to financial data.
+   ────────────────────────────────────────────────────────────── */
 .signal-buy {
   color: var(--color-signal-buy);
   background: var(--color-signal-buy-container);
@@ -148,28 +184,4 @@ body {
   border-radius: 50%;
   background: var(--color-signal-buy);
   animation: live-pulse 1.6s ease-in-out infinite;
-}
-
-/* ─── shadcn/ui CSS variable bridge ────────────────────────── */
-:root {
-  --background:   221 39% 11%;   /* #0F172A */
-  --foreground:   210 40% 93%;   /* #E2E8F0 */
-  --card:         222 47% 14%;   /* #1F2937 */
-  --card-foreground: 210 40% 93%;
-  --popover:      215 28% 17%;   /* #1F2937 */
-  --popover-foreground: 210 40% 93%;
-  --primary:      220 100% 56%;  /* #2979FF */
-  --primary-foreground: 0 0% 100%;
-  --secondary:    215 28% 17%;   /* surface-low */
-  --secondary-foreground: 215 16% 77%;
-  --muted:        215 25% 27%;   /* container */
-  --muted-foreground: 215 16% 63%;
-  --accent:       215 25% 27%;
-  --accent-foreground: 210 40% 93%;
-  --destructive:  0 72% 65%;     /* #FF5252 */
-  --destructive-foreground: 0 0% 100%;
-  --border:       215 28% 20%;
-  --input:        215 28% 20%;
-  --ring:         220 100% 56%;
-  --radius: 0.5rem;
 }
