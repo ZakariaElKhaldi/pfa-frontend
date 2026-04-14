@@ -20,7 +20,7 @@
    -------------------------------------------------------------------------- */
 :root {
   /* ── COLOR: PRIMARY ACCENT ─────────────────────────────────────────────── */
-  --primary:          oklch(0.205 0 0);        /* Luminous indigo */
+  --primary:                hsl(243, 72%, 60%);        /* Luminous indigo */
   --primary-hover:          hsl(243, 72%, 55%);
   --primary-container:      hsl(243, 60%, 75%);        /* Gradient endpoint */
   --on-primary:             hsl(0, 0%, 100%);
@@ -47,7 +47,7 @@
   --outline-variant:        hsla(220, 15%, 45%, 0.22); /* Ghost border */
 
   /* ── COLOR: SEMANTIC — SECONDARY (Bullish / Success) ─────────────────── */
-  --secondary:          oklch(0.97 0 0);
+  --secondary:              hsl(158, 60%, 35%); /* Bullish green */
   --secondary-container:    hsl(158, 50%, 88%);
   --on-secondary:           hsl(0, 0%, 100%);
   --on-secondary-container: hsl(158, 60%, 12%);
