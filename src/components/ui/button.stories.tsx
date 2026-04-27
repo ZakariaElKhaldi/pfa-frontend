@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Mail, ChevronRight } from 'lucide-react'
+import { Mail, ChevronRight, Settings } from 'lucide-react'
 
 import { Button } from './button'
 
@@ -88,5 +88,44 @@ export const Loading: Story = {
     <Button disabled>
       Please wait
     </Button>
+  ),
+}
+
+export const Disabled: Story = {
+  args: {
+    children: 'Disabled',
+    disabled: true,
+  },
+}
+
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <Button size="xs">Extra Small</Button>
+      <Button size="sm">Small</Button>
+      <Button size="default">Default</Button>
+      <Button size="lg">Large</Button>
+    </div>
+  ),
+}
+
+export const IconOnly: Story = {
+  render: () => (
+    <Button size="icon" aria-label="Settings">
+      <Settings />
+    </Button>
+  ),
+}
+
+export const AllVariants: Story = {
+  render: () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <Button variant="default">Default</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="destructive">Destructive</Button>
+      <Button variant="outline">Outline</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Button variant="link">Link</Button>
+    </div>
   ),
 }

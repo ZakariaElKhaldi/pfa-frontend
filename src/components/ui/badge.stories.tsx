@@ -51,3 +51,23 @@ export const Ghost: Story = {
     variant: 'ghost',
   },
 }
+
+export const Link: Story = {
+  args: {
+    children: 'Link',
+    variant: 'link',
+  },
+}
+
+export const AllVariants: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+      <Badge variant="default">Default</Badge>
+      <Badge variant="secondary">Secondary</Badge>
+      <Badge variant="destructive">Destructive</Badge>
+      <Badge variant="outline">Outline</Badge>
+      <Badge variant="ghost">Ghost</Badge>
+      <Badge variant="link">Link</Badge>
+    </div>
+  ),
+}
