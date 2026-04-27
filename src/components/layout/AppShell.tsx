@@ -13,7 +13,7 @@ interface AppShellProps {
 
 export function AppShell({ children, activeId, onSelect, username, role, defaultOpen }: AppShellProps) {
   return (
-    <SidebarProvider defaultOpen={defaultOpen}
+    <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar activeId={activeId} onSelect={onSelect} username={username} role={role} />
       <div className="flex flex-col flex-1 min-w-0">
         <div style={{ position: 'sticky', top: 0, zIndex: 'var(--z-raised)', display: 'flex', alignItems: 'center', height: 'var(--topbar-height)', padding: '0 var(--space-4)', borderBottom: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)' }}>
