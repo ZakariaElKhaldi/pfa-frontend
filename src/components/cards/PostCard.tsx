@@ -11,13 +11,16 @@ export interface PostCardProps {
 }
 
 export function PostCard({ source, sourceName, time, content, label, score }: PostCardProps) {
+  const initial = source.charAt(0).toUpperCase()
   return (
-    <div className="post-card">
-      <div className="post-card-source">{source}</div>
+    <article className="post-card" aria-label={`Post from ${sourceName} on ${source}`}>
+      <div className="post-card-source" data-source={source} title={source} aria-hidden="true">
+        {initial}
+      </div>
       <div className="post-card-body">
         <div className="post-card-header">
           <span className="post-card-source-name">{sourceName}</span>
-          <span className="post-card-time">{time}</span>
+          <time className="post-card-time">{time}</time>
         </div>
         <p className="post-card-content">{content}</p>
         <div className="post-card-footer">
@@ -27,6 +30,6 @@ export function PostCard({ source, sourceName, time, content, label, score }: Po
           </span>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

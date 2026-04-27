@@ -1,9 +1,10 @@
-export type OAuthProvider = 'google'
+export type OAuthProvider = 'google' | 'github'
 
 interface OAuthButtonProps {
   provider: OAuthProvider
   onClick?: () => void
   loading?: boolean
+  disabled?: boolean
 }
 
 const GOOGLE_LOGO = (
@@ -15,16 +16,26 @@ const GOOGLE_LOGO = (
   </svg>
 )
 
+const GITHUB_LOGO = (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.1-.4-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"
+    />
+  </svg>
+)
+
 const PROVIDER_CONFIG: Record<OAuthProvider, { logo: React.ReactNode; label: string }> = {
   google: { logo: GOOGLE_LOGO, label: 'Continue with Google' },
+  github: { logo: GITHUB_LOGO, label: 'Continue with GitHub' },
 }
 
-export function OAuthButton({ provider, onClick, loading }: OAuthButtonProps) {
+export function OAuthButton({ provider, onClick, loading, disabled }: OAuthButtonProps) {
   const { logo, label } = PROVIDER_CONFIG[provider]
   return (
     <button
       onClick={onClick}
-      disabled={loading}
+      disabled={loading || disabled}
       aria-label={label}
       className="oauth-button"
     >

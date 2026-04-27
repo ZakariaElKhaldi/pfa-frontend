@@ -1639,8 +1639,10 @@ ul, ol {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: var(--text-label-md);
+  overflow: hidden;
+  font-size: 13px;
   font-weight: 700;
+  line-height: 1;
   color: var(--on-surface-variant);
 }
 

@@ -21,6 +21,11 @@ import {
   Flame,
   Activity,
   Check,
+  Mail,
+  Link,
+  FileText,
+  Bot,
+  Minus,
 } from 'lucide-react'
 
 export const Icons = {
@@ -41,6 +46,11 @@ export const Icons = {
   Flame:         Flame,
   Logo:          Activity,
   Check:         Check,
+  Mail:          Mail,
+  Link:          Link,
+  FileText:      FileText,
+  Bot:           Bot,
+  Minus:         Minus,
 } as const
 
 export type IconName = keyof typeof Icons
