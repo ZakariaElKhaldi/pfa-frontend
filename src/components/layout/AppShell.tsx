@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 
 interface AppShellProps {
@@ -15,12 +15,17 @@ export function AppShell({ children, activeId, onSelect, username, role, default
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar activeId={activeId} onSelect={onSelect} username={username} role={role} />
-      <div className="flex flex-col flex-1 min-w-0">
-        <div style={{ position: 'sticky', top: 0, zIndex: 'var(--z-raised)', display: 'flex', alignItems: 'center', height: 'var(--topbar-height)', padding: '0 var(--space-4)', borderBottom: '1px solid var(--outline-variant)', background: 'var(--surface-container-lowest)' }}>
+      <SidebarInset>
+        <header
+          className="sticky top-0 z-10 flex h-[var(--topbar-height)] items-center gap-3 px-4 border-b bg-[var(--surface-container-lowest)]"
+          style={{ borderBottomColor: 'var(--outline-variant)' }}
+        >
           <SidebarTrigger />
+        </header>
+        <div className="flex-1 overflow-auto">
+          {children}
         </div>
-        {children}
-      </div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }
