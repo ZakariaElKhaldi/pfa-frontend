@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { SignalToast } from './SignalToast'
 import type { Signal } from '@/design-system/tokens'
 

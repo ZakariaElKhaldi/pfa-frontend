@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { FeatureImportanceChart } from './FeatureImportanceChart'
 import type { FeatureImportance } from './FeatureImportanceChart'
 

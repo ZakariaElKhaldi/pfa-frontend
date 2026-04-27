@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { SentimentBadge } from './SentimentBadge'
 
 const meta: Meta<typeof SentimentBadge> = {

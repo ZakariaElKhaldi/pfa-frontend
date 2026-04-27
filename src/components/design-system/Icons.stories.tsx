@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { Icons, type IconName } from './icons'
 
 const NAMES = Object.keys(Icons) as IconName[]

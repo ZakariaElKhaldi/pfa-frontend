@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { EmptyState } from './EmptyState'
 import { Icons } from '@/components/design-system'
 

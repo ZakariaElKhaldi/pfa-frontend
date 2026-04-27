@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { SentimentTrendChart } from './SentimentTrendChart'
 import type { SentimentPoint } from './SentimentTrendChart'
 

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import '../../index.css'
 import { StrategyCard } from './StrategyCard'
 
 const meta: Meta<typeof StrategyCard> = {

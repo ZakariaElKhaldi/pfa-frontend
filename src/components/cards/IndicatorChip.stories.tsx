@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { IndicatorChip } from './IndicatorChip'
 
 const meta: Meta<typeof IndicatorChip> = {

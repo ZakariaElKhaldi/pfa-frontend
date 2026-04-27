@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { DataTable } from './DataTable'
 import type { Column } from './DataTable'
 import { SignalBadge } from '@/components/design-system'

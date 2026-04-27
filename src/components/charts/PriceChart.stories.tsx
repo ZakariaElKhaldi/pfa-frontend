@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { PriceChart } from './PriceChart'
 import type { OHLCBar } from './PriceChart'
 

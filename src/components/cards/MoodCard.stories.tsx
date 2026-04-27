@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { MoodCard } from './MoodCard'
 import type { Mood } from '@/components/design-system/MoodBadge'
 

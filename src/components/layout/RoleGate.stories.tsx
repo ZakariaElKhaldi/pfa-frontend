@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { RoleGate } from './RoleGate'
 
 const meta: Meta<typeof RoleGate> = {

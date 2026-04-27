@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { PostCard } from './PostCard'
 
 const meta: Meta<typeof PostCard> = {

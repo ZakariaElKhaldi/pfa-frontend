@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { ManipulationFlagCard } from './ManipulationFlagCard'
 import type { PatternType } from './ManipulationFlagCard'
 

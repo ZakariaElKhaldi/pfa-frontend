@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { PredictionMethodBadge } from './PredictionMethodBadge'
 import type { PredictionMethod } from './PredictionMethodBadge'
 

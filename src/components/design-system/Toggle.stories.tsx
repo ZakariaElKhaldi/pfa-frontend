@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { Toggle } from './Toggle'
 
 const meta: Meta<typeof Toggle> = {

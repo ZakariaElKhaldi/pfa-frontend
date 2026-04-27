@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { AlertTypeBadge } from './AlertTypeBadge'
 import type { AlertType } from './AlertTypeBadge'
 

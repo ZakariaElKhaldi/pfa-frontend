@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import '../../index.css'
 import { AccuracyRing } from './AccuracyRing'
 
 const meta: Meta<typeof AccuracyRing> = {
