@@ -28,6 +28,49 @@ export const Default: Story = {
   },
 }
 
+export const AdminRole: Story = {
+  args: {
+    activeId: 'dashboard',
+    username: 'Admin User',
+    role: 'admin',
+    onSelect: (id) => console.log('Selected:', id),
+  },
+}
+
+export const AnalystRole: Story = {
+  args: {
+    activeId: 'signals',
+    username: 'Jane Analyst',
+    role: 'analyst',
+    onSelect: (id) => console.log('Selected:', id),
+  },
+}
+
+export const UserRole: Story = {
+  args: {
+    activeId: 'portfolio',
+    username: 'John Trader',
+    role: 'user',
+    onSelect: (id) => console.log('Selected:', id),
+  },
+}
+
+export const CollapsedIconMode: Story = {
+  decorators: [
+    (Story) => (
+      <SidebarProvider defaultOpen={false}>
+        <Story />
+      </SidebarProvider>
+    ),
+  ],
+  args: {
+    activeId: 'dashboard',
+    username: 'Zakaria',
+    role: 'super_user',
+    onSelect: (id) => console.log('Selected:', id),
+  },
+}
+
 export const Interactive: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
