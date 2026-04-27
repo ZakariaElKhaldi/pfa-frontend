@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-
+import { useState } from 'react'
 import { TickerCard } from './TickerCard'
 
 const meta: Meta<typeof TickerCard> = {
@@ -44,6 +44,21 @@ export const Hold: Story = {
     change: '+0.12',
     pct:    '0.03%',
     signal: 'HOLD',
+  },
+}
+
+export const Clickable: Story = {
+  render: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [selected, setSelected] = useState<string | null>(null)
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <TickerCard symbol="AAPL" name="Apple Inc."      price="189.42" change="+2.31" pct="1.23%" signal="BUY"  onClick={() => setSelected('AAPL')} />
+        <TickerCard symbol="META" name="Meta Platforms"  price="482.10" change="-8.90" pct="1.81%" signal="SELL" onClick={() => setSelected('META')} />
+        <TickerCard symbol="MSFT" name="Microsoft Corp." price="424.55" change="+0.12" pct="0.03%" signal="HOLD" onClick={() => setSelected('MSFT')} />
+        {selected && <p style={{ gridColumn: '1/-1', textAlign: 'center', marginTop: 8 }}>Selected: <strong>{selected}</strong></p>}
+      </div>
+    )
   },
 }
 
