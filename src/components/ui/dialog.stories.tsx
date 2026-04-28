@@ -23,7 +23,7 @@ type Story = StoryObj<typeof Dialog>
 export const Default: Story = {
   render: () => (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="outline">Open Dialog</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

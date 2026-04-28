@@ -49,11 +49,6 @@ export type { SignalHistoryTableProps, SignalHistoryRow } from './SignalHistoryT
 export { SignalExplainPanel } from './SignalExplainPanel'
 export type { SignalExplainPanelProps, ScoringEntry } from './SignalExplainPanel'
 
-export { RuleConditionRow } from './RuleConditionRow'
-export type { RuleConditionRowProps, ConditionField, ConditionOperator } from './RuleConditionRow'
-
-export { RuleActionRow } from './RuleActionRow'
-export type { RuleActionRowProps, ActionType } from './RuleActionRow'
 
 export { StrategyExecutionLog } from './StrategyExecutionLog'
 export type { StrategyExecutionLogProps, StrategyExecution } from './StrategyExecutionLog'
@@ -66,3 +61,6 @@ export type { AdminStatsCardsProps } from './AdminStatsCards'
 
 export { RetrainLogRow } from './RetrainLogRow'
 export type { RetrainLogRowProps, RetrainLogEntry, RetrainStatus } from './RetrainLogRow'
+
+export { TickerAccuracyTable } from './TickerAccuracyTable'
+export type { TickerAccuracyTableProps, TickerAccuracyRow } from './TickerAccuracyTable'

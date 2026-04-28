@@ -4,11 +4,11 @@ import {
 import { RoleBadge } from '@/components/design-system'
 
 export interface AdminUser {
-  id:        string | number
-  username:  string
-  email:     string
-  role:      'user' | 'admin'
-  isActive:  boolean
+  id:         string | number
+  username:   string
+  email:      string
+  role:       'user' | 'analyst' | 'admin'
+  isActive:   boolean
   dateJoined: string
 }
 

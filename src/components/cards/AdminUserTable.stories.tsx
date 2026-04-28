@@ -4,9 +4,9 @@ import type { AdminUser } from './AdminUserTable'
 import { fn } from 'storybook/test'
 
 const users: AdminUser[] = [
-  { id: 1, username: 'zakaria',   email: 'zakaria@crowdsignal.dev',  role: 'admin', isActive: true,  dateJoined: '2 weeks ago' },
-  { id: 2, username: 'alice',     email: 'alice@crowdsignal.dev',    role: 'user',  isActive: true,  dateJoined: '5 days ago'  },
-  { id: 3, username: 'bob_trade', email: 'bob@crowdsignal.dev',      role: 'user',  isActive: false, dateJoined: '1 month ago' },
+  { id: 1, username: 'zakaria',   email: 'zakaria@crowdsignal.dev',  role: 'admin',   isActive: true,  dateJoined: '2 weeks ago' },
+  { id: 2, username: 'alice',     email: 'alice@crowdsignal.dev',    role: 'analyst', isActive: true,  dateJoined: '5 days ago'  },
+  { id: 3, username: 'bob_trade', email: 'bob@crowdsignal.dev',      role: 'user',    isActive: false, dateJoined: '1 month ago' },
 ]
 
 const meta: Meta<typeof AdminUserTable> = {

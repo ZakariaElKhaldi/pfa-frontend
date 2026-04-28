@@ -8,7 +8,7 @@ const meta: Meta<typeof PredictionMethodBadge> = {
   component: PredictionMethodBadge,
   tags: ['autodocs'],
   argTypes: {
-    method: { control: 'radio', options: ['ml', 'rule'] satisfies PredictionMethod[] },
+    method: { control: 'radio', options: ['ml', 'rule_based'] satisfies PredictionMethod[] },
   },
 }
 export default meta
@@ -16,13 +16,13 @@ export default meta
 type Story = StoryObj<typeof PredictionMethodBadge>
 
 export const ML:        Story = { args: { method: 'ml'   } }
-export const RuleBased: Story = { args: { method: 'rule' } }
+export const RuleBased: Story = { args: { method: 'rule_based' } }
 
 export const Both: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8 }}>
       <PredictionMethodBadge method="ml" />
-      <PredictionMethodBadge method="rule" />
+      <PredictionMethodBadge method="rule_based" />
     </div>
   ),
 }

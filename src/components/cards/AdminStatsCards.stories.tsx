@@ -9,15 +9,15 @@ const meta: Meta<typeof AdminStatsCards> = {
     docs: {
       description: {
         component:
-          'KPI grid for the admin dashboard. Maps `GET /api/auth/admin/stats/`. Each card has an accent top-border matching its semantic colour.',
+          'KPI grid for the admin dashboard. Maps `GET /api/auth/admin/stats/` — fields are `total_users`, `total_tickers`, `signals_today`, `total_posts`.',
       },
     },
   },
   argTypes: {
-    totalUsers:  { control: { type: 'number' } },
-    activeUsers: { control: { type: 'number' } },
-    adminUsers:  { control: { type: 'number' } },
-    newThisWeek: { control: { type: 'number' } },
+    totalUsers:   { control: { type: 'number' } },
+    totalTickers: { control: { type: 'number' } },
+    signalsToday: { control: { type: 'number' } },
+    totalPosts:   { control: { type: 'number' } },
   },
 }
 export default meta
@@ -25,5 +25,10 @@ export default meta
 type Story = StoryObj<typeof AdminStatsCards>
 
 export const Default: Story = {
-  args: { totalUsers: 248, activeUsers: 215, adminUsers: 3, newThisWeek: 12 },
+  args: { totalUsers: 248, totalTickers: 31, signalsToday: 124, totalPosts: 18450 },
+}
+
+export const EarlyStage: Story = {
+  args: { totalUsers: 12, totalTickers: 5, signalsToday: 10, totalPosts: 280 },
+  parameters: { docs: { description: { story: 'Low-traffic early deployment.' } } },
 }

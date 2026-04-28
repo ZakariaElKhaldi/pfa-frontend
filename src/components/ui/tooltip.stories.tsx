@@ -30,7 +30,7 @@ type Story = StoryObj<typeof Tooltip>
 export const Default: Story = {
   render: () => (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger >
         <Button variant="outline" className="w-10 rounded-full p-0">
           <Plus className="h-4 w-4" />
           <span className="sr-only">Add</span>
@@ -48,7 +48,7 @@ export const Positions: Story = {
     <div className="flex gap-4">
       {["top", "right", "bottom", "left"].map((side) => (
         <Tooltip key={side}>
-          <TooltipTrigger asChild>
+          <TooltipTrigger >
             <Button variant="outline" className="capitalize">{side}</Button>
           </TooltipTrigger>
           <TooltipContent side={side as "top" | "right" | "bottom" | "left"}>

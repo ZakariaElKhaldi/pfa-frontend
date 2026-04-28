@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-
+@import "@xyflow/react/dist/style.css";
 @custom-variant dark (&:is(.dark *));
 
 /* Fonts loaded via <link> in index.html (Inter + JetBrains Mono) */

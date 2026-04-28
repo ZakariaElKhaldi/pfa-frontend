@@ -1,8 +1,8 @@
-export type PredictionMethod = 'ml' | 'rule'
+export type PredictionMethod = 'ml' | 'rule_based'
 
 const CONFIG: Record<PredictionMethod, { cls: string; label: string }> = {
-  ml:   { cls: 'badge-buy',     label: 'ML Model'   },
-  rule: { cls: 'badge-neutral', label: 'Rule-Based' },
+  ml:         { cls: 'badge-buy',     label: 'ML Model'   },
+  rule_based: { cls: 'badge-neutral', label: 'Rule-Based' },
 }
 
 export function PredictionMethodBadge({ method }: { method: PredictionMethod }) {

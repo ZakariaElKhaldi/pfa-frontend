@@ -25,7 +25,7 @@ type Story = StoryObj<typeof Sheet>
 export const Default: Story = {
   render: () => (
     <Sheet>
-      <SheetTrigger asChild>
+      <SheetTrigger >
         <Button variant="outline">Open Sheet</Button>
       </SheetTrigger>
       <SheetContent>
@@ -50,7 +50,7 @@ export const Default: Story = {
           </div>
         </div>
         <SheetFooter>
-          <SheetClose asChild>
+          <SheetClose >
             <Button type="submit">Save changes</Button>
           </SheetClose>
         </SheetFooter>
@@ -64,7 +64,7 @@ export const SideOptions: Story = {
     <div className="flex gap-2">
       {["top", "right", "bottom", "left"].map((side) => (
         <Sheet key={side}>
-          <SheetTrigger asChild>
+          <SheetTrigger >
             <Button variant="outline" className="capitalize">{side}</Button>
           </SheetTrigger>
           <SheetContent side={side as "top" | "right" | "bottom" | "left"}>

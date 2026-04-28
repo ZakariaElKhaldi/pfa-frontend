@@ -26,6 +26,8 @@ import {
   FileText,
   Bot,
   Minus,
+  ChevronDown,
+  Plus,
 } from 'lucide-react'
 
 export const Icons = {
@@ -51,6 +53,8 @@ export const Icons = {
   FileText:      FileText,
   Bot:           Bot,
   Minus:         Minus,
+  ChevronDown:   ChevronDown,
+  Plus:          Plus,
 } as const
 
 export type IconName = keyof typeof Icons

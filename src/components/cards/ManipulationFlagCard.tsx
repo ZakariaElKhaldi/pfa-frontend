@@ -3,11 +3,13 @@ import { Icons } from '@/components/design-system'
 export type PatternType = 'pump_dump' | 'bot_swarm' | 'coordinated_spam'
 
 export interface ManipulationFlagCardProps {
-  symbol: string
-  patternType: PatternType
-  confidence: number
-  detectedAt: string
-  reviewed?: boolean
+  symbol:          string
+  patternType:     PatternType
+  confidence:      number
+  detectedAt:      string
+  reviewed?:       boolean
+  /** Wires to PATCH /api/intelligence/flags/<pk>/review/ — omit to hide button */
+  onMarkReviewed?: () => void
 }
 
 const LABEL: Record<PatternType, string> = {
@@ -22,6 +24,7 @@ export function ManipulationFlagCard({
   confidence,
   detectedAt,
   reviewed,
+  onMarkReviewed,
 }: ManipulationFlagCardProps) {
   const severity = reviewed ? 'resolved' : 'danger'
   return (
@@ -41,6 +44,17 @@ export function ManipulationFlagCard({
           <span className="alert-card-stat">Detected: {detectedAt}</span>
         </div>
       </div>
+
+      {!reviewed && onMarkReviewed && (
+        <button
+          className="btn btn-sm btn-outline-alert alert-card-action"
+          onClick={onMarkReviewed}
+          aria-label="Mark as reviewed"
+        >
+          <Icons.Check size={14} aria-hidden />
+          Review
+        </button>
+      )}
     </div>
   )
 }
