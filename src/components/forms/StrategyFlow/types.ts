@@ -46,6 +46,17 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   notify: 'Notify', email: 'Email', webhook: 'Webhook', log: 'Log', auto_trade: 'Auto-Trade (post-MVP)',
 }
 
+export interface StrategyCondition {
+  field: ConditionField
+  operator: ConditionOperator
+  value: string | number
+}
+
+export interface StrategyAction {
+  actionType: ActionType
+  target?: string
+}
+
 // ── Node Data Types ─────────────────────────────────────────────────────────
 
 export interface TriggerNodeData extends Record<string, unknown> {

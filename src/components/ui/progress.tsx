@@ -1,13 +1,37 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+
+const progressIndicatorVariants = cva(
+  "h-full transition-all duration-500 ease-[var(--ease-out)]",
+  {
+    variants: {
+      color: {
+        default: "bg-primary",
+        buy:     "bg-[var(--secondary)]",
+        sell:    "bg-[var(--tertiary)]",
+        hold:    "bg-[var(--warning)]",
+        success: "bg-teal-500",
+        info:    "bg-sky-500",
+        muted:   "bg-muted-foreground",
+      },
+    },
+    defaultVariants: { color: "default" },
+  }
+)
+
+interface ProgressProps extends ProgressPrimitive.Root.Props {
+  color?: VariantProps<typeof progressIndicatorVariants>["color"]
+}
 
 function Progress({
   className,
   children,
   value,
+  color = "default",
   ...props
-}: ProgressPrimitive.Root.Props) {
+}: ProgressProps) {
   return (
     <ProgressPrimitive.Root
       value={value}
@@ -17,7 +41,7 @@ function Progress({
     >
       {children}
       <ProgressTrack>
-        <ProgressIndicator />
+        <ProgressIndicator color={color} />
       </ProgressTrack>
     </ProgressPrimitive.Root>
   )
@@ -27,7 +51,7 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
   return (
     <ProgressPrimitive.Track
       className={cn(
-        "relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted",
+        "relative flex h-1.5 w-full items-center overflow-hidden rounded-full bg-muted",
         className
       )}
       data-slot="progress-track"
@@ -38,12 +62,13 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
 
 function ProgressIndicator({
   className,
+  color = "default",
   ...props
-}: ProgressPrimitive.Indicator.Props) {
+}: ProgressPrimitive.Indicator.Props & VariantProps<typeof progressIndicatorVariants>) {
   return (
     <ProgressPrimitive.Indicator
       data-slot="progress-indicator"
-      className={cn("h-full bg-primary transition-all", className)}
+      className={cn(progressIndicatorVariants({ color }), className)}
       {...props}
     />
   )
@@ -63,7 +88,7 @@ function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
   return (
     <ProgressPrimitive.Value
       className={cn(
-        "ml-auto text-sm text-muted-foreground tabular-nums",
+        "ml-auto font-mono text-sm text-muted-foreground tabular-nums",
         className
       )}
       data-slot="progress-value"

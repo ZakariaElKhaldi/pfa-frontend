@@ -171,22 +171,23 @@
   --z-modal:    300;
   --z-toast:    400;
   --z-tooltip:  500;
-  --background:          oklch(1 0 0);
-  --foreground:          oklch(0.145 0 0);
-  --card:          oklch(1 0 0);
-  --card-foreground:          oklch(0.145 0 0);
-  --popover:          oklch(1 0 0);
-  --popover-foreground:          oklch(0.145 0 0);
-  --primary-foreground:          oklch(0.985 0 0);
-  --secondary-foreground:          oklch(0.205 0 0);
-  --muted:          oklch(0.97 0 0);
-  --muted-foreground:          oklch(0.556 0 0);
-  --accent:          oklch(0.97 0 0);
-  --accent-foreground:          oklch(0.205 0 0);
-  --destructive:          oklch(0.577 0.245 27.325);
-  --border:          oklch(0.922 0 0);
-  --input:          oklch(0.922 0 0);
-  --ring:          oklch(0.708 0 0);
+  /* shadcn tokens — all reference design system vars so they theme automatically */
+  --background:          var(--surface-container-lowest);
+  --foreground:          var(--on-surface);
+  --card:                var(--surface-container);
+  --card-foreground:     var(--on-surface);
+  --popover:             var(--surface-container-highest);
+  --popover-foreground:  var(--on-surface);
+  --primary-foreground:  var(--on-primary);
+  --secondary-foreground: var(--on-secondary);
+  --muted:               var(--surface-container-low);
+  --muted-foreground:    var(--on-surface-variant);
+  --accent:              var(--surface-container-high);
+  --accent-foreground:   var(--on-surface);
+  --destructive:         var(--tertiary);
+  --border:              var(--outline-variant);
+  --input:               var(--outline);
+  --ring:                var(--primary);
   --chart-1:          oklch(0.87 0 0);
   --chart-2:          oklch(0.556 0 0);
   --chart-3:          oklch(0.439 0 0);
@@ -205,60 +206,65 @@
 
 /* --------------------------------------------------------------------------
    3. RESET & BASE
+   Wrapped in @layer base so Tailwind utilities (which sit in higher cascade
+   layers) win over the universal `padding: 0` reset. Without this, every
+   `.px-*` class on form controls is silently overridden.
    -------------------------------------------------------------------------- */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-html {
-  height: 100%;
-  font-size: 16px;
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
+  html {
+    height: 100%;
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  height: 100%;
-  font-family: var(--font-body);
-  font-size: var(--text-body-md);
-  line-height: var(--leading-normal);
-  color: var(--on-surface);
-  background-color: var(--surface-container-lowest);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    height: 100%;
+    font-family: var(--font-body);
+    font-size: var(--text-body-md);
+    line-height: var(--leading-normal);
+    color: var(--on-surface);
+    background-color: var(--surface-container-lowest);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-#root {
-  height: 100%;
-}
+  #root {
+    height: 100%;
+  }
 
-img, svg, video {
-  display: block;
-  max-width: 100%;
-}
+  img, svg, video {
+    display: block;
+    max-width: 100%;
+  }
 
-input, button, textarea, select {
-  font: inherit;
-  color: inherit;
-}
+  input, button, textarea, select {
+    font: inherit;
+    color: inherit;
+  }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-}
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-ul, ol {
-  list-style: none;
+  ul, ol {
+    list-style: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -2179,6 +2185,11 @@ ul, ol {
   50%       { box-shadow: 0 0 0 6px hsla(243, 72%, 60%, 0.15); }
 }
 
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
 @keyframes ws-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.3; }
@@ -2264,37 +2275,63 @@ ul, ol {
 }
 
 .dark {
-  --background:          oklch(0.145 0 0);
-  --foreground:          oklch(0.985 0 0);
-  --card:          oklch(0.205 0 0);
-  --card-foreground:          oklch(0.985 0 0);
-  --popover:          oklch(0.205 0 0);
-  --popover-foreground:          oklch(0.985 0 0);
-  --primary:          oklch(0.922 0 0);
-  --primary-foreground:          oklch(0.205 0 0);
-  --secondary:          oklch(0.269 0 0);
-  --secondary-foreground:          oklch(0.985 0 0);
-  --muted:          oklch(0.269 0 0);
-  --muted-foreground:          oklch(0.708 0 0);
-  --accent:          oklch(0.269 0 0);
-  --accent-foreground:          oklch(0.985 0 0);
-  --destructive:          oklch(0.704 0.191 22.216);
-  --border:          oklch(1 0 0 / 10%);
-  --input:          oklch(1 0 0 / 15%);
-  --ring:          oklch(0.556 0 0);
-  --chart-1:          oklch(0.87 0 0);
-  --chart-2:          oklch(0.556 0 0);
-  --chart-3:          oklch(0.439 0 0);
-  --chart-4:          oklch(0.371 0 0);
-  --chart-5:          oklch(0.269 0 0);
-  --sidebar:          oklch(0.205 0 0);
-  --sidebar-foreground:          oklch(0.985 0 0);
-  --sidebar-primary:          oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground:          oklch(0.985 0 0);
-  --sidebar-accent:          oklch(0.269 0 0);
-  --sidebar-accent-foreground:          oklch(0.985 0 0);
-  --sidebar-border:          oklch(1 0 0 / 10%);
-  --sidebar-ring:          oklch(0.556 0 0);
+  /* Obsidian Lens — dark surface stack */
+  --surface-container-lowest:  hsl(222, 42%, 7%);
+  --surface-container-low:     hsl(222, 38%, 12%);
+  --surface-container:         hsl(215, 28%, 17%);
+  --surface-container-high:    hsl(215, 25%, 26%);
+  --surface-container-highest: hsl(215, 20%, 36%);
+  --surface:                   hsl(220, 32%, 15%);
+  --surface-variant:           hsla(215, 28%, 22%, 0.72);
+  --surface-bright:            hsl(215, 25%, 28%);
+  --surface-dim:               hsl(215, 24%, 20%);
+
+  /* Text on dark surfaces */
+  --on-surface:                hsl(210, 40%, 98%);
+  --on-surface-variant:        hsl(215, 16%, 65%);
+  --on-surface-muted:          hsl(215, 12%, 45%);
+
+  /* Outlines */
+  --outline:                   hsl(215, 18%, 42%);
+  --outline-variant:           hsla(215, 22%, 62%, 0.18);
+
+  /* Primary: indigo, slightly lighter/brighter in dark */
+  --primary:                   hsl(243, 78%, 68%);
+  --primary-hover:             hsl(243, 78%, 63%);
+  --primary-container:         hsl(243, 45%, 22%);
+  --on-primary:                hsl(0, 0%, 100%);
+  --on-primary-container:      hsl(243, 80%, 90%);
+
+  /* Secondary: bullish green, brighter in dark */
+  --secondary:                 hsl(158, 65%, 50%);
+  --secondary-container:       hsl(158, 35%, 15%);
+  --on-secondary:              hsl(158, 40%, 8%);
+  --on-secondary-container:    hsl(158, 70%, 78%);
+
+  /* Tertiary: bearish red, brighter in dark */
+  --tertiary:                  hsl(4, 72%, 60%);
+  --tertiary-container:        hsl(4, 40%, 18%);
+  --on-tertiary:               hsl(0, 0%, 100%);
+  --on-tertiary-container:     hsl(4, 70%, 87%);
+
+  /* Warning: amber, brighter in dark */
+  --warning:                   hsl(38, 92%, 58%);
+  --warning-container:         hsl(38, 45%, 18%);
+  --on-warning:                hsl(38, 40%, 8%);
+  --on-warning-container:      hsl(38, 85%, 84%);
+
+  /* shadcn vars — cascade automatically from surface/text overrides above */
+  /* (background, foreground, card, muted, accent, border, input, ring all cascade) */
+
+  /* Sidebar dark */
+  --sidebar:                   var(--surface-container-low);
+  --sidebar-foreground:        var(--on-surface);
+  --sidebar-primary:           var(--primary);
+  --sidebar-primary-foreground: var(--on-primary);
+  --sidebar-accent:            var(--surface-container);
+  --sidebar-accent-foreground: var(--on-surface);
+  --sidebar-border:            var(--outline-variant);
+  --sidebar-ring:              var(--primary);
 }
 
 @layer base {

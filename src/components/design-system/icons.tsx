@@ -28,8 +28,11 @@ import {
   Minus,
   ChevronDown,
   Plus,
+  Filter,
+  Play,
+  Save,
+  Trash2,
 } from 'lucide-react'
-
 export const Icons = {
   Grid:          LayoutGrid,
   BarChart:      BarChart3,
@@ -55,6 +58,10 @@ export const Icons = {
   Minus:         Minus,
   ChevronDown:   ChevronDown,
   Plus:          Plus,
+  Filter:        Filter,
+  Play:          Play,
+  Save:          Save,
+  Trash2:        Trash2,
 } as const
 
 export type IconName = keyof typeof Icons

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   ReactFlow,
   Background,
@@ -7,8 +7,8 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Connection,
-  Edge,
+  type Connection,
+  type Edge,
 } from '@xyflow/react'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -18,7 +18,7 @@ import { Icons } from '@/components/design-system'
 import { TriggerNode } from './nodes/TriggerNode'
 import { ConditionNode } from './nodes/ConditionNode'
 import { ActionNode } from './nodes/ActionNode'
-import type { StrategyFormProps, StrategyFormValues, StrategyCondition, StrategyAction } from '../StrategyForm' // We will keep these interfaces in StrategyFlowBuilder later, but for now we'll define them here to decouple.
+import type { StrategyCondition, StrategyAction } from '../StrategyForm'
 import type {
   ConditionField,
   ConditionOperator,
@@ -44,7 +44,6 @@ export interface StrategyFlowBuilderProps {
 }
 
 // ── Layout Constants ─────────────────────────────────────────────────────────
-const NODE_WIDTH = 320
 const X_START = 100
 const Y_START = 50
 const Y_GAP = 220
@@ -62,7 +61,14 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
 
   // Derived state to track values inside nodes without constantly re-rendering the whole graph
   // We'll update the node `data` directly when inputs change.
-  // We need to provide the updater functions.
+  const updateNodeData = useCallback((id: string, partialData: Record<string, any>) => {
+    setNodes((nds) => nds.map((n) => {
+      if (n.id === id) {
+        return { ...n, data: { ...n.data, ...partialData } } as StrategyAppNode
+      }
+      return n
+    }))
+  }, [setNodes])
 
   const initNodesAndEdges = useCallback(() => {
     let currY = Y_START
@@ -79,10 +85,10 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
         name: initial.name ?? '',
         desc: initial.desc ?? '',
         tickers: initial.tickers ?? [],
-        onNameChange: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' ? { ...n, data: { ...n.data, name: val } } : n)),
-        onDescChange: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' ? { ...n, data: { ...n.data, desc: val } } : n)),
-        onAddTicker: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' && !n.data.tickers.includes(val) ? { ...n, data: { ...n.data, tickers: [...n.data.tickers, val] } } : n)),
-        onRemoveTicker: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' ? { ...n, data: { ...n.data, tickers: n.data.tickers.filter((t: string) => t !== val) } } : n)),
+        onNameChange: (val: string) => updateNodeData('trigger-1', { name: val }),
+        onDescChange: (val: string) => updateNodeData('trigger-1', { desc: val }),
+        onAddTicker: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' && n.type === 'trigger' && !n.data.tickers.includes(val) ? { ...n, data: { ...n.data, tickers: [...n.data.tickers, val] } } : n)),
+        onRemoveTicker: (val: string) => setNodes((nds) => nds.map(n => n.id === 'trigger-1' && n.type === 'trigger' ? { ...n, data: { ...n.data, tickers: n.data.tickers.filter((t: string) => t !== val) } } : n)),
       },
     })
     currY += Y_GAP
@@ -99,9 +105,9 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
           field: cond.field,
           operator: cond.operator,
           value: cond.value,
-          onFieldChange: (val: ConditionField) => setNodes((nds) => nds.map(n => n.id === id ? { ...n, data: { ...n.data, field: val } } : n)),
-          onOperatorChange: (val: ConditionOperator) => setNodes((nds) => nds.map(n => n.id === id ? { ...n, data: { ...n.data, operator: val } } : n)),
-          onValueChange: (val: string) => setNodes((nds) => nds.map(n => n.id === id ? { ...n, data: { ...n.data, value: val } } : n)),
+          onFieldChange: (val: ConditionField) => updateNodeData(id, { field: val }),
+          onOperatorChange: (val: ConditionOperator) => updateNodeData(id, { operator: val }),
+          onValueChange: (val: string) => updateNodeData(id, { value: val }),
           onDelete: () => {
             setNodes((nds) => nds.filter((n) => n.id !== id))
             setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id))
@@ -130,8 +136,8 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
         data: {
           actionType: act.actionType,
           target: act.target,
-          onActionTypeChange: (val: ActionType) => setNodes((nds) => nds.map(n => n.id === id ? { ...n, data: { ...n.data, actionType: val } } : n)),
-          onTargetChange: (val: string) => setNodes((nds) => nds.map(n => n.id === id ? { ...n, data: { ...n.data, target: val } } : n)),
+          onActionTypeChange: (val: ActionType) => updateNodeData(id, { actionType: val }),
+          onTargetChange: (val: string) => updateNodeData(id, { target: val }),
           onDelete: () => {
             setNodes((nds) => nds.filter((n) => n.id !== id))
             setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id))
@@ -174,9 +180,9 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
           field: 'sentiment_score',
           operator: 'gt',
           value: '',
-          onFieldChange: (val: ConditionField) => setNodes((n) => n.map(x => x.id === id ? { ...x, data: { ...x.data, field: val } } : x)),
-          onOperatorChange: (val: ConditionOperator) => setNodes((n) => n.map(x => x.id === id ? { ...x, data: { ...x.data, operator: val } } : x)),
-          onValueChange: (val: string) => setNodes((n) => n.map(x => x.id === id ? { ...x, data: { ...x.data, value: val } } : x)),
+          onFieldChange: (val: ConditionField) => updateNodeData(id, { field: val }),
+          onOperatorChange: (val: ConditionOperator) => updateNodeData(id, { operator: val }),
+          onValueChange: (val: string) => updateNodeData(id, { value: val }),
           onDelete: () => {
             setNodes((n) => n.filter(x => x.id !== id))
             setEdges((eds) => eds.filter(e => e.source !== id && e.target !== id))
@@ -202,8 +208,8 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
         data: {
           actionType: 'notify',
           target: '',
-          onActionTypeChange: (val: ActionType) => setNodes((n) => n.map(x => x.id === id ? { ...x, data: { ...x.data, actionType: val } } : x)),
-          onTargetChange: (val: string) => setNodes((n) => n.map(x => x.id === id ? { ...x, data: { ...x.data, target: val } } : x)),
+          onActionTypeChange: (val: ActionType) => updateNodeData(id, { actionType: val }),
+          onTargetChange: (val: string) => updateNodeData(id, { target: val }),
           onDelete: () => {
             setNodes((n) => n.filter(x => x.id !== id))
             setEdges((eds) => eds.filter(e => e.source !== id && e.target !== id))
