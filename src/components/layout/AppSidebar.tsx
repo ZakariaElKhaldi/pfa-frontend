@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router'
 import {
   Sidebar,
   SidebarContent,
@@ -11,17 +12,62 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import { Icons } from '@/components/design-system'
-import { NAV_ITEMS } from '@/pages/design-system/fixtures'
+import { pathToNavId, visibleNav, type NavItem } from '@/router/nav'
+import type { UserRole } from '@/components/design-system/RoleBadge'
 
 interface AppSidebarProps {
-  activeId: string
-  onSelect: (id: string) => void
   username?: string
-  role?: string
+  role?: UserRole
+  /** Storybook/test override: controlled active id (skips useLocation) */
+  activeId?: string
+  /** Storybook/test override: click handler (skips Link navigation) */
+  onSelect?: (id: string) => void
 }
 
-export function AppSidebar({ activeId, onSelect, username = 'User', role = 'user' }: AppSidebarProps) {
+const GROUP_LABELS: Record<NavItem['group'], string> = {
+  main:    'Navigate',
+  analyst: 'Intelligence',
+  admin:   'Administration',
+  system:  'Account',
+}
+
+export function AppSidebar({ username = 'User', role = 'user', activeId, onSelect }: AppSidebarProps) {
+  const location = useLocation()
+  const currentId = activeId ?? pathToNavId(location.pathname)
+
   const initials = username.slice(0, 2).toUpperCase()
+  const items = visibleNav(role)
+
+  const groups = (['main', 'analyst', 'admin', 'system'] as NavItem['group'][])
+    .map(g => ({ group: g, items: items.filter(i => i.group === g) }))
+    .filter(g => g.items.length > 0)
+
+  function renderItem(item: NavItem) {
+    const Icon = Icons[item.icon]
+    const isActive = currentId === item.id
+
+    const button = onSelect ? (
+      <SidebarMenuButton
+        isActive={isActive}
+        tooltip={item.label}
+        onClick={() => onSelect(item.id)}
+      >
+        <Icon size={18} />
+        <span>{item.label}</span>
+      </SidebarMenuButton>
+    ) : (
+      <SidebarMenuButton
+        isActive={isActive}
+        tooltip={item.label}
+        render={<Link to={item.path} />}
+      >
+        <Icon size={18} />
+        <span>{item.label}</span>
+      </SidebarMenuButton>
+    )
+
+    return <SidebarMenuItem key={item.id}>{button}</SidebarMenuItem>
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -51,50 +97,17 @@ export function AppSidebar({ activeId, onSelect, username = 'User', role = 'user
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigate</SidebarGroupLabel>
-          <SidebarMenu>
-            {NAV_ITEMS.map(item => {
-              const Icon = Icons[item.icon]
-              return (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={activeId === item.id}
-                    onClick={() => onSelect(item.id)}
-                    tooltip={item.label}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={activeId === 'settings'}
-                onClick={() => onSelect('settings')}
-                tooltip="Settings"
-              >
-                <Icons.Settings size={18} />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+        {groups.map(({ group, items: groupItems }) => (
+          <SidebarGroup key={group}>
+            <SidebarGroupLabel>{GROUP_LABELS[group]}</SidebarGroupLabel>
+            <SidebarMenu>{groupItems.map(renderItem)}</SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>
         <div className="flex cursor-default items-center gap-3 px-1 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
-          <div
-            className="avatar avatar-sm shrink-0"
-            aria-label={`User: ${initials}`}
-          >
+          <div className="avatar avatar-sm shrink-0" aria-label={`User: ${initials}`}>
             {initials}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">

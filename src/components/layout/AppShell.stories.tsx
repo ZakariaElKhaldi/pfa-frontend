@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
+import { MemoryRouter } from 'react-router'
 import { AppShell } from './AppShell'
 import { PageHeader } from './PageHeader'
 import { EmptyState } from './EmptyState'
@@ -8,9 +9,16 @@ const meta: Meta<typeof AppShell> = {
   title: 'Layout/AppShell',
   component: AppShell,
   tags: ['autodocs'],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <div className="h-screen">
+          <Story />
+        </div>
+      </MemoryRouter>
+    ),
+  ],
 }
 
 export default meta
@@ -24,41 +32,21 @@ function ShellContent({ title, subtitle }: { title: string; subtitle: string }) 
         <EmptyState
           title="No data available"
           description="Connect your accounts to start visualizing data."
-          action={
-            <button className="btn btn-primary" onClick={() => console.log('clicked')}>
-              Connect Account
-            </button>
-          }
+          action={<button className="btn btn-primary">Connect Account</button>}
         />
       </div>
     </div>
   )
 }
 
-export const DashboardLayout: Story = {
+export const UserDashboard: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [activeId, setActiveId] = useState('dashboard')
     return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="Zakaria" role="super_user" onSelect={setActiveId}>
-          <ShellContent title="Dashboard" subtitle="Welcome back to Sentient Terminal. Here's what's happening." />
-        </AppShell>
-      </div>
-    )
-  },
-}
-
-export const AdminDashboard: Story = {
-  render: () => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('dashboard')
-    return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="Admin User" role="admin" onSelect={setActiveId}>
-          <ShellContent title="Dashboard" subtitle="Admin view — full platform overview." />
-        </AppShell>
-      </div>
+      <AppShell activeId={activeId} username="John Trader" role="user" onSelect={setActiveId}>
+        <ShellContent title="Dashboard" subtitle="Welcome back to Sentient Terminal." />
+      </AppShell>
     )
   },
 }
@@ -66,41 +54,23 @@ export const AdminDashboard: Story = {
 export const AnalystSignals: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('signals')
+    const [activeId, setActiveId] = useState('analytics')
     return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="Jane Analyst" role="analyst" onSelect={setActiveId}>
-          <ShellContent title="Signals" subtitle="Live signal feed from social + on-chain sources." />
-        </AppShell>
-      </div>
+      <AppShell activeId={activeId} username="Jane Analyst" role="analyst" onSelect={setActiveId}>
+        <ShellContent title="Analytics" subtitle="Cross-ticker intelligence and backtest tools." />
+      </AppShell>
     )
   },
 }
 
-export const UserPortfolio: Story = {
+export const AdminDashboard: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('portfolio')
+    const [activeId, setActiveId] = useState('admin')
     return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="John Trader" role="user" onSelect={setActiveId}>
-          <ShellContent title="Portfolio" subtitle="Track your holdings and performance." />
-        </AppShell>
-      </div>
-    )
-  },
-}
-
-export const MarketPage: Story = {
-  render: () => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('market')
-    return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="Zakaria" role="super_user" onSelect={setActiveId}>
-          <ShellContent title="Market" subtitle="Real-time market data and sentiment overview." />
-        </AppShell>
-      </div>
+      <AppShell activeId={activeId} username="Admin User" role="admin" onSelect={setActiveId}>
+        <ShellContent title="Admin" subtitle="Full platform overview and user management." />
+      </AppShell>
     )
   },
 }
@@ -110,11 +80,9 @@ export const CollapsedSidebar: Story = {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [activeId, setActiveId] = useState('dashboard')
     return (
-      <div className="h-screen">
-        <AppShell activeId={activeId} username="Zakaria" role="super_user" onSelect={setActiveId} defaultOpen={false}>
-          <ShellContent title="Dashboard" subtitle="Sidebar starts collapsed — icon-only mode." />
-        </AppShell>
-      </div>
+      <AppShell activeId={activeId} username="Zakaria" role="user" defaultOpen={false} onSelect={setActiveId}>
+        <ShellContent title="Dashboard" subtitle="Sidebar starts collapsed — icon-only mode." />
+      </AppShell>
     )
   },
 }

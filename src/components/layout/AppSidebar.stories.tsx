@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
+import { MemoryRouter } from 'react-router'
 import { AppSidebar } from './AppSidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 
@@ -9,9 +10,11 @@ const meta: Meta<typeof AppSidebar> = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <SidebarProvider>
-        <Story />
-      </SidebarProvider>
+      <MemoryRouter>
+        <SidebarProvider>
+          <Story />
+        </SidebarProvider>
+      </MemoryRouter>
     ),
   ],
 }
@@ -19,56 +22,29 @@ const meta: Meta<typeof AppSidebar> = {
 export default meta
 type Story = StoryObj<typeof AppSidebar>
 
-export const Default: Story = {
-  args: {
-    activeId: 'dashboard',
-    username: 'Zakaria',
-    role: 'super_user',
-    onSelect: (id) => console.log('Selected:', id),
-  },
-}
-
-export const AdminRole: Story = {
-  args: {
-    activeId: 'dashboard',
-    username: 'Admin User',
-    role: 'admin',
-    onSelect: (id) => console.log('Selected:', id),
-  },
+export const UserRole: Story = {
+  args: { activeId: 'dashboard', username: 'John Trader', role: 'user', onSelect: (id) => console.log('Selected:', id) },
 }
 
 export const AnalystRole: Story = {
-  args: {
-    activeId: 'signals',
-    username: 'Jane Analyst',
-    role: 'analyst',
-    onSelect: (id) => console.log('Selected:', id),
-  },
+  args: { activeId: 'analytics', username: 'Jane Analyst', role: 'analyst', onSelect: (id) => console.log('Selected:', id) },
 }
 
-export const UserRole: Story = {
-  args: {
-    activeId: 'portfolio',
-    username: 'John Trader',
-    role: 'user',
-    onSelect: (id) => console.log('Selected:', id),
-  },
+export const AdminRole: Story = {
+  args: { activeId: 'admin', username: 'Admin User', role: 'admin', onSelect: (id) => console.log('Selected:', id) },
 }
 
 export const CollapsedIconMode: Story = {
   decorators: [
     (Story) => (
-      <SidebarProvider defaultOpen={false}>
-        <Story />
-      </SidebarProvider>
+      <MemoryRouter>
+        <SidebarProvider defaultOpen={false}>
+          <Story />
+        </SidebarProvider>
+      </MemoryRouter>
     ),
   ],
-  args: {
-    activeId: 'dashboard',
-    username: 'Zakaria',
-    role: 'super_user',
-    onSelect: (id) => console.log('Selected:', id),
-  },
+  args: { activeId: 'dashboard', username: 'Zakaria', role: 'user', onSelect: (id) => console.log('Selected:', id) },
 }
 
 export const Interactive: Story = {
@@ -76,12 +52,11 @@ export const Interactive: Story = {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [activeId, setActiveId] = useState('dashboard')
     return (
-      <AppSidebar
-        activeId={activeId}
-        username="Zakaria"
-        role="super_user"
-        onSelect={setActiveId}
-      />
+      <MemoryRouter>
+        <SidebarProvider>
+          <AppSidebar activeId={activeId} username="Zakaria" role="admin" onSelect={setActiveId} />
+        </SidebarProvider>
+      </MemoryRouter>
     )
   },
 }

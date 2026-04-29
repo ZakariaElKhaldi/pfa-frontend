@@ -125,7 +125,7 @@ export function drawVolume(ctx: RenderCtx, volumeH: number) {
 }
 
 export function drawLatestPrice(ctx: RenderCtx) {
-  const { svg, data, x, y, margin, width } = ctx
+  const { svg, data, y, margin, width } = ctx
   const lastBar   = data[data.length - 1]
   const lastColor = lastBar.close >= lastBar.open ? COLOR_BULL : COLOR_BEAR
   const latestG   = svg.append('g').attr('class', 'pc-latest-group')
@@ -145,7 +145,7 @@ export function drawLatestPrice(ctx: RenderCtx) {
 }
 
 export function drawAxes(ctx: RenderCtx, dateKeys: string[], yTicks: number[]) {
-  const { svg, x, y, data, margin, width, height } = ctx
+  const { svg, x, y, data, margin, height } = ctx
   const tickEvery   = data.length > 120 ? 20 : data.length > 60 ? 10 : 5
   const xTickValues = dateKeys.filter((_, i) => i % tickEvery === 0)
 
