@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { RegisterForm, type RegisterFormValues } from '@/components/forms/RegisterForm'
 import { api, ApiError } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -18,6 +19,7 @@ export function RegisterPage() {
       await api.post('/api/auth/registration/', { email, password1, password2 })
       // After registration, log in automatically
       await login(email, password1)
+      toast.success('Welcome to CrowdSignal!')
       navigate('/')
     } catch (e) {
       if (e instanceof ApiError && e.status === 400) {

@@ -19,11 +19,15 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'watchlist',  label: 'Watchlist',  path: '/watchlist',     icon: 'Star',         group: 'main' },
   { id: 'portfolio',  label: 'Portfolio',  path: '/portfolio',     icon: 'Briefcase',    group: 'main' },
   { id: 'alerts',     label: 'Alerts',     path: '/alerts',        icon: 'Bell',         group: 'main' },
+  { id: 'feed',       label: 'Social Feed',path: '/feed',          icon: 'MessageSquare', group: 'main' },
   { id: 'strategies', label: 'Strategies', path: '/strategies',    icon: 'TrendingUp',   group: 'main' },
   { id: 'export',     label: 'Export',     path: '/export',        icon: 'Download',     group: 'main' },
 
   // ── Analyst + Admin ────────────────────────────────────────────
   { id: 'analytics',     label: 'Analytics',    path: '/analytics',    icon: 'LineChart',    group: 'analyst', minRole: 'analyst' },
+  { id: 'backtest',      label: 'Backtest',     path: '/backtest',     icon: 'TrendingUp',   group: 'analyst', minRole: 'analyst' },
+  { id: 'correlation',   label: 'Correlation',  path: '/correlation',  icon: 'Grid',         group: 'analyst', minRole: 'analyst' },
+  { id: 'heatmap',       label: 'Heatmap',      path: '/heatmap',      icon: 'BarChart',     group: 'analyst', minRole: 'analyst' },
   { id: 'intelligence',  label: 'Intelligence', path: '/intelligence', icon: 'Bot',          group: 'analyst', minRole: 'analyst' },
   { id: 'audit',         label: 'Audit',        path: '/audit',        icon: 'FileText',     group: 'analyst', minRole: 'analyst' },
 

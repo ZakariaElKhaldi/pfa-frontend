@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { LoginForm } from '@/components/forms/LoginForm'
 import { useAuth } from '@/context/AuthContext'
 import { ApiError } from '@/lib/api'
@@ -40,7 +41,7 @@ export function LoginPage() {
         <LoginForm
           onSubmit={handleSubmit}
           onOAuth={handleOAuth}
-          onForgotPassword={() => navigate('/forgot-password')}
+          onForgotPassword={() => toast.info('Password reset coming soon. Contact your admin.')}
           onSwitchToRegister={() => navigate('/register')}
           loading={loading}
           error={error}

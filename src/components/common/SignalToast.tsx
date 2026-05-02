@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { SignalBadge } from '@/components/design-system'
 import type { Signal } from '@/design-system/tokens'
 
@@ -31,7 +32,5 @@ export function SignalToast({ symbol, signal, price, timestamp }: SignalToastPro
 }
 
 export function showSignalToast(props: SignalToastProps) {
-  import('sonner').then(({ toast }) => {
-    toast.custom(() => <SignalToast {...props} />, { duration: 6000 })
-  })
+  toast.custom(() => <SignalToast {...props} />, { duration: 6000 })
 }

@@ -36,6 +36,10 @@ import {
   ShieldCheck,
   LineChart,
   User,
+  MessageSquare,
+  Grid3x3,
+  PieChart,
+  Eye,
 } from 'lucide-react'
 export const Icons = {
   Grid:          LayoutGrid,
@@ -70,6 +74,10 @@ export const Icons = {
   ShieldCheck:   ShieldCheck,
   LineChart:     LineChart,
   User:          User,
+  MessageSquare: MessageSquare,
+  Grid3x3:       Grid3x3,
+  PieChart:      PieChart,
+  Eye:           Eye,
 } as const
 
 export type IconName = keyof typeof Icons
