@@ -1,11 +1,13 @@
-export type PredictionMethod = 'ml' | 'rule_based'
+export type PredictionMethod = 'ml' | 'rule_based' | 'xgboost' | 'ensemble'
 
-const CONFIG: Record<PredictionMethod, { cls: string; label: string }> = {
+const CONFIG: Record<string, { cls: string; label: string }> = {
   ml:         { cls: 'badge-buy',     label: 'ML Model'   },
   rule_based: { cls: 'badge-neutral', label: 'Rule-Based' },
+  xgboost:    { cls: 'badge-buy',     label: 'XGBoost'    },
+  ensemble:   { cls: 'badge-sell',    label: 'Ensemble'   },
 }
 
-export function PredictionMethodBadge({ method }: { method: PredictionMethod }) {
-  const { cls, label } = CONFIG[method]
-  return <span className={`badge ${cls}`}>{label}</span>
+export function PredictionMethodBadge({ method }: { method: string }) {
+  const config = CONFIG[method] ?? { cls: 'badge-neutral', label: method ?? 'Unknown' }
+  return <span className={`badge ${config.cls}`}>{config.label}</span>
 }

@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem, cardVariants } from '@/lib/motion'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -9,6 +11,9 @@ import { TickerCard } from '@/components/cards/TickerCard'
 import { MetricCard } from '@/components/cards/MetricCard'
 import { SignalHistoryTable, type SignalHistoryRow } from '@/components/cards/SignalHistoryTable'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SectionLabel } from '@/components/design-system/SectionLabel'
+import { SkeletonGrid } from '@/components/common/SkeletonGrid'
+import { PageMeta } from '@/components/common/PageMeta'
 import { useData } from '@/hooks/useApi'
 import { useQuotes } from '@/hooks/useQuotes'
 import { useAuth } from '@/context/AuthContext'
@@ -57,18 +62,21 @@ export function DashboardPage() {
 
   const watchlistSymbols = watchlist.status === 'success' ? watchlist.data.slice(0, 8).map(w => w.symbol) : []
   const { quotes } = useQuotes(watchlistSymbols)
-
   // Map ticker_symbol → latest signal (from recent signals feed)
+  const signalsData = signals.status === 'success' && Array.isArray(signals.data) ? signals.data : []
   const signalBySymbol = new Map<string, Signal>(
-    signals.status === 'success' ? signals.data.map(s => [s.ticker_symbol, s.signal]) : []
+    signalsData.map(s => [s.ticker_symbol, s.signal])
   )
 
-  const activeAlertCount = alerts.status === 'success' ? alerts.data.filter(a => !a.resolved).length : null
-  const todayCount       = signals.status === 'success'
-    ? signals.data.filter(s => new Date(s.created_at).toDateString() === new Date().toDateString()).length
-    : null
-  const buyCount         = signals.status === 'success' ? signals.data.filter(s => s.signal === 'BUY').length  : null
-  const sellCount        = signals.status === 'success' ? signals.data.filter(s => s.signal === 'SELL').length : null
+  const trendingData = trending.status === 'success' && Array.isArray(trending.data) ? trending.data : []
+
+  const alertsData = alerts.status === 'success' && Array.isArray(alerts.data) ? alerts.data : []
+  const activeAlertCount = alertsData.length === 0 ? 0 : alertsData.filter(a => !a.resolved).length
+  const todayCount       = signalsData.length === 0
+    ? null
+    : signalsData.filter(s => new Date(s.created_at).toDateString() === new Date().toDateString()).length
+  const buyCount         = signalsData.length === 0 ? null : signalsData.filter(s => s.signal === 'BUY').length
+  const sellCount        = signalsData.length === 0 ? null : signalsData.filter(s => s.signal === 'SELL').length
 
   const greeting = (() => {
     const h = new Date().getHours()
@@ -78,43 +86,65 @@ export function DashboardPage() {
   })()
 
   return (
-    <div className="p-6 stack stack-6">
-      <PageHeader
-        title={user ? `${greeting}, ${user.username}` : 'Dashboard'}
-        subtitle="Your market overview and latest signals."
-      />
+    <motion.div
+      className="p-6 stack stack-6"
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+    >
+      <PageMeta title="Dashboard" description="Market overview, watchlist, and latest signals." />
+      <motion.div variants={staggerItem}>
+        <PageHeader
+          title={user ? `${greeting}, ${user.username}` : 'Dashboard'}
+          subtitle="Your market overview and latest signals."
+        />
+      </motion.div>
 
       {/* Hero stats strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
+      <motion.div
+        variants={staggerItem}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-3)' }}
+      >
         {portfolio.status === 'success' ? (
-          <MetricCard
-            label="Portfolio P&L"
-            value={`${portfolio.data.total_pnl_pct >= 0 ? '+' : ''}${portfolio.data.total_pnl_pct.toFixed(2)}%`}
-            delta={`$${parseFloat(portfolio.data.total_pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-            positive={portfolio.data.total_pnl_pct >= 0}
-          />
+          <motion.div variants={cardVariants}>
+            <MetricCard
+              label="Portfolio P&L"
+              value={`${portfolio.data.total_pnl_pct >= 0 ? '+' : ''}${portfolio.data.total_pnl_pct.toFixed(2)}%`}
+              delta={`$${parseFloat(portfolio.data.total_pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              positive={portfolio.data.total_pnl_pct >= 0}
+            />
+          </motion.div>
         ) : <Skeleton className="h-24 w-full" />}
-        <MetricCard
-          label="Active Alerts"
-          value={activeAlertCount === null ? '—' : String(activeAlertCount)}
-          delta={alerts.status === 'success' ? `${alerts.data.length} total` : ''}
-          positive={activeAlertCount === 0}
-        />
-        <MetricCard
-          label="Signals Today"
-          value={todayCount === null ? '—' : String(todayCount)}
-          delta={signals.status === 'success' ? `${signals.data.length} recent` : ''}
-          positive
-        />
-        <MetricCard
-          label="Buy / Sell"
-          value={buyCount === null || sellCount === null ? '—' : `${buyCount} / ${sellCount}`}
-          delta="last 10 signals"
-          positive={(buyCount ?? 0) >= (sellCount ?? 0)}
-        />
-      </div>
+        <motion.div variants={cardVariants}>
+          <MetricCard
+            label="Active Alerts"
+            value={activeAlertCount === null ? '—' : String(activeAlertCount)}
+            delta={alerts.status === 'success' ? `${alertsData.length} total` : ''}
+            positive={activeAlertCount === 0}
+          />
+        </motion.div>
+        <motion.div variants={cardVariants}>
+          <MetricCard
+            label="Signals Today"
+            value={todayCount === null ? '—' : String(todayCount)}
+            delta={signals.status === 'success' ? `${signals.data.length} recent` : ''}
+            positive
+          />
+        </motion.div>
+        <motion.div variants={cardVariants}>
+          <MetricCard
+            label="Buy / Sell"
+            value={buyCount === null || sellCount === null ? '—' : `${buyCount} / ${sellCount}`}
+            delta="last 10 signals"
+            positive={(buyCount ?? 0) >= (sellCount ?? 0)}
+          />
+        </motion.div>
+      </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-5)' }}>
+      <motion.div
+        variants={staggerItem}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-5)' }}
+      >
         {/* Portfolio Summary */}
         {portfolio.status === 'error' && (
           <ErrorState message={portfolio.message} onRetry={refetchPortfolio} />
@@ -131,22 +161,19 @@ export function DashboardPage() {
 
         {/* Trending Tickers */}
         <div className="card stack stack-2">
-          <span
-            style={{
-              fontSize: 'var(--text-label-md)', fontWeight: 500,
-              letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
-              color: 'var(--on-surface-muted)',
-            }}
-          >
-            Trending
-          </span>
+          <SectionLabel>Trending</SectionLabel>
+          {trending.status === 'loading' && (
+            <div className="stack stack-2">
+              {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} style={{ height: 48, borderRadius: 'var(--radius-md)' }} />)}
+            </div>
+          )}
           {trending.status === 'error' && (
             <ErrorState message={trending.message} onRetry={refetchTrending} />
           )}
-          {trending.status === 'success' && trending.data.length === 0 && (
+          {trending.status === 'success' && trendingData.length === 0 && (
             <EmptyState title="No trending tickers" />
           )}
-          {trending.status === 'success' && trending.data.map((item, i) => (
+          {trending.status === 'success' && trendingData.map((item, i) => (
             <TrendingTickerRow
               key={item.symbol}
               rank={i + 1}
@@ -158,65 +185,58 @@ export function DashboardPage() {
             />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Watchlist */}
-      {watchlist.status === 'success' && watchlist.data.length > 0 && (
-        <div className="stack stack-3">
-          <span
-            style={{
-              fontSize: 'var(--text-label-md)', fontWeight: 500,
-              letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
-              color: 'var(--on-surface-muted)',
-            }}
-          >
-            Watchlist
-          </span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
-            {watchlist.data.slice(0, 8).map(w => {
-              const q       = quotes[w.symbol]
-              const last    = q ? parseFloat(q.price)      : null
-              const open    = q ? parseFloat(q.open_price) : null
-              const change  = last !== null && open !== null ? last - open : null
-              const pct     = last !== null && open && open !== 0 ? (change! / open) * 100 : null
-              const sig     = signalBySymbol.get(w.symbol) ?? 'HOLD'
-              return (
-                <TickerCard
-                  key={w.symbol}
-                  symbol={w.symbol}
-                  name={w.name}
-                  price={last === null ? '—' : last.toFixed(2)}
-                  change={change === null ? '+0.00' : `${change >= 0 ? '+' : ''}${change.toFixed(2)}`}
-                  pct={pct === null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
-                  signal={sig}
-                  onClick={() => navigate(`/tickers/${w.symbol}`)}
-                />
-              )
-            })}
+      <motion.div variants={staggerItem}>
+        {watchlist.status === 'loading' && (
+          <div className="stack stack-3">
+            <SectionLabel>Watchlist</SectionLabel>
+            <SkeletonGrid count={8} minWidth="180px" height="96px" />
           </div>
-        </div>
-      )}
+        )}
+        {watchlist.status === 'success' && watchlist.data.length > 0 && (
+          <div className="stack stack-3">
+            <SectionLabel>Watchlist</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
+              {watchlist.data.slice(0, 8).map(w => {
+                const q       = quotes[w.symbol]
+                const last    = q ? parseFloat(q.price)      : null
+                const open    = q ? parseFloat(q.open_price) : null
+                const change  = last !== null && open !== null ? last - open : null
+                const pct     = last !== null && open && open !== 0 ? (change! / open) * 100 : null
+                const sig     = signalBySymbol.get(w.symbol) ?? 'HOLD'
+                return (
+                  <TickerCard
+                    key={w.symbol}
+                    symbol={w.symbol}
+                    name={w.name}
+                    price={last === null ? '—' : last.toFixed(2)}
+                    change={change === null ? '+0.00' : `${change >= 0 ? '+' : ''}${change.toFixed(2)}`}
+                    pct={pct === null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
+                    signal={sig}
+                    onClick={() => navigate(`/tickers/${w.symbol}`)}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       {/* Active Alerts */}
-      <div className="stack stack-3">
-        <span
-          style={{
-            fontSize: 'var(--text-label-md)', fontWeight: 500,
-            letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
-            color: 'var(--on-surface-muted)',
-          }}
-        >
-          Active Alerts
-        </span>
+      <motion.div variants={staggerItem} className="stack stack-3">
+        <SectionLabel>Active Alerts</SectionLabel>
+        {alerts.status === 'loading' && <SkeletonGrid count={3} minWidth="280px" height="112px" />}
         {alerts.status === 'error' && (
           <ErrorState message={alerts.message} onRetry={refetchAlerts} />
         )}
-        {alerts.status === 'success' && alerts.data.filter(a => !a.resolved).length === 0 && (
+        {alerts.status === 'success' && alertsData.filter(a => !a.resolved).length === 0 && (
           <EmptyState title="No active alerts" description="All clear — no signals to review." />
         )}
         {alerts.status === 'success' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-3)' }}>
-            {alerts.data.filter(a => !a.resolved).slice(0, 6).map(a => (
+            {alertsData.filter(a => !a.resolved).slice(0, 6).map(a => (
               <AlertCard
                 key={a.id}
                 type={a.type}
@@ -229,25 +249,17 @@ export function DashboardPage() {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Recent Signals */}
-      <div className="stack stack-3">
-        <span
-          style={{
-            fontSize: 'var(--text-label-md)', fontWeight: 500,
-            letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
-            color: 'var(--on-surface-muted)',
-          }}
-        >
-          Recent Signals
-        </span>
+      <motion.div variants={staggerItem} className="stack stack-3">
+        <SectionLabel>Recent Signals</SectionLabel>
         {signals.status === 'error' && (
           <ErrorState message={signals.message} onRetry={refetchSignals} />
         )}
         {signals.status === 'success' && (
           <SignalHistoryTable
-            rows={signals.data.map(s => ({
+            rows={signalsData.map(s => ({
               id:                   s.id,
               createdAt:            new Date(s.created_at).toLocaleString(),
               signal:               s.signal,
@@ -260,8 +272,8 @@ export function DashboardPage() {
             }))}
           />
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

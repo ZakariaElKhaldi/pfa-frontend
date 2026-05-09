@@ -29,7 +29,7 @@ export const colors = {
   // Content
   onSurface:            'hsl(220, 20%, 14%)',
   onSurfaceVariant:     'hsl(220, 14%, 40%)',
-  onSurfaceMuted:       'hsl(220, 10%, 58%)',
+  onSurfaceMuted:       'hsl(220, 12%, 50%)',       // darkened for WCAG AA 4.5:1 contrast
 
   // Outline
   outline:              'hsl(220, 12%, 55%)',
@@ -41,11 +41,17 @@ export const colors = {
   onSecondary:          'hsl(0, 0%, 100%)',
   onSecondaryContainer: 'hsl(158, 60%, 12%)',
 
-  // Tertiary (Bearish / Error)
+  // Tertiary (Bearish / Sell)
   tertiary:             'hsl(4, 68%, 50%)',
   tertiaryContainer:    'hsl(4, 70%, 91%)',
   onTertiary:           'hsl(0, 0%, 100%)',
   onTertiaryContainer:  'hsl(4, 60%, 18%)',
+
+  // Error (true red — semantically distinct from tertiary/bearish)
+  error:                'hsl(0, 72%, 51%)',
+  errorContainer:       'hsl(0, 72%, 92%)',
+  onError:              'hsl(0, 0%, 100%)',
+  onErrorContainer:     'hsl(0, 60%, 20%)',
 
   // Warning / Hold
   warning:              'hsl(38, 88%, 46%)',

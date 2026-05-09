@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { Navigate, Outlet } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageTransition } from '@/components/common/PageTransition'
 import { useAuth } from '@/context/AuthContext'
 import { useWSStatus } from '@/hooks/useWSStatus'
 import { showSignalToast } from '@/components/common/SignalToast'
@@ -48,7 +49,9 @@ export function AppLayout() {
   return (
     <div className="h-screen">
       <AppShell username={user.username} role={user.role} wsStatus={wsStatus}>
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </AppShell>
     </div>
   )

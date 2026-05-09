@@ -6,45 +6,70 @@ import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
   [
-    "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent",
+    "group/button relative inline-flex shrink-0 items-center justify-center overflow-hidden",
+    "rounded-lg border border-transparent",
     "bg-clip-padding text-sm font-medium whitespace-nowrap",
     "transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]",
     "outline-none select-none",
-    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+    "focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:ring-offset-1",
     "active:not-aria-[haspopup]:scale-[0.97]",
-    "disabled:pointer-events-none disabled:opacity-50",
-    "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
-    "dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+    "disabled:pointer-events-none disabled:opacity-40",
+    "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ].join(" "),
   {
     variants: {
       variant: {
-        /* ── Core UI variants ──────────────────────────────────────── */
-        default:
-          "bg-primary text-primary-foreground shadow-sm hover:brightness-105 hover:shadow-md",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-muted text-foreground hover:bg-accent aria-expanded:bg-accent",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30",
-        link: "text-primary underline-offset-4 hover:underline",
+        /* ── Primary — gradient, consistent with .btn-primary CSS class ─── */
+        default: [
+          "[background:var(--gradient-primary)] text-white shadow-sm",
+          "hover:brightness-105 hover:shadow-md",
+        ].join(" "),
 
-        /* ── Trading signal variants (ONLY for signal-driven actions) */
+        /* ── Outline — glass-friendly bordered button ─────────────────── */
+        outline: [
+          "border-[rgba(148,163,184,0.50)] bg-[rgba(255,255,255,0.70)]",
+          "text-[var(--on-surface)] backdrop-blur-sm",
+          "hover:bg-[rgba(255,255,255,0.90)] hover:border-[rgba(148,163,184,0.70)]",
+          "aria-expanded:bg-[rgba(255,255,255,0.90)]",
+        ].join(" "),
+
+        /* ── Secondary — muted glass surface ─────────────────────────── */
+        secondary: [
+          "bg-[var(--surface-container-high)] text-[var(--on-surface)]",
+          "hover:bg-[var(--surface-bright)] hover:shadow-sm",
+          "aria-expanded:bg-[var(--surface-bright)]",
+        ].join(" "),
+
+        /* ── Ghost — transparent, hover surface tint ─────────────────── */
+        ghost: [
+          "text-[var(--on-surface)]",
+          "hover:bg-[var(--surface-container-high)]",
+          "aria-expanded:bg-[var(--surface-container-high)]",
+        ].join(" "),
+
+        /* ── Destructive — muted red, on-glass friendly ───────────────── */
+        destructive: [
+          "bg-[var(--tertiary-container)] text-[var(--on-tertiary-container)]",
+          "hover:bg-[var(--tertiary)] hover:text-white hover:shadow-sm",
+          "focus-visible:ring-[var(--tertiary)]/30",
+        ].join(" "),
+
+        /* ── Link ────────────────────────────────────────────────────── */
+        link: "text-[var(--primary)] underline-offset-4 hover:underline",
+
+        /* ── Trading signal variants ─────────────────────────────────── */
         buy: [
           "bg-[var(--secondary-container)] text-[var(--on-secondary-container)]",
-          "border border-[color:var(--secondary)]/30",
-          "hover:bg-[var(--secondary)] hover:text-[var(--on-secondary)] hover:shadow-sm",
-          "focus-visible:ring-[color:var(--secondary)]/40",
+          "border border-[color:var(--secondary)]/25",
+          "hover:bg-[var(--secondary)] hover:text-white hover:shadow-sm",
+          "focus-visible:ring-[color:var(--secondary)]/30",
         ].join(" "),
         sell: [
           "bg-[var(--tertiary-container)] text-[var(--on-tertiary-container)]",
-          "border border-[color:var(--tertiary)]/30",
-          "hover:bg-[var(--tertiary)] hover:text-[var(--on-tertiary)] hover:shadow-sm",
-          "focus-visible:ring-[color:var(--tertiary)]/40",
+          "border border-[color:var(--tertiary)]/25",
+          "hover:bg-[var(--tertiary)] hover:text-white hover:shadow-sm",
+          "focus-visible:ring-[color:var(--tertiary)]/30",
         ].join(" "),
       },
       size: {

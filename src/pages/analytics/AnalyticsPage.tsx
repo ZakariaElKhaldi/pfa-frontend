@@ -75,15 +75,18 @@ export function AnalyticsPage() {
         )}
         {movers.status === 'success' && movers.data.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
-            {movers.data.slice(0, 8).map(m => (
-              <MetricCard
-                key={m.ticker}
-                label={m.ticker}
-                value={m.signal}
-                delta={`${m.delta >= 0 ? '+' : ''}${(m.delta * 100).toFixed(1)}%`}
-                positive={m.delta >= 0}
-              />
-            ))}
+            {movers.data.slice(0, 8).map(m => {
+              const d = Number.isFinite(m.delta) ? m.delta : null
+              return (
+                <MetricCard
+                  key={m.ticker}
+                  label={m.ticker}
+                  value={m.signal ?? '—'}
+                  delta={d !== null ? `${d >= 0 ? '+' : ''}${(d * 100).toFixed(1)}%` : '—'}
+                  positive={d !== null ? d >= 0 : true}
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -95,15 +98,18 @@ export function AnalyticsPage() {
             Sentiment Leaderboard
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
-            {leaderboard.data.slice(0, 8).map((item, i) => (
-              <MetricCard
-                key={item.ticker}
-                label={`${i + 1}. ${item.ticker}`}
-                value={`${(item.bullish_ratio * 100).toFixed(1)}% bullish`}
-                delta={`${item.post_count} posts`}
-                positive={item.bullish_ratio >= 0.5}
-              />
-            ))}
+            {leaderboard.data.slice(0, 8).map((item, i) => {
+              const r = Number.isFinite(item.bullish_ratio) ? item.bullish_ratio : null
+              return (
+                <MetricCard
+                  key={item.ticker}
+                  label={`${i + 1}. ${item.ticker}`}
+                  value={r !== null ? `${(r * 100).toFixed(1)}% bullish` : '—'}
+                  delta={`${item.post_count ?? 0} posts`}
+                  positive={r !== null ? r >= 0.5 : true}
+                />
+              )
+            })}
           </div>
         </div>
       )}
@@ -115,15 +121,18 @@ export function AnalyticsPage() {
             Sector Rollup
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
-            {sectorRollup.data.map(s => (
-              <MetricCard
-                key={s.sector}
-                label={s.sector || 'Unclassified'}
-                value={`${(s.avg_bullish_ratio * 100).toFixed(1)}% bullish`}
-                delta={`${s.ticker_count} tickers`}
-                positive={s.avg_bullish_ratio >= 0.5}
-              />
-            ))}
+            {sectorRollup.data.map(s => {
+              const r = Number.isFinite(s.avg_bullish_ratio) ? s.avg_bullish_ratio : null
+              return (
+                <MetricCard
+                  key={s.sector}
+                  label={s.sector || 'Unclassified'}
+                  value={r !== null ? `${(r * 100).toFixed(1)}% bullish` : '—'}
+                  delta={`${s.ticker_count ?? 0} tickers`}
+                  positive={r !== null ? r >= 0.5 : true}
+                />
+              )
+            })}
           </div>
         </div>
       )}

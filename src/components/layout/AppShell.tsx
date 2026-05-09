@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
+import { Topbar } from './Topbar'
+import type { TopbarProps } from './Topbar'
 import type { UserRole } from '@/components/design-system/RoleBadge'
-import { WSStatusDot } from '@/components/common/WSStatusDot'
 import type { WSStatus } from '@/components/common/WSStatusDot'
 
 interface AppShellProps {
@@ -11,28 +12,25 @@ interface AppShellProps {
   role?: UserRole
   defaultOpen?: boolean
   wsStatus?: WSStatus
+  /** Optional breadcrumb items passed to Topbar */
+  breadcrumb?: TopbarProps['breadcrumb']
+  /** Optional search/command-palette slot passed to Topbar */
+  searchSlot?: ReactNode
   /** Storybook/test: controlled active id passed through to AppSidebar */
   activeId?: string
   /** Storybook/test: nav click handler passed through to AppSidebar */
   onSelect?: (id: string) => void
 }
 
-export function AppShell({ children, username, role, defaultOpen, wsStatus, activeId, onSelect }: AppShellProps) {
+export function AppShell({
+  children, username, role, defaultOpen,
+  wsStatus, breadcrumb, searchSlot, activeId, onSelect,
+}: AppShellProps) {
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar username={username} role={role} activeId={activeId} onSelect={onSelect} />
       <SidebarInset>
-        <header
-          className="sticky top-0 z-10 flex h-[var(--topbar-height)] items-center gap-3 px-4 border-b bg-[var(--surface-container-lowest)]"
-          style={{ borderBottomColor: 'var(--outline-variant)' }}
-        >
-          <SidebarTrigger />
-          {wsStatus && (
-            <div style={{ marginLeft: 'auto' }}>
-              <WSStatusDot status={wsStatus} />
-            </div>
-          )}
-        </header>
+        <Topbar breadcrumb={breadcrumb} wsStatus={wsStatus} searchSlot={searchSlot} />
         <div className="flex-1 overflow-auto">
           {children}
         </div>

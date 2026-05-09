@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+import { cardVariants } from '@/lib/motion'
 import { SignalBadge } from '@/components/design-system'
 import type { Signal } from '@/design-system/tokens'
 
@@ -14,7 +16,15 @@ export interface TickerCardProps {
 export function TickerCard({ symbol, name, price, change, pct, signal, onClick }: TickerCardProps) {
   const positive = change.startsWith('+')
   return (
-    <div className="ticker-card" onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}>
+    <motion.div
+      className="ticker-card"
+      variants={cardVariants}
+      whileHover={{ y: -2, boxShadow: 'var(--shadow-md)' }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <span className="ticker-card-symbol">{symbol}</span>
       <span className="ticker-card-name">{name}</span>
       <div className="stack stack-2" style={{ alignItems: 'flex-end' }}>
@@ -24,6 +34,6 @@ export function TickerCard({ symbol, name, price, change, pct, signal, onClick }
         </span>
       </div>
       <SignalBadge signal={signal} />
-    </div>
+    </motion.div>
   )
 }
