@@ -34,11 +34,12 @@ export function useWSStatus<T = unknown>(
       setStatus('connecting')
       ws = new WebSocket(url)
       ws.onopen = () => {
+        if (stopped) return
         attempt = 0
         setStatus('connected')
       }
       ws.onmessage = e => {
-        if (!onMessageRef.current) return
+        if (stopped || !onMessageRef.current) return
         try {
           onMessageRef.current(JSON.parse(e.data) as T)
         } catch {
@@ -46,13 +47,16 @@ export function useWSStatus<T = unknown>(
         }
       }
       ws.onclose = () => {
-        setStatus('disconnected')
         if (stopped) return
+        setStatus('disconnected')
         attempt++
         const delay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5))
         timer = setTimeout(connect, delay)
       }
-      ws.onerror = () => { ws?.close() }
+      ws.onerror = () => {
+        if (stopped) return
+        ws?.close()
+      }
     }
     connect()
 

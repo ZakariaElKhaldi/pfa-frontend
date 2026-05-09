@@ -20,23 +20,11 @@ import { BuySellForm } from '@/components/forms/BuySellForm'
 import { WatchlistStarButton } from '@/components/common/WatchlistStarButton'
 import { Input } from '@/components/ui/input'
 import { useData } from '@/hooks/useApi'
-import { useWSStatus } from '@/hooks/useWSStatus'
+import { useOHLCData } from '@/hooks/useOHLCData'
 import { api } from '@/lib/api'
 import { useState, useCallback, useMemo } from 'react'
 import type { Signal, SentimentLabel } from '@/design-system/tokens'
 import type { Mood } from '@/components/design-system/MoodBadge'
-
-interface MarketEvent {
-  type:   string
-  open?: string | number
-  high?: string | number
-  low?: string | number
-  price?: string | number
-  volume?: number
-  timestamp?: string
-  signal?: Signal
-  prediction_confidence?: number
-}
 
 interface PriceSnap  { price: string; open_price: string; high_price: string; low_price: string; volume: number; timestamp: string }
 interface TickerInfo { symbol: string; name: string }
@@ -100,7 +88,6 @@ export function TickerDetailPage() {
   const { state: explain }   = useData<ExplainData>(`/api/tickers/${sym}/signal/explain/`)
   const { state: sentiment } = useData<SentimentData>(`/api/tickers/${sym}/social/sentiment/`)
   const { state: posts }     = useData<SocialPost[]>(`/api/tickers/${sym}/posts/`)
-  const { state: prices }    = useData<PriceSnap[]>(`/api/tickers/${sym}/prices/`)
   const { state: accuracy }    = useData<AccuracyItem[]>(`/api/tickers/${sym}/signal/accuracy/`)
   const { state: indicators }  = useData<IndicatorsData>(`/api/tickers/${sym}/indicators/`)
   const { state: tickerMood }  = useData<MoodSnap[]>(`/api/tickers/${sym}/mood/`)
@@ -112,27 +99,9 @@ export function TickerDetailPage() {
   const [postSource,    setPostSource]    = useState<'all' | 'reddit' | 'stocktwits'>('all')
   const [postSentiment, setPostSentiment] = useState<'all' | SentimentLabel>('all')
   const [postSearch,    setPostSearch]    = useState('')
-  const [livePrice,     setLivePrice]     = useState<number | null>(null)
-  const [liveBar,       setLiveBar]       = useState<OHLCBar | null>(null)
 
-  // Live market updates for this ticker
-  const marketWs = useWSStatus<MarketEvent>(`/ws/market/${sym}/`, useCallback((data: MarketEvent) => {
-    const price = typeof data?.price === 'number' ? data.price : Number(data?.price)
-    if (Number.isFinite(price)) setLivePrice(price)
-    if (data?.type === 'price' && data.timestamp && Number.isFinite(price)) {
-      const open = Number(data.open ?? price)
-      const high = Number(data.high ?? price)
-      const low = Number(data.low ?? price)
-      setLiveBar({
-        date: new Date(data.timestamp),
-        open: Number.isFinite(open) ? open : price,
-        high: Number.isFinite(high) ? high : price,
-        low: Number.isFinite(low) ? low : price,
-        close: price,
-        volume: data.volume ?? 0,
-      })
-    }
-  }, []))
+  const { bars: priceChartData, status: marketWs, loading: pricesLoading } = useOHLCData(sym, 100)
+  const livePrice = priceChartData.length > 0 ? priceChartData[priceChartData.length - 1].close : null
 
   const isWatched = watchlist.status === 'success' && watchlist.data.some(w => w.symbol === sym)
 
@@ -166,35 +135,11 @@ export function TickerDetailPage() {
 
   const name = ticker.status === 'success' ? ticker.data.name : sym
 
-  // Price chart OHLC
-  const priceChartData: OHLCBar[] = useMemo(() => {
-    const bars = prices.status === 'success'
-      ? prices.data.map(p => ({
-          date: new Date(p.timestamp),
-          open: parseFloat(p.open_price),
-          high: parseFloat(p.high_price),
-          low: parseFloat(p.low_price),
-          close: parseFloat(p.price),
-          volume: p.volume,
-        }))
-      : []
-    if (liveBar) {
-      const liveTime = liveBar.date.getTime()
-      const idx = bars.findIndex(b => b.date.getTime() === liveTime)
-      if (idx >= 0) bars[idx] = liveBar
-      else bars.push(liveBar)
-    }
-    return bars
-      .filter(b => Number.isFinite(b.close) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low))
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(-100)
-  }, [prices, liveBar])
-
   // Sentiment + price overlay
-  const sentPriceData: SentimentPricePoint[] = history.status === 'success' && prices.status === 'success'
+  const sentPriceData: SentimentPricePoint[] = history.status === 'success' && !pricesLoading
     ? history.data.map(s => {
-        const priceSnap = prices.data.find(p => Math.abs(new Date(p.timestamp).getTime() - new Date(s.created_at).getTime()) < 86400000)
-        return { time: s.created_at, price: parseFloat(priceSnap?.price ?? '0'), sentimentScore: s.normalized_index, signal: s.signal }
+        const priceSnap = priceChartData.find(p => Math.abs(p.date.getTime() - new Date(s.created_at).getTime()) < 86400000)
+        return { time: s.created_at, price: priceSnap?.close ?? 0, sentimentScore: s.normalized_index, signal: s.signal }
       }).filter(p => p.price > 0)
     : []
 

@@ -4,6 +4,7 @@ import { staggerContainer, staggerItem, cardVariants } from '@/lib/motion'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
+import { FeaturedMarketChart } from '@/components/cards/FeaturedMarketChart'
 import { TrendingTickerRow } from '@/components/cards/TrendingTickerRow'
 import { PortfolioSummaryCard } from '@/components/cards/PortfolioSummaryCard'
 import { AlertCard } from '@/components/cards/AlertCard'
@@ -142,6 +143,11 @@ export function DashboardPage() {
             positive={(buyCount ?? 0) >= (sellCount ?? 0)}
           />
         </motion.div>
+      </motion.div>
+
+      {/* Featured Market Chart */}
+      <motion.div variants={staggerItem}>
+        <FeaturedMarketChart symbol={watchlistSymbols.length > 0 ? watchlistSymbols[0] : 'AAPL'} />
       </motion.div>
 
       <motion.div

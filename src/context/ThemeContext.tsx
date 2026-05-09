@@ -17,8 +17,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      api.get('/api/auth/preferences/')
-        .then(res => setThemeState(res.data.theme || 'system'))
+      api.get<any>('/api/auth/preferences/')
+        .then(res => setThemeState(res.theme || 'system'))
         .catch(console.error)
     } else {
       setThemeState('system')

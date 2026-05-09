@@ -18,8 +18,48 @@ const ROLE_FILTERS: { value: 'all' | 'user' | 'analyst' | 'admin'; label: string
   { value: 'admin',   label: 'Admins' },
 ]
 
+const ROLE_COLOR: Record<string, string> = {
+  admin:   'var(--tertiary)',
+  analyst: 'var(--primary)',
+  user:    'var(--secondary)',
+}
+
 interface BackendUser {
   id: number; username: string; email: string; role: 'user' | 'analyst' | 'admin'; is_active: boolean; date_joined: string
+}
+
+// ── Role summary bar ─────────────────────────────────────────────────────────
+function RoleSummaryBar({ users }: { users: AdminUser[] }) {
+  const counts = { admin: 0, analyst: 0, user: 0 }
+  users.forEach(u => { if (u.role in counts) counts[u.role as keyof typeof counts]++ })
+  const total = users.length || 1
+
+  return (
+    <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+      {(['admin', 'analyst', 'user'] as const).map(r => {
+        const color = ROLE_COLOR[r]
+        const pct = ((counts[r] / total) * 100).toFixed(0)
+        return (
+          <div key={r} style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+            padding: 'var(--space-1) var(--space-3)', borderRadius: 'var(--radius-full)',
+            background: `color-mix(in srgb, ${color} 12%, var(--surface-container))`,
+            border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: color, flexShrink: 0 }} />
+            <span style={{ fontSize: 'var(--text-label-sm)', fontWeight: 600, color, textTransform: 'capitalize' }}>{r}</span>
+            <span style={{ fontSize: 'var(--text-mono-sm)', fontFamily: 'var(--font-mono)', color: 'var(--on-surface)', fontWeight: 700 }}>
+              {counts[r]}
+            </span>
+            <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>({pct}%)</span>
+          </div>
+        )
+      })}
+      <span style={{ marginLeft: 'auto', fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
+        {users.length} total users
+      </span>
+    </div>
+  )
 }
 
 export function AdminUsersPage() {
@@ -30,13 +70,12 @@ export function AdminUsersPage() {
   const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'analyst' | 'admin'>('all')
-  const [search,     setSearch]     = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState<'username' | 'email' | 'role' | 'dateJoined'>('dateJoined')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-  const handleEdit = useCallback((user: AdminUser) => {
-    setEditing(user)
-    setSaveError(undefined)
-  }, [])
-
+  const handleEdit   = useCallback((user: AdminUser) => { setEditing(user); setSaveError(undefined) }, [])
   const handleDelete = useCallback(async () => {
     if (!pendingDelete) return
     setDeleting(true)
@@ -47,55 +86,87 @@ export function AdminUsersPage() {
       refetch()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Delete failed')
-    } finally {
-      setDeleting(false)
-    }
+    } finally { setDeleting(false) }
   }, [pendingDelete, refetch])
 
   const handleSave = useCallback(async (values: AdminUserEditValues) => {
     if (!editing) return
-    setSaving(true)
-    setSaveError(undefined)
+    setSaving(true); setSaveError(undefined)
     try {
-      await api.patch(`/api/auth/admin/users/${editing.id}/`, {
-        email: values.email, username: values.username, role: values.role,
-      })
+      await api.patch(`/api/auth/admin/users/${editing.id}/`, { email: values.email, username: values.username, role: values.role })
       toast.success(`Updated ${values.username}`)
       setEditing(null)
       refetch()
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed'
-      setSaveError(msg)
-      toast.error(msg)
-    } finally {
-      setSaving(false)
-    }
+      setSaveError(msg); toast.error(msg)
+    } finally { setSaving(false) }
   }, [editing, refetch])
+
+  const toggleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
 
   const users: AdminUser[] = useMemo(() => {
     if (state.status !== 'success') return []
     const q = search.trim().toLowerCase()
-    return state.data
-      .filter(u => roleFilter === 'all' || u.role === roleFilter)
+    let rows = state.data
+      .filter(u => roleFilter === 'all'   || u.role === roleFilter)
+      .filter(u => statusFilter === 'all' || (statusFilter === 'active' ? u.is_active : !u.is_active))
       .filter(u => !q || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
       .map(u => ({
-        id:         u.id,
-        username:   u.username,
-        email:      u.email,
-        role:       u.role,
-        isActive:   u.is_active,
-        dateJoined: new Date(u.date_joined).toLocaleDateString(),
+        id: u.id, username: u.username, email: u.email, role: u.role,
+        isActive: u.is_active, dateJoined: new Date(u.date_joined).toLocaleDateString(),
       }))
-  }, [state, roleFilter, search])
+
+    rows = [...rows].sort((a, b) => {
+      const va = String(a[sortKey] ?? '').toLowerCase()
+      const vb = String(b[sortKey] ?? '').toLowerCase()
+      return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
+    })
+    return rows
+  }, [state, roleFilter, statusFilter, search, sortKey, sortDir])
+
+  const allUsers: AdminUser[] = useMemo(() => {
+    if (state.status !== 'success') return []
+    return state.data.map(u => ({
+      id: u.id, username: u.username, email: u.email, role: u.role,
+      isActive: u.is_active, dateJoined: new Date(u.date_joined).toLocaleDateString(),
+    }))
+  }, [state])
+
+  const SortBtn = ({ k, children }: { k: typeof sortKey; children: React.ReactNode }) => (
+    <button
+      type="button"
+      onClick={() => toggleSort(k)}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 'inherit', color: 'inherit', fontWeight: sortKey === k ? 700 : 400 }}
+    >
+      {children}
+      <span style={{ fontSize: 10, opacity: sortKey === k ? 1 : 0.3 }}>{sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
+    </button>
+  )
 
   return (
     <div className="p-6 stack stack-5">
-      <PageHeader title="User Management" subtitle="View and edit all platform users." />
+      <PageHeader title="User Management" subtitle="View, search, and manage all platform accounts." />
 
-      {/* Filter bar */}
+      {state.status === 'success' && allUsers.length > 0 && <RoleSummaryBar users={allUsers} />}
+
+      {/* Filter + sort bar */}
       {state.status === 'success' && state.data.length > 0 && (
-        <div className="cluster cluster-3" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="cluster cluster-2" style={{ flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {/* Search */}
+          <div style={{ maxWidth: 360 }}>
+            <Input
+              placeholder="Search username or email…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          {/* Filter chips */}
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>Role:</span>
             {ROLE_FILTERS.map(f => (
               <button
                 key={f.value}
@@ -107,42 +178,58 @@ export function AdminUsersPage() {
                 {f.label}
               </button>
             ))}
+            <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', marginLeft: 'var(--space-3)' }}>Status:</span>
+            {(['all', 'active', 'inactive'] as const).map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`btn btn-sm ${statusFilter === s ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ borderRadius: 'var(--radius-full)', textTransform: 'capitalize' }}
+              >
+                {s}
+              </button>
+            ))}
+            {(roleFilter !== 'all' || statusFilter !== 'all' || search) && (
+              <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)', marginLeft: 'auto' }}>
+                {users.length} of {state.data.length}
+              </span>
+            )}
           </div>
-          <div style={{ flex: 1, minWidth: 180, maxWidth: 320 }}>
-            <Input
-              placeholder="Search username or email…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          {/* Sort row */}
+          <div style={{ display: 'flex', gap: 'var(--space-3)', fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', flexWrap: 'wrap' }}>
+            <span>Sort by:</span>
+            <SortBtn k="username">Username</SortBtn>
+            <SortBtn k="email">Email</SortBtn>
+            <SortBtn k="role">Role</SortBtn>
+            <SortBtn k="dateJoined">Joined</SortBtn>
           </div>
-          {(roleFilter !== 'all' || search) && (
-            <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
-              {users.length} of {state.data.length}
-            </span>
-          )}
         </div>
       )}
 
       {state.status === 'error' && <ErrorState message={state.message} onRetry={refetch} />}
       {(state.status === 'loading' || state.status === 'idle') && <Skeleton className="h-64 w-full" />}
       {state.status === 'success' && users.length === 0 && (
-        <EmptyState title="No users" description="No users registered yet." />
+        <EmptyState title="No users" description="No users match the current filters." />
       )}
       {state.status === 'success' && users.length > 0 && (
         <AdminUserTable users={users} onEdit={handleEdit} onDelete={u => setPendingDelete(u)} />
       )}
 
+      {/* Edit modal */}
       {editing && (
         <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={e => e.target === e.currentTarget && setEditing(null)}
         >
           <div className="card" style={{ width: '100%', maxWidth: 440 }}>
             <div className="cluster cluster-4" style={{ justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
-              <span className="text-headline-sm">Edit User</span>
+              <div>
+                <span className="text-headline-sm">Edit User</span>
+                <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)', marginTop: 4 }}>
+                  ID #{editing.id} · Joined {editing.dateJoined}
+                </p>
+              </div>
               <button className="btn btn-sm btn-ghost" onClick={() => setEditing(null)}>✕</button>
             </div>
             <AdminUserEditForm
@@ -158,27 +245,13 @@ export function AdminUsersPage() {
       <ConfirmDialog
         open={pendingDelete !== null}
         title="Delete user?"
-        description={pendingDelete ? `User "${pendingDelete.username}" will be permanently removed. This cannot be undone.` : undefined}
+        description={pendingDelete ? `User "${pendingDelete.username}" (${pendingDelete.email}) will be permanently removed. This cannot be undone.` : undefined}
         confirmText="Delete"
         destructive
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setPendingDelete(null)}
       />
-    </div>
-  )
-}
-
-export function AdminUsersPagePreview() {
-  const users: AdminUser[] = [
-    { id: 1, username: 'zakaria',  email: 'zakaria@example.com',  role: 'admin',   isActive: true,  dateJoined: '2024-01-01' },
-    { id: 2, username: 'analyst1', email: 'analyst1@example.com', role: 'analyst', isActive: true,  dateJoined: '2024-01-05' },
-    { id: 3, username: 'user42',   email: 'user42@example.com',   role: 'user',    isActive: false, dateJoined: '2024-01-10' },
-  ]
-  return (
-    <div className="p-6 stack stack-5">
-      <PageHeader title="User Management" subtitle="View and edit all platform users." />
-      <AdminUserTable users={users} onEdit={() => {}} onDelete={() => {}} />
     </div>
   )
 }

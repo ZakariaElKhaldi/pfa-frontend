@@ -1,245 +1,368 @@
-import { useNavigate } from 'react-router'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { ErrorState } from '@/components/layout/ErrorState'
-import { EmptyState } from '@/components/layout/EmptyState'
-import { ManipulationFlagCard, type PatternType } from '@/components/cards/ManipulationFlagCard'
-import { RetrainLogRow, type RetrainLogEntry, type RetrainStatus } from '@/components/cards/RetrainLogRow'
-import { MoodCard } from '@/components/cards/MoodCard'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { useData } from '@/hooks/useApi'
-import { useAuth } from '@/context/AuthContext'
-import { api } from '@/lib/api'
-import { useCallback, useState } from 'react'
-import { toast } from 'sonner'
-import type { Mood } from '@/components/design-system/MoodBadge'
+import { useMemo } from 'react'
+import { PageHeader }       from '@/components/layout/PageHeader'
+import { ErrorState }       from '@/components/layout/ErrorState'
+import { EmptyState }       from '@/components/layout/EmptyState'
+import { Skeleton }         from '@/components/ui/skeleton'
+import { useData }          from '@/hooks/useApi'
+import { api }              from '@/lib/api'
+import { toast }            from 'sonner'
+import { Icons, SectionLabel } from '@/components/design-system'
+import { ManipulationFlagCard } from '@/components/cards/ManipulationFlagCard'
+import type { PatternType }    from '@/components/cards/ManipulationFlagCard'
+import { RetrainLogRow }       from '@/components/cards/RetrainLogRow'
+import type { RetrainLogEntry } from '@/components/cards/RetrainLogRow'
+import { MoodCard }            from '@/components/cards/MoodCard'
+import type { Mood }           from '@/components/design-system/MoodBadge'
 
-interface FlagItem {
-  id: number; ticker_symbol: string; pattern_type: PatternType; confidence: number
-  detected_at: string; reviewed: boolean
-  evidence?: Record<string, unknown>
-}
-interface LogItem {
-  id: number; ticker_symbol: string | null; trigger_reason: string; old_accuracy: number | null
-  new_accuracy: number | null; model_version: string; training_samples: number
-  started_at: string; completed_at: string | null; status: RetrainStatus
-}
-interface MoodItem {
-  id: number; ticker_symbol: string; dominant_mood: Mood; confidence: number
-  window_start: string; window_end: string
+// ── Backend response shapes ───────────────────────────────────────────────────
+
+interface ManipulationFlagResponse {
+  id:           number
+  ticker_symbol: string
+  pattern_type: PatternType
+  confidence:   number
+  evidence:     Record<string, unknown>
+  detected_at:  string
+  reviewed:     boolean
 }
 
-export function IntelligencePage() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { state: flags,    refetch: refetchFlags }  = useData<FlagItem[]>('/api/intelligence/flags/?reviewed=false')
-  const { state: logs,     refetch: refetchLogs }   = useData<LogItem[]>('/api/intelligence/retrain-logs/')
-  const { state: moods }                            = useData<MoodItem[]>('/api/intelligence/mood/')
-  const [reviewing, setReviewing] = useState<Set<number>>(new Set())
-  const [selectedFlag, setSelectedFlag] = useState<FlagItem | null>(null)
-  const canReview = user?.role === 'admin'
+interface RetrainLogResponse {
+  id:               number
+  ticker_symbol:    string | null
+  trigger_reason:   string
+  old_accuracy:     number
+  new_accuracy:     number | null
+  model_version:    string
+  training_samples: number
+  started_at:       string
+  completed_at:     string | null
+  status:           'running' | 'success' | 'failed'
+}
 
-  const handleReview = useCallback(async (id: number) => {
-    setReviewing(s => new Set(s).add(id))
-    try {
-      await api.patch(`/api/intelligence/flags/${id}/review/`, {})
-      toast.success('Flag marked as reviewed')
-      refetchFlags()
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Review failed')
-    } finally {
-      setReviewing(s => { const n = new Set(s); n.delete(id); return n })
-    }
-  }, [refetchFlags])
+interface MoodSnapshotResponse {
+  id:            number
+  ticker_symbol: string
+  dominant_mood: string
+  confidence:    number
+  window_start:  string
+  window_end:    string
+  created_at:    string
+}
 
-  const logEntries: RetrainLogEntry[] = logs.status === 'success'
-    ? logs.data.map(l => ({
-        id:              l.id,
-        ticker:          l.ticker_symbol ?? undefined,
-        triggerReason:   l.trigger_reason,
-        oldAccuracy:     l.old_accuracy ?? 0,
-        newAccuracy:     l.new_accuracy ?? 0,
-        modelVersion:    l.model_version,
-        trainingSamples: l.training_samples,
-        startedAt:       new Date(l.started_at).toLocaleString(),
-        completedAt:     l.completed_at ? new Date(l.completed_at).toLocaleString() : undefined,
-        status:          l.status,
-      }))
-    : []
+// ── Quick-stat card ───────────────────────────────────────────────────────────
+
+function StatChip({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon:    React.ReactNode
+  label:   string
+  value:   string | number
+  accent?: 'positive' | 'negative' | 'warning'
+}) {
+  const accentColor =
+    accent === 'positive' ? 'var(--secondary)' :
+    accent === 'negative' ? 'var(--tertiary)'  :
+    accent === 'warning'  ? 'var(--warning)'   :
+    'var(--on-surface)'
 
   return (
-    <div className="p-6 stack stack-6">
-      <PageHeader title="Intelligence" subtitle="Manipulation flags, mood snapshots, and retrain logs." />
-
-      {/* Manipulation Flags */}
-      <div className="stack stack-3">
-        <span style={{ fontSize: 'var(--text-label-md)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase', color: 'var(--on-surface-muted)' }}>
-          Manipulation Flags
-        </span>
-        {flags.status === 'error' && <ErrorState message={flags.message} onRetry={refetchFlags} />}
-        {(flags.status === 'idle' || flags.status === 'loading') && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40 w-full" />)}
-          </div>
-        )}
-        {flags.status === 'success' && flags.data.length === 0 && (
-          <EmptyState title="No unreviewed flags" description="All manipulation flags have been reviewed." />
-        )}
-        {flags.status === 'success' && flags.data.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-            {flags.data.map(f => (
-              <div
-                key={f.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedFlag(f)}
-                onKeyDown={e => e.key === 'Enter' && setSelectedFlag(f)}
-                style={{ cursor: 'pointer' }}
-              >
-                <ManipulationFlagCard
-                  symbol={f.ticker_symbol}
-                  patternType={f.pattern_type}
-                  confidence={f.confidence}
-                  detectedAt={new Date(f.detected_at).toLocaleString()}
-                  reviewed={f.reviewed}
-                  onMarkReviewed={canReview && !reviewing.has(f.id) ? () => handleReview(f.id) : undefined}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+    <div style={{
+      background:   'var(--surface-container)',
+      borderRadius: 'var(--radius-xl)',
+      padding:      'var(--space-4) var(--space-5)',
+      display:      'flex',
+      alignItems:   'center',
+      gap:          'var(--space-3)',
+      flex:         '1 1 0',
+      minWidth:     0,
+    }}>
+      <div style={{
+        width:        36,
+        height:       36,
+        borderRadius: 'var(--radius-lg)',
+        background:   `color-mix(in srgb, ${accentColor} 12%, transparent)`,
+        display:      'flex',
+        alignItems:   'center',
+        justifyContent: 'center',
+        color:        accentColor,
+        flexShrink:   0,
+      }}>
+        {icon}
       </div>
-
-      {/* Market Mood */}
-      <div className="stack stack-3">
-        <span style={{ fontSize: 'var(--text-label-md)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase', color: 'var(--on-surface-muted)' }}>
-          Market Mood
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span style={{
+          fontSize:   'var(--text-label-sm)',
+          color:      'var(--on-surface-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: 'var(--tracking-label-pro)',
+          whiteSpace: 'nowrap',
+        }}>
+          {label}
         </span>
-        {(moods.status === 'idle' || moods.status === 'loading') && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
-          </div>
-        )}
-        {moods.status === 'success' && moods.data.length === 0 && (
-          <EmptyState title="No mood snapshots" description="Mood data will appear after the next pipeline run." />
-        )}
-        {moods.status === 'success' && moods.data.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
-            {moods.data.slice(0, 6).map(m => (
-              <MoodCard
-                key={m.id}
-                symbol={m.ticker_symbol}
-                mood={m.dominant_mood}
-                confidence={m.confidence}
-                windowStart={new Date(m.window_start).toLocaleDateString()}
-                windowEnd={new Date(m.window_end).toLocaleDateString()}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Retrain Logs */}
-      <div className="stack stack-3">
-        <span style={{ fontSize: 'var(--text-label-md)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase', color: 'var(--on-surface-muted)' }}>
-          Retrain Logs
+        <span style={{
+          fontSize:           'var(--text-mono-lg)',
+          fontFamily:         'var(--font-mono)',
+          fontWeight:         700,
+          color:              accentColor,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {value}
         </span>
-        {logs.status === 'error' && <ErrorState message={logs.message} onRetry={refetchLogs} />}
-        {(logs.status === 'idle' || logs.status === 'loading') && <Skeleton className="h-32 w-full" />}
-        {logs.status === 'success' && logEntries.length === 0 && (
-          <EmptyState title="No retrain logs" description="No model retraining has occurred yet." />
-        )}
-        {logEntries.length > 0 && <RetrainLogRow entries={logEntries} />}
       </div>
-
-      {/* Flag detail modal */}
-      <Dialog open={selectedFlag !== null} onOpenChange={o => !o && setSelectedFlag(null)}>
-        <DialogContent className="sm:max-w-2xl">
-          {selectedFlag && (
-            <>
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedFlag.ticker_symbol} · {selectedFlag.pattern_type.replace(/_/g, ' ')}
-                </DialogTitle>
-                <DialogDescription>
-                  Detected {new Date(selectedFlag.detected_at).toLocaleString()} ·
-                  Confidence {(selectedFlag.confidence * 100).toFixed(1)}% ·
-                  {selectedFlag.reviewed ? ' Reviewed' : ' Unreviewed'}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="stack stack-3" style={{ marginTop: 'var(--space-3)' }}>
-                <span style={{ fontSize: 'var(--text-label-sm)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase', color: 'var(--on-surface-muted)' }}>
-                  Evidence
-                </span>
-                <pre
-                  style={{
-                    fontSize:     'var(--text-body-sm)',
-                    fontFamily:   'var(--font-mono)',
-                    background:   'var(--surface-container-lowest)',
-                    border:       '1px solid var(--outline-variant)',
-                    borderRadius: 'var(--radius-md)',
-                    padding:      'var(--space-3)',
-                    maxHeight:    320,
-                    overflow:     'auto',
-                    whiteSpace:   'pre-wrap',
-                    wordBreak:    'break-word',
-                    color:        'var(--on-surface)',
-                  }}
-                >
-                  {selectedFlag.evidence
-                    ? JSON.stringify(selectedFlag.evidence, null, 2)
-                    : '(No evidence payload provided.)'}
-                </pre>
-              </div>
-
-              <div className="cluster cluster-2" style={{ justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
-                <Button variant="outline" onClick={() => navigate(`/tickers/${selectedFlag.ticker_symbol}`)}>
-                  View ticker
-                </Button>
-                {canReview && !selectedFlag.reviewed && (
-                  <Button
-                    onClick={() => {
-                      handleReview(selectedFlag.id)
-                      setSelectedFlag(null)
-                    }}
-                    disabled={reviewing.has(selectedFlag.id)}
-                  >
-                    Mark as reviewed
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
 
-export function IntelligencePagePreview() {
-  const flags: FlagItem[] = [
-    { id: 1, ticker_symbol: 'AMC',  pattern_type: 'pump_dump',         confidence: 0.91, detected_at: new Date().toISOString(), reviewed: false },
-    { id: 2, ticker_symbol: 'BBBY', pattern_type: 'coordinated_spam', confidence: 0.74, detected_at: new Date(Date.now() - 3600000).toISOString(), reviewed: false },
-  ]
-  const logs: RetrainLogEntry[] = [
-    { id: 1, ticker: 'AAPL', triggerReason: 'accuracy_drop', oldAccuracy: 0.62, newAccuracy: 0.74, modelVersion: 'v2.1', trainingSamples: 4200, startedAt: '2024-01-15 02:00', completedAt: '2024-01-15 02:14', status: 'success' },
-    { id: 2,                  triggerReason: 'scheduled',     oldAccuracy: 0.70, newAccuracy: 0.71, modelVersion: 'v2.2', trainingSamples: 9800, startedAt: '2024-01-14 02:00', completedAt: '2024-01-14 02:22', status: 'success' },
-  ]
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export function IntelligencePage() {
+  const { state: retrainState, refetch: refetchRetrain } =
+    useData<RetrainLogResponse[]>('/api/intelligence/retrain-logs/')
+
+  const { state: flagsState, refetch: refetchFlags } =
+    useData<ManipulationFlagResponse[]>('/api/intelligence/flags/')
+
+  const { state: moodState } =
+    useData<MoodSnapshotResponse[]>('/api/intelligence/mood/')
+
+  // ── handlers ──────────────────────────────────────────────────────────────
+
+  const handleReviewFlag = async (id: number) => {
+    try {
+      await api.patch(`/api/intelligence/flags/${id}/review/`, {})
+      toast.success('Flag marked as reviewed')
+      refetchFlags()
+    } catch {
+      toast.error('Failed to review flag')
+    }
+  }
+
+  // ── derived data ──────────────────────────────────────────────────────────
+
+  const retrainEntries = useMemo<RetrainLogEntry[]>(() => {
+    if (retrainState.status !== 'success') return []
+    return retrainState.data.map(r => ({
+      id:              r.id,
+      ticker:          r.ticker_symbol ?? undefined,
+      triggerReason:   r.trigger_reason,
+      oldAccuracy:     r.old_accuracy,
+      newAccuracy:     r.new_accuracy ?? r.old_accuracy,
+      modelVersion:    r.model_version || '—',
+      trainingSamples: r.training_samples,
+      startedAt:       new Date(r.started_at).toLocaleString(),
+      completedAt:     r.completed_at ? new Date(r.completed_at).toLocaleString() : undefined,
+      status:          r.status,
+    }))
+  }, [retrainState])
+
+  const pendingFlags = useMemo(() =>
+    flagsState.status === 'success'
+      ? flagsState.data.filter(f => !f.reviewed)
+      : [],
+  [flagsState])
+
+  const resolvedFlags = useMemo(() =>
+    flagsState.status === 'success'
+      ? flagsState.data.filter(f => f.reviewed)
+      : [],
+  [flagsState])
+
+  // quick-stat helpers
+  const latestRetrain = retrainState.status === 'success' ? retrainState.data[0] : null
+  const latestDelta   = latestRetrain && latestRetrain.new_accuracy != null
+    ? ((latestRetrain.new_accuracy - latestRetrain.old_accuracy) * 100)
+    : null
+
+  const moodSnapshots = moodState.status === 'success' ? moodState.data : []
+
+  // ── render ────────────────────────────────────────────────────────────────
+
   return (
     <div className="p-6 stack stack-6">
-      <PageHeader title="Intelligence" subtitle="Manipulation flags, mood snapshots, and retrain logs." />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-        {flags.map(f => (
-          <ManipulationFlagCard key={f.id} symbol={f.ticker_symbol} patternType={f.pattern_type} confidence={f.confidence} detectedAt={new Date(f.detected_at).toLocaleString()} reviewed={f.reviewed} onMarkReviewed={() => {}} />
-        ))}
+
+      <PageHeader
+        title="Intelligence"
+        subtitle="Monitor model retraining, manipulation alerts, and market mood snapshots."
+      />
+
+      {/* ── Quick Stats ── */}
+      <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+        <StatChip
+          icon={<Icons.Flag size={18} />}
+          label="Pending Flags"
+          value={pendingFlags.length}
+          accent={pendingFlags.length > 0 ? 'negative' : 'positive'}
+        />
+        <StatChip
+          icon={<Icons.RefreshCw size={18} />}
+          label="Retrain Runs"
+          value={retrainState.status === 'success' ? retrainState.data.length : '—'}
+        />
+        <StatChip
+          icon={<Icons.TrendingUp size={18} />}
+          label="Latest Accuracy Δ"
+          value={latestDelta != null
+            ? `${latestDelta >= 0 ? '+' : ''}${latestDelta.toFixed(1)}pp`
+            : '—'}
+          accent={
+            latestDelta == null  ? undefined  :
+            latestDelta > 0      ? 'positive' :
+            latestDelta < 0      ? 'negative' : undefined
+          }
+        />
+        <StatChip
+          icon={<Icons.Brain size={18} />}
+          label="Mood Snapshots"
+          value={moodState.status === 'success' ? moodState.data.length : '—'}
+        />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
-        <MoodCard symbol="AAPL" mood="bullish" confidence={0.82} windowStart="Jan 14" windowEnd="Jan 15" />
-        <MoodCard symbol="TSLA" mood="panic"   confidence={0.71} windowStart="Jan 14" windowEnd="Jan 15" />
+
+      {/* ── Main Grid: Retrain + Flags ── */}
+      <div style={{
+        display:             'grid',
+        gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
+        gap:                 'var(--space-6)',
+        alignItems:          'start',
+      }}>
+
+        {/* Left: Retrain Log */}
+        <section className="stack stack-3">
+          <SectionLabel as="h2">Model Retrain Log</SectionLabel>
+
+          {retrainState.status === 'error' && (
+            <ErrorState message={retrainState.message} onRetry={refetchRetrain} />
+          )}
+          {(retrainState.status === 'idle' || retrainState.status === 'loading') && (
+            <Skeleton className="h-48 w-full" />
+          )}
+          {retrainState.status === 'success' && retrainEntries.length === 0 && (
+            <EmptyState
+              icon={<Icons.RefreshCw size={32} />}
+              title="No retrain logs yet"
+              description="Model retraining events will appear here once the retrainer runs."
+            />
+          )}
+          {retrainState.status === 'success' && retrainEntries.length > 0 && (
+            <RetrainLogRow entries={retrainEntries} />
+          )}
+        </section>
+
+        {/* Right: Manipulation Flags */}
+        <section className="stack stack-3">
+          <SectionLabel
+            as="h2"
+            action={
+              pendingFlags.length > 0 ? (
+                <span style={{
+                  fontSize:   'var(--text-label-sm)',
+                  fontWeight: 700,
+                  color:      'var(--tertiary)',
+                  background: 'var(--tertiary-container)',
+                  padding:    '2px 8px',
+                  borderRadius: 'var(--radius-full)',
+                }}>
+                  {pendingFlags.length} pending
+                </span>
+              ) : undefined
+            }
+          >
+            Manipulation Flags
+          </SectionLabel>
+
+          {flagsState.status === 'error' && (
+            <ErrorState message={flagsState.message} onRetry={refetchFlags} />
+          )}
+          {(flagsState.status === 'idle' || flagsState.status === 'loading') && (
+            <Skeleton className="h-64 w-full" />
+          )}
+          {flagsState.status === 'success' && flagsState.data.length === 0 && (
+            <EmptyState
+              icon={<Icons.ShieldCheck size={32} />}
+              title="No flags detected"
+              description="The system hasn't flagged any suspicious market activity."
+            />
+          )}
+
+          {/* Pending flags */}
+          {pendingFlags.length > 0 && (
+            <div className="stack stack-2">
+              {pendingFlags.map(f => (
+                <ManipulationFlagCard
+                  key={f.id}
+                  symbol={f.ticker_symbol}
+                  patternType={f.pattern_type}
+                  confidence={f.confidence}
+                  detectedAt={new Date(f.detected_at).toLocaleString()}
+                  reviewed={false}
+                  onMarkReviewed={() => handleReviewFlag(f.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Resolved flags */}
+          {resolvedFlags.length > 0 && (
+            <div className="stack stack-2" style={{ marginTop: 'var(--space-4)' }}>
+              <SectionLabel as="h3">Recently Reviewed</SectionLabel>
+              {resolvedFlags.slice(0, 8).map(f => (
+                <ManipulationFlagCard
+                  key={f.id}
+                  symbol={f.ticker_symbol}
+                  patternType={f.pattern_type}
+                  confidence={f.confidence}
+                  detectedAt={new Date(f.detected_at).toLocaleString()}
+                  reviewed
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
-      <RetrainLogRow entries={logs} />
+
+      {/* ── Market Mood Snapshots ── */}
+      <section className="stack stack-3">
+        <SectionLabel as="h2">Market Mood Snapshots</SectionLabel>
+
+        {moodState.status === 'error' && (
+          <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
+            Could not load mood data.
+          </p>
+        )}
+        {(moodState.status === 'idle' || moodState.status === 'loading') && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
+          </div>
+        )}
+        {moodState.status === 'success' && moodSnapshots.length === 0 && (
+          <EmptyState
+            icon={<Icons.Activity size={32} />}
+            title="No mood snapshots"
+            description="Market mood data will appear once the intelligence engine runs."
+          />
+        )}
+        {moodState.status === 'success' && moodSnapshots.length > 0 && (
+          <div style={{
+            display:             'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap:                 'var(--space-3)',
+          }}>
+            {moodSnapshots.map(m => (
+              <MoodCard
+                key={m.id}
+                symbol={m.ticker_symbol}
+                mood={m.dominant_mood as Mood}
+                confidence={m.confidence}
+                windowStart={new Date(m.window_start).toLocaleString()}
+                windowEnd={new Date(m.window_end).toLocaleString()}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
     </div>
   )
 }

@@ -40,6 +40,9 @@ import {
   Grid3x3,
   PieChart,
   Eye,
+  Brain,
+  Flag,
+  RefreshCw,
 } from 'lucide-react'
 export const Icons = {
   Grid:          LayoutGrid,
@@ -78,6 +81,10 @@ export const Icons = {
   Grid3x3:       Grid3x3,
   PieChart:      PieChart,
   Eye:           Eye,
+  Brain:         Brain,
+  Flag:          Flag,
+  RefreshCw:     RefreshCw,
+  Activity:      Activity,
 } as const
 
 export type IconName = keyof typeof Icons
