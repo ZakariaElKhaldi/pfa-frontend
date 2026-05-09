@@ -10,9 +10,13 @@ import { D3SectorTreemap } from '@/components/charts/D3SectorTreemap'
 import { D3SentimentBeeswarm } from '@/components/charts/D3SentimentBeeswarm'
 import { D3SignalHeatmap } from '@/components/charts/D3SignalHeatmap'
 import { D3MarketBreadth } from '@/components/charts/D3MarketBreadth'
+import { D3VolumeForecast, type HistoricalVolume } from '@/components/charts/D3VolumeForecast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
 import { useData } from '@/hooks/useApi'
+import { useOHLCData } from '@/hooks/useOHLCData'
 import { PageMeta } from '@/components/common/PageMeta'
+import { Search } from 'lucide-react'
 
 interface GlobalAccuracy { overall_pct: number | null; by_signal: Partial<Record<'BUY' | 'SELL' | 'HOLD', number>>; total_evaluated: number }
 interface TopMover { ticker: string; signal: string; prev_signal: string; delta: number; normalized_index: number }
@@ -88,7 +92,14 @@ export function AnalyticsPage() {
   const { state: movers, refetch: refetchMovers }     = useData<TopMover[]>('/api/analytics/top-movers/')
   const { state: leaderboard }                        = useData<LeaderboardItem[]>('/api/analytics/sentiment-leaderboard/?limit=20')
   const { state: sectorRollup }                       = useData<SectorItem[]>('/api/analytics/sector-rollup/')
-  const { state: recentSignals }                      = useData<RecentSignal[]>('/api/signals/recent/?limit=200&all=true')
+  const { state: recentSignals }                      = useData<RecentSignal[]>('/api/signals/recent/?limit=2000&all=true')
+
+  const [forecastTickerInput, setForecastTickerInput] = useState('AAPL')
+  const [forecastTicker, setForecastTicker] = useState('AAPL')
+
+  const { bars: priceChartData } = useOHLCData(forecastTicker, 200)
+  const { state: volumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${forecastTicker}`)
+  const { state: breadthForecast } = useData<{ forecast: number[]; last_historical_value: number }>('/api/analytics/forecast/breadth/')
 
   const rangeDays = RANGES[rangeIdx].days
 
@@ -137,6 +148,13 @@ export function AnalyticsPage() {
       postCount: d.post_count ?? 0,
     }))
   }, [leaderboard])
+
+  const histVol: HistoricalVolume[] = useMemo(() => {
+    return priceChartData.map(p => ({
+      date: p.date.toISOString().split('T')[0],
+      volume: p.volume,
+    }))
+  }, [priceChartData])
 
   return (
     <div className="p-6 stack stack-6">
@@ -219,7 +237,12 @@ export function AnalyticsPage() {
         <div className="stack stack-3">
           <SectionLabel subtitle={`BUY (green) vs SELL (red) proportion over time · ${RANGES[rangeIdx].label}`}>Market Breadth</SectionLabel>
           <div className="card" style={{ overflow: 'hidden' }}>
-            <D3MarketBreadth data={recentSignals.data} days={rangeDays} height={200} />
+            <D3MarketBreadth 
+              data={recentSignals.data} 
+              days={rangeDays} 
+              height={340}
+              forecastData={breadthForecast.status === 'success' ? breadthForecast.data.forecast : undefined}
+            />
           </div>
         </div>
       )}
@@ -281,6 +304,64 @@ export function AnalyticsPage() {
           )}
         </div>
       </div>
+
+      {/* ─── Row 5: Market Volume Forecast ──────────────────────────── */}
+      <div className="card stack stack-3">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <SectionLabel>Market Volume Forecast</SectionLabel>
+            <span style={{
+              fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
+              color: 'hsl(160, 70%, 45%)', background: 'hsla(160, 70%, 45%, 0.1)',
+              padding: '2px 7px', borderRadius: 'var(--radius-full)',
+              border: '1px solid hsla(160, 70%, 45%, 0.2)',
+            }}>
+              TIMESFM AI
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
+              30-day projection
+            </span>
+            <div style={{ position: 'relative', width: 140 }}>
+              <Input
+                value={forecastTickerInput}
+                onChange={e => setForecastTickerInput(e.target.value.toUpperCase())}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && forecastTickerInput.trim()) {
+                    setForecastTicker(forecastTickerInput.trim())
+                  }
+                }}
+                onBlur={() => {
+                  if (forecastTickerInput.trim()) setForecastTicker(forecastTickerInput.trim())
+                }}
+                placeholder="Ticker (e.g. AAPL)"
+                style={{ height: 32, paddingLeft: 32, fontSize: 'var(--text-label-sm)' }}
+              />
+              <Search size={14} style={{ position: 'absolute', left: 10, top: 9, color: 'var(--on-surface-muted)' }} />
+            </div>
+          </div>
+        </div>
+        
+        {histVol.length > 1 ? (
+          <D3VolumeForecast
+            historicalData={histVol}
+            forecastData={volumeForecast.status === 'success' ? volumeForecast.data.forecast : null}
+            isLoading={volumeForecast.status === 'loading'}
+            error={volumeForecast.status === 'error' ? volumeForecast.message : null}
+            height={300}
+          />
+        ) : priceChartData.length === 0 ? (
+          <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Skeleton className="w-full h-full" />
+          </div>
+        ) : (
+          <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'var(--on-surface-muted)' }}>No volume data found for {forecastTicker}</span>
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
