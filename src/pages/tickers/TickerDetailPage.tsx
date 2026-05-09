@@ -16,6 +16,7 @@ import { SentimentPriceChart, type SentimentPricePoint } from '@/components/char
 import { SignalAccuracyChart, type AccuracyRecord } from '@/components/charts/SignalAccuracyChart'
 import { FeatureImportanceChart, type FeatureImportance } from '@/components/charts/FeatureImportanceChart'
 import { SentimentTrendChart, type SentimentPoint } from '@/components/charts/SentimentTrendChart'
+import { D3VolumeForecast, type HistoricalVolume } from '@/components/charts/D3VolumeForecast'
 import { BuySellForm } from '@/components/forms/BuySellForm'
 import { WatchlistStarButton } from '@/components/common/WatchlistStarButton'
 import { Input } from '@/components/ui/input'
@@ -92,6 +93,7 @@ export function TickerDetailPage() {
   const { state: indicators }  = useData<IndicatorsData>(`/api/tickers/${sym}/indicators/`)
   const { state: tickerMood }  = useData<MoodSnap[]>(`/api/tickers/${sym}/mood/`)
   const { state: watchlist, refetch: refetchWatchlist } = useData<WatchlistItem[]>('/api/watchlist/')
+  const { state: volumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${sym}`)
 
   const [tradeLoading, setTradeLoading] = useState(false)
   const [tradeError, setTradeError]     = useState<string | undefined>()
@@ -202,6 +204,15 @@ export function TickerDetailPage() {
         ]
     : []
 
+  // Historical volume for the forecast chart
+  const histVol: HistoricalVolume[] = useMemo(
+    () => priceChartData.map(p => ({
+      date: p.date.toISOString().split('T')[0],
+      volume: p.volume,
+    })),
+    [priceChartData],
+  )
+
   // Latest signal indicators
   const latestSignal = history.status === 'success' ? history.data[0] : null
 
@@ -293,6 +304,35 @@ export function TickerDetailPage() {
         <div className="card stack stack-2">
           <SectionLabel>Price Chart</SectionLabel>
           <PriceChart data={priceChartData} height={400} />
+        </div>
+      )}
+
+      {/* Volume Forecast — TimesFM AI */}
+      {histVol.length > 1 && (
+        <div className="card stack stack-3">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <SectionLabel>Volume Forecast</SectionLabel>
+              <span style={{
+                fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
+                color: 'hsl(160, 70%, 45%)', background: 'hsla(160, 70%, 45%, 0.1)',
+                padding: '2px 7px', borderRadius: 'var(--radius-full)',
+                border: '1px solid hsla(160, 70%, 45%, 0.2)',
+              }}>
+                TIMESFM AI
+              </span>
+            </div>
+            <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
+              30-day zero-shot projection · Google TimesFM 200M
+            </span>
+          </div>
+          <D3VolumeForecast
+            historicalData={histVol}
+            forecastData={volumeForecast.status === 'success' ? volumeForecast.data.forecast : null}
+            isLoading={volumeForecast.status === 'loading'}
+            error={volumeForecast.status === 'error' ? volumeForecast.message : null}
+            height={300}
+          />
         </div>
       )}
 
