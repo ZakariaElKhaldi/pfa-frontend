@@ -318,21 +318,21 @@ export function ExportPage() {
           )}
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
             <button
-              className="btn btn-ghost"
+              className="btn btn-sm btn-ghost"
               onClick={handlePreview}
               disabled={previewing || includes.size === 0}
-              style={{ flex: 1, minWidth: 120 }}
             >
-              {previewing ? 'Loading…' : 'Preview Data'}
+              <Icons.Eye size={14} />
+              {previewing ? 'Loading…' : 'Preview'}
             </button>
             <button
-              className="btn btn-primary"
+              className="btn btn-sm btn-primary"
               onClick={() => handleExport()}
               disabled={loading || includes.size === 0}
-              style={{ flex: 2, minWidth: 160 }}
             >
+              <Icons.Download size={14} />
               {loading ? 'Preparing…' : `Download ${format.toUpperCase()}`}
             </button>
           </div>
