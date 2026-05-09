@@ -1,6 +1,7 @@
 import { useState, useCallback, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -48,6 +49,11 @@ const SECTION_LABEL: React.CSSProperties = {
   fontSize: 'var(--text-label-md)', fontWeight: 500,
   letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
   color: 'var(--on-surface-muted)',
+}
+
+function formatEquityTooltip(value: ValueType | undefined, _name: NameType | undefined): [string, string] {
+  const n = typeof value === 'number' ? value : Number(value ?? 0)
+  return [`$${n.toFixed(2)}`, 'Equity']
 }
 
 export function BacktestPage() {
@@ -286,7 +292,7 @@ function BacktestResult({ run, equityPoints, onClose }: { run: BacktestRun; equi
               />
               <Tooltip
                 contentStyle={{ background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body-sm)' }}
-                formatter={(v: number) => [`$${v.toFixed(2)}`, 'Equity']}
+                formatter={formatEquityTooltip}
               />
               <Line type="monotone" dataKey="equity" stroke="hsl(158, 60%, 45%)" strokeWidth={2} dot={false} />
             </LineChart>

@@ -54,9 +54,10 @@ interface SignalItem {
 export function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const canViewAlerts = user?.role === 'analyst' || user?.role === 'admin'
   const { state: trending, refetch: refetchTrending } = useData<TrendingItem[]>('/api/social/trending/')
   const { state: portfolio, refetch: refetchPortfolio }  = useData<PortfolioSummary>('/api/portfolio/summary/')
-  const { state: alerts, refetch: refetchAlerts }        = useData<AlertFlagItem[]>('/api/alerts/')
+  const { state: alerts, refetch: refetchAlerts }        = useData<AlertFlagItem[]>(canViewAlerts ? '/api/alerts/' : null, [canViewAlerts])
   const { state: signals, refetch: refetchSignals }      = useData<SignalItem[]>('/api/signals/recent/?limit=10')
   const { state: watchlist }                             = useData<WatchlistEntry[]>('/api/watchlist/')
 
@@ -115,14 +116,16 @@ export function DashboardPage() {
             />
           </motion.div>
         ) : <Skeleton className="h-24 w-full" />}
-        <motion.div variants={cardVariants}>
-          <MetricCard
-            label="Active Alerts"
-            value={activeAlertCount === null ? '—' : String(activeAlertCount)}
-            delta={alerts.status === 'success' ? `${alertsData.length} total` : ''}
-            positive={activeAlertCount === 0}
-          />
-        </motion.div>
+        {canViewAlerts && (
+          <motion.div variants={cardVariants}>
+            <MetricCard
+              label="Active Alerts"
+              value={activeAlertCount === null ? '—' : String(activeAlertCount)}
+              delta={alerts.status === 'success' ? `${alertsData.length} total` : ''}
+              positive={activeAlertCount === 0}
+            />
+          </motion.div>
+        )}
         <motion.div variants={cardVariants}>
           <MetricCard
             label="Signals Today"
@@ -178,9 +181,7 @@ export function DashboardPage() {
               key={item.symbol}
               rank={i + 1}
               symbol={item.symbol}
-              name={item.symbol}
               postCount={item.mention_count}
-              bullishRatio={0.5}
               onClick={() => navigate(`/tickers/${item.symbol}`)}
             />
           ))}
@@ -197,7 +198,14 @@ export function DashboardPage() {
         )}
         {watchlist.status === 'success' && watchlist.data.length > 0 && (
           <div className="stack stack-3">
-            <SectionLabel>Watchlist</SectionLabel>
+            <div className="cluster cluster-3" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <SectionLabel>Watchlist</SectionLabel>
+              {watchlist.data.length > 8 && (
+                <button onClick={() => navigate('/tickers')} className="btn btn-ghost btn-sm" style={{ padding: '0 var(--space-2)' }}>
+                  View all &rarr;
+                </button>
+              )}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
               {watchlist.data.slice(0, 8).map(w => {
                 const q       = quotes[w.symbol]
@@ -225,31 +233,33 @@ export function DashboardPage() {
       </motion.div>
 
       {/* Active Alerts */}
-      <motion.div variants={staggerItem} className="stack stack-3">
-        <SectionLabel>Active Alerts</SectionLabel>
-        {alerts.status === 'loading' && <SkeletonGrid count={3} minWidth="280px" height="112px" />}
-        {alerts.status === 'error' && (
-          <ErrorState message={alerts.message} onRetry={refetchAlerts} />
-        )}
-        {alerts.status === 'success' && alertsData.filter(a => !a.resolved).length === 0 && (
-          <EmptyState title="No active alerts" description="All clear — no signals to review." />
-        )}
-        {alerts.status === 'success' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-3)' }}>
-            {alertsData.filter(a => !a.resolved).slice(0, 6).map(a => (
-              <AlertCard
-                key={a.id}
-                type={a.type}
-                symbol={a.ticker_symbol}
-                sentiment={a.sentiment}
-                momentum={a.momentum}
-                consistency={a.consistency}
-                resolved={a.resolved}
-              />
-            ))}
-          </div>
-        )}
-      </motion.div>
+      {canViewAlerts && (
+        <motion.div variants={staggerItem} className="stack stack-3">
+          <SectionLabel>Active Alerts</SectionLabel>
+          {alerts.status === 'loading' && <SkeletonGrid count={3} minWidth="280px" height="112px" />}
+          {alerts.status === 'error' && (
+            <ErrorState message={alerts.message} onRetry={refetchAlerts} />
+          )}
+          {alerts.status === 'success' && alertsData.filter(a => !a.resolved).length === 0 && (
+            <EmptyState title="No active alerts" description="All clear — no signals to review." />
+          )}
+          {alerts.status === 'success' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-3)' }}>
+              {alertsData.filter(a => !a.resolved).slice(0, 6).map(a => (
+                <AlertCard
+                  key={a.id}
+                  type={a.type}
+                  symbol={a.ticker_symbol}
+                  sentiment={a.sentiment}
+                  momentum={a.momentum}
+                  consistency={a.consistency}
+                  resolved={a.resolved}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Recent Signals */}
       <motion.div variants={staggerItem} className="stack stack-3">
@@ -317,7 +327,7 @@ export function DashboardPagePreview({
             Trending
           </span>
           {trending.map((item, i) => (
-            <TrendingTickerRow key={item.symbol} rank={i + 1} symbol={item.symbol} name={item.symbol} postCount={item.mention_count} bullishRatio={0.5} />
+            <TrendingTickerRow key={item.symbol} rank={i + 1} symbol={item.symbol} postCount={item.mention_count} />
           ))}
         </div>
       </div>

@@ -9,13 +9,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useData } from '@/hooks/useApi'
+import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import type { Mood } from '@/components/design-system/MoodBadge'
 
 interface FlagItem {
-  id: number; ticker_symbol: string; pattern_type: string; confidence: number
+  id: number; ticker_symbol: string; pattern_type: PatternType; confidence: number
   detected_at: string; reviewed: boolean
   evidence?: Record<string, unknown>
 }
@@ -31,11 +32,13 @@ interface MoodItem {
 
 export function IntelligencePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { state: flags,    refetch: refetchFlags }  = useData<FlagItem[]>('/api/intelligence/flags/?reviewed=false')
   const { state: logs,     refetch: refetchLogs }   = useData<LogItem[]>('/api/intelligence/retrain-logs/')
   const { state: moods }                            = useData<MoodItem[]>('/api/intelligence/mood/')
   const [reviewing, setReviewing] = useState<Set<number>>(new Set())
   const [selectedFlag, setSelectedFlag] = useState<FlagItem | null>(null)
+  const canReview = user?.role === 'admin'
 
   const handleReview = useCallback(async (id: number) => {
     setReviewing(s => new Set(s).add(id))
@@ -96,11 +99,11 @@ export function IntelligencePage() {
               >
                 <ManipulationFlagCard
                   symbol={f.ticker_symbol}
-                  patternType={f.pattern_type as PatternType}
+                  patternType={f.pattern_type}
                   confidence={f.confidence}
                   detectedAt={new Date(f.detected_at).toLocaleString()}
                   reviewed={f.reviewed}
-                  onMarkReviewed={reviewing.has(f.id) ? undefined : () => handleReview(f.id)}
+                  onMarkReviewed={canReview && !reviewing.has(f.id) ? () => handleReview(f.id) : undefined}
                 />
               </div>
             ))}
@@ -195,7 +198,7 @@ export function IntelligencePage() {
                 <Button variant="outline" onClick={() => navigate(`/tickers/${selectedFlag.ticker_symbol}`)}>
                   View ticker
                 </Button>
-                {!selectedFlag.reviewed && (
+                {canReview && !selectedFlag.reviewed && (
                   <Button
                     onClick={() => {
                       handleReview(selectedFlag.id)

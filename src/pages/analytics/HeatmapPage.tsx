@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -36,6 +37,12 @@ const SECTION_LABEL: React.CSSProperties = {
   fontSize: 'var(--text-label-md)', fontWeight: 500,
   letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
   color: 'var(--on-surface-muted)',
+}
+
+function formatHeatmapTooltip(value: ValueType | undefined, name: NameType | undefined): [string, string] {
+  const label = String(name)
+  const n = typeof value === 'number' ? value : Number(value ?? 0)
+  return [label === 'Signal' ? n.toFixed(3) : `${n.toFixed(2)}%`, label]
 }
 
 export function HeatmapPage() {
@@ -139,7 +146,7 @@ export function HeatmapPage() {
               <Tooltip
                 cursor={{ strokeDasharray: '3 3' }}
                 contentStyle={{ background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body-sm)' }}
-                formatter={(v: number, n: string) => [n === 'Signal' ? v.toFixed(3) : `${v.toFixed(2)}%`, n]}
+                formatter={formatHeatmapTooltip}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               {series.map(s => (

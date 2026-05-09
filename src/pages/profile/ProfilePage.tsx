@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useData } from '@/hooks/useApi'
+import { useTheme } from '@/context/ThemeContext'
 import { api } from '@/lib/api'
 
 type Theme  = 'light' | 'dark' | 'system'
@@ -204,7 +206,7 @@ function PasswordChangeSection() {
       </div>
 
       {err && (
-        <div role="alert" className="rounded-lg px-3 py-2 text-body-sm" style={{ background: 'var(--tertiary-container)', color: 'var(--tertiary)' }}>
+        <div role="alert" className="rounded-lg px-3 py-2 text-body-sm" style={{ background: 'var(--error-container)', color: 'var(--on-error-container)' }}>
           {err}
         </div>
       )}
@@ -222,6 +224,8 @@ function PreferencesSection() {
   const { state, refetch } = useData<UserPreference>('/api/auth/preferences/')
   const [draft, setDraft]  = useState<UserPreference | null>(null)
   const [busy, setBusy]    = useState(false)
+
+  const { setTheme } = useTheme()
 
   useEffect(() => {
     if (state.status === 'success') setDraft(state.data)
@@ -243,6 +247,7 @@ function PreferencesSection() {
     try {
       await api.patch('/api/auth/preferences/', draft)
       toast.success('Preferences saved')
+      setTheme(draft.theme)
       refetch()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Save failed')
@@ -261,24 +266,16 @@ function PreferencesSection() {
       <div className="stack stack-3">
         <div className="stack stack-1">
           <Label htmlFor="pref-theme">Theme</Label>
-          <select
-            id="pref-theme"
-            value={draft.theme}
-            onChange={e => setDraft({ ...draft, theme: e.target.value as Theme })}
-            disabled={busy}
-            style={{
-              padding: 'var(--space-2) var(--space-3)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--outline-variant)',
-              background: 'var(--surface-container-lowest)',
-              color: 'var(--on-surface)',
-              fontSize: 'var(--text-body-md)',
-            }}
-          >
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
+          <Select value={draft.theme} onValueChange={(val: Theme) => setDraft({ ...draft, theme: val })} disabled={busy}>
+            <SelectTrigger id="pref-theme" className="w-full" style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-container-lowest)', color: 'var(--on-surface)', fontSize: 'var(--text-body-md)' }}>
+              <SelectValue placeholder="Select theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="system">System</SelectItem>
+              <SelectItem value="light">Light</SelectItem>
+              <SelectItem value="dark">Dark</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="stack stack-1">
@@ -314,24 +311,16 @@ function PreferencesSection() {
 
         <div className="stack stack-1">
           <Label htmlFor="pref-digest">Digest frequency</Label>
-          <select
-            id="pref-digest"
-            value={draft.digest_frequency}
-            onChange={e => setDraft({ ...draft, digest_frequency: e.target.value as Digest })}
-            disabled={busy}
-            style={{
-              padding: 'var(--space-2) var(--space-3)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--outline-variant)',
-              background: 'var(--surface-container-lowest)',
-              color: 'var(--on-surface)',
-              fontSize: 'var(--text-body-md)',
-            }}
-          >
-            <option value="off">Off</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-          </select>
+          <Select value={draft.digest_frequency} onValueChange={(val: Digest) => setDraft({ ...draft, digest_frequency: val })} disabled={busy}>
+            <SelectTrigger id="pref-digest" className="w-full" style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-container-lowest)', color: 'var(--on-surface)', fontSize: 'var(--text-body-md)' }}>
+              <SelectValue placeholder="Select frequency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="off">Off</SelectItem>
+              <SelectItem value="daily">Daily</SelectItem>
+              <SelectItem value="weekly">Weekly</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

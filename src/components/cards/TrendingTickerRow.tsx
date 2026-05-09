@@ -3,11 +3,11 @@ import { Icons } from '@/components/design-system'
 export interface TrendingTickerRowProps {
   rank:    number
   symbol:  string
-  name:    string
+  name?:   string
   /** Total post count in the trending window */
   postCount: number
   /** Bullish post ratio 0–1 */
-  bullishRatio: number
+  bullishRatio?: number
   onClick?: () => void
 }
 
@@ -19,9 +19,9 @@ export function TrendingTickerRow({
   bullishRatio,
   onClick,
 }: TrendingTickerRowProps) {
-  const pct     = Math.round(bullishRatio * 100)
-  const bullish = bullishRatio >= 0.55
-  const neutral = bullishRatio >= 0.45 && bullishRatio < 0.55
+  const pct = bullishRatio !== undefined ? Math.round(bullishRatio * 100) : 0
+  const bullish = bullishRatio !== undefined && bullishRatio >= 0.55
+  const neutral = bullishRatio !== undefined && bullishRatio >= 0.45 && bullishRatio < 0.55
   const sentimentColor = bullish
     ? 'var(--secondary)'
     : neutral
@@ -80,17 +80,19 @@ export function TrendingTickerRow({
         >
           {symbol}
         </span>
-        <span
-          style={{
-            fontSize:     'var(--text-label-sm)',
-            color:        'var(--on-surface-muted)',
-            overflow:     'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace:   'nowrap',
-          }}
-        >
-          {name}
-        </span>
+        {name && name !== symbol && (
+          <span
+            style={{
+              fontSize:     'var(--text-label-sm)',
+              color:        'var(--on-surface-muted)',
+              overflow:     'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace:   'nowrap',
+            }}
+          >
+            {name}
+          </span>
+        )}
       </div>
 
       {/* Post count + sentiment */}
@@ -106,9 +108,11 @@ export function TrendingTickerRow({
         >
           {postCount >= 1000 ? `${(postCount / 1000).toFixed(1)}k` : postCount} posts
         </span>
-        <span style={{ fontSize: 'var(--text-label-sm)', color: sentimentColor, fontWeight: 500 }}>
-          {pct}% bullish
-        </span>
+        {bullishRatio !== undefined && (
+          <span style={{ fontSize: 'var(--text-label-sm)', color: sentimentColor, fontWeight: 500 }}>
+            {pct}% bullish
+          </span>
+        )}
       </div>
     </div>
   )

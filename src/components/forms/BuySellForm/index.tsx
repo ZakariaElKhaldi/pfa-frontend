@@ -8,9 +8,9 @@ import type { BuySellFormProps, BuySellFormValues } from './types'
 
 export type { BuySellFormProps, BuySellFormValues }
 
-export function BuySellForm({ symbol: fixedSymbol, defaultSide = 'buy', onSubmit, loading, error }: BuySellFormProps) {
+export function BuySellForm({ symbol: fixedSymbol, defaultSymbol, defaultSide = 'buy', onSubmit, loading, error }: BuySellFormProps) {
   const [side, setSide]         = useState<'buy' | 'sell'>(defaultSide)
-  const [symbol, setSymbol]     = useState(fixedSymbol ?? '')
+  const [symbol, setSymbol]     = useState(fixedSymbol ?? defaultSymbol ?? '')
   const [quantity, setQuantity] = useState('')
   const [price, setPrice]       = useState('')
 

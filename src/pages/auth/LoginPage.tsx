@@ -42,7 +42,7 @@ export function LoginPage() {
         <LoginForm
           onSubmit={handleSubmit}
           onOAuth={handleOAuth}
-          onForgotPassword={() => toast.info('Password reset coming soon. Contact your admin.')}
+          onForgotPassword={() => toast.info('Password reset is not yet configured. Please ask your administrator for a temporary password.')}
           onSwitchToRegister={() => navigate('/register')}
           loading={loading}
           error={error}

@@ -14,4 +14,3 @@ type Story = StoryObj<typeof ProfilePagePreview>
 export const Default: Story = {}
 export const Loading: Story = { args: { loading: true } }
 export const WithError: Story = { args: { error: 'Email already in use.' } }
-export const Saved: Story = { args: { success: 'Profile updated.' } }

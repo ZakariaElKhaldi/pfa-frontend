@@ -6,7 +6,8 @@ export interface BuySellFormValues {
 }
 
 export interface BuySellFormProps {
-  symbol?:      string
+  symbol?:      string // acts as fixed symbol
+  defaultSymbol?: string
   defaultSide?: 'buy' | 'sell'
   onSubmit:     (v: BuySellFormValues) => void
   loading?:     boolean

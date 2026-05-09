@@ -13,9 +13,17 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/design-system'
 import { pathToNavId, visibleNav, type NavItem } from '@/router/nav'
 import type { UserRole } from '@/components/design-system/RoleBadge'
+import { useAuth } from '@/context/AuthContext'
 
 interface AppSidebarProps {
   username?: string
@@ -35,6 +43,7 @@ const GROUP_LABELS: Record<NavItem['group'], string> = {
 
 export function AppSidebar({ username = 'User', role = 'user', activeId, onSelect }: AppSidebarProps) {
   const location = useLocation()
+  const { logout } = useAuth()
   const currentId = activeId ?? pathToNavId(location.pathname)
 
   const initials = username.slice(0, 2).toUpperCase()
@@ -112,15 +121,24 @@ export function AppSidebar({ username = 'User', role = 'user', activeId, onSelec
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex cursor-default items-center gap-3 px-1 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
-          <div className="avatar avatar-sm shrink-0" aria-label={`User: ${initials}`}>
-            {initials}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
-            <span className="text-title-md truncate">{username}</span>
-            <span className="text-body-sm capitalize truncate" style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>{role}</span>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex cursor-pointer hover:bg-accent hover:text-accent-foreground items-center gap-3 px-1 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center rounded-md transition-colors">
+              <div className="avatar avatar-sm shrink-0" aria-label={`User: ${initials}`}>
+                {initials}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
+                <span className="text-title-md truncate">{username}</span>
+                <span className="text-body-sm capitalize truncate" style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>{role}</span>
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="w-56">
+            <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
 
       <SidebarRail />

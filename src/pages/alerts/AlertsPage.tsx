@@ -7,6 +7,7 @@ import { AlertCard } from '@/components/cards/AlertCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { useData } from '@/hooks/useApi'
+import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { useState, useCallback, useMemo } from 'react'
 import type { AlertType } from '@/components/design-system/AlertTypeBadge'
@@ -31,6 +32,7 @@ interface AlertFlagItem {
 
 export function AlertsPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { state, refetch } = useData<AlertFlagItem[]>('/api/alerts/')
   const [resolving, setResolving] = useState<Set<number>>(new Set())
   const [typeFilter, setTypeFilter] = useState<AlertType | 'all'>('all')
@@ -61,6 +63,7 @@ export function AlertsPage() {
 
   const active   = filtered.filter(a => !a.resolved)
   const resolved = filtered.filter(a => a.resolved)
+  const canResolve = user?.role === 'admin'
 
   return (
     <div className="p-6 stack stack-6">
@@ -119,7 +122,7 @@ export function AlertsPage() {
                   momentum={a.momentum}
                   consistency={a.consistency}
                   resolved={a.resolved}
-                  onResolve={resolving.has(a.id) ? undefined : () => handleResolve(a.id)}
+                  onResolve={canResolve && !resolving.has(a.id) ? () => handleResolve(a.id) : undefined}
                 />
               </div>
             ))}

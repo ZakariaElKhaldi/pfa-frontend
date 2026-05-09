@@ -138,29 +138,34 @@ export function SocialFeedPage() {
       </div>
 
       {state.status === 'error' && <ErrorState message={state.message} onRetry={refetch} />}
-      {(state.status === 'idle' || state.status === 'loading') && (
+      {(state.status === 'idle' || state.status === 'loading' || tickers.status === 'loading') && (
         <div className="stack stack-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
       )}
-      {state.status === 'success' && filtered.length === 0 && (
+      {state.status === 'success' && tickers.status === 'success' && filtered.length === 0 && (
         <EmptyState
           title={state.data.length === 0 ? 'No posts yet' : 'No matches'}
           description={state.data.length === 0 ? 'Posts will appear after the next pipeline run.' : 'Adjust the filters to see more.'}
         />
       )}
-      {state.status === 'success' && filtered.length > 0 && (
+      {state.status === 'success' && tickers.status === 'success' && filtered.length > 0 && (
         <div className="stack stack-3">
           {filtered.map(p => {
             const symbol = symbolByTickerId.get(p.ticker) ?? ''
             return (
               <div
                 key={p.id}
-                role={symbol ? 'button' : undefined}
-                tabIndex={symbol ? 0 : undefined}
-                onClick={() => symbol && navigate(`/tickers/${symbol}`)}
-                onKeyDown={e => symbol && e.key === 'Enter' && navigate(`/tickers/${symbol}`)}
-                style={{ cursor: symbol ? 'pointer' : 'default' }}
+                role={symbol || p.url ? 'button' : undefined}
+                tabIndex={symbol || p.url ? 0 : undefined}
+                onClick={() => symbol ? navigate(`/tickers/${symbol}`) : p.url ? window.open(p.url, '_blank') : undefined}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (symbol) navigate(`/tickers/${symbol}`)
+                    else if (p.url) window.open(p.url, '_blank')
+                  }
+                }}
+                style={{ cursor: symbol || p.url ? 'pointer' : 'default' }}
               >
                 <PostCard
                   source={p.source}

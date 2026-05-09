@@ -29,7 +29,7 @@ export function AdminDashboardPage() {
   const navigate = useNavigate()
   const { state: stats, refetch: refetchStats } = useData<AdminStats>('/api/auth/admin/stats/')
   const { state: users }                        = useData<BackendUser[]>('/api/auth/admin/users/')
-  const { state: signals }                      = useData<SignalItem[]>('/api/signals/recent/?limit=8')
+  const { state: signals }                      = useData<SignalItem[]>('/api/signals/recent/?limit=8&all=true')
 
   const recentUsers = users.status === 'success'
     ? [...users.data].sort((a, b) => +new Date(b.date_joined) - +new Date(a.date_joined)).slice(0, 5)

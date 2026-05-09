@@ -63,7 +63,14 @@ export function AlertCard({ type, symbol, sentiment, momentum, consistency, reso
       </div>
 
       {!resolved && onResolve && (
-        <button className="btn btn-sm btn-outline-alert alert-card-action" onClick={onResolve} aria-label="Resolve alert">
+        <button
+          className="btn btn-sm btn-outline-alert alert-card-action"
+          onClick={(e) => {
+            e.stopPropagation()
+            onResolve()
+          }}
+          aria-label="Resolve alert"
+        >
           <span>Resolve</span>
         </button>
       )}

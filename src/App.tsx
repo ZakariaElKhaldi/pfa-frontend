@@ -1,8 +1,10 @@
 import './index.css'
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { RoleGate } from '@/components/layout/RoleGate'
 
 import { AppLayout } from '@/pages/app/Layout'
@@ -32,11 +34,18 @@ import { AuditPage } from '@/pages/audit/AuditPage'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 
+function RedirectWithToast({ to, message }: { to: string; message: string }) {
+  useEffect(() => {
+    toast.error(message)
+  }, [message])
+  return <Navigate to={to} replace />
+}
+
 function AnalystGuard({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   if (!user) return null
   return (
-    <RoleGate role={user.role} require="analyst+admin" fallback={<Navigate to="/" replace />}>
+    <RoleGate role={user.role} require="analyst+admin" fallback={<RedirectWithToast to="/" message="Access Denied: You need Analyst privileges to view this page." />}>
       {children}
     </RoleGate>
   )
@@ -46,7 +55,7 @@ function AdminGuard({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   if (!user) return null
   return (
-    <RoleGate role={user.role} require="admin" fallback={<Navigate to="/" replace />}>
+    <RoleGate role={user.role} require="admin" fallback={<RedirectWithToast to="/" message="Access Denied: You need Admin privileges to view this page." />}>
       {children}
     </RoleGate>
   )
@@ -56,42 +65,44 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-right" richColors closeButton />
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/auth/callback/google" element={<OAuthCallbackPage provider="google" />} />
-          <Route path="/auth/callback/github" element={<OAuthCallbackPage provider="github" />} />
+        <ThemeProvider>
+          <Toaster position="top-right" richColors closeButton />
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth/callback/google" element={<OAuthCallbackPage provider="google" />} />
+            <Route path="/auth/callback/github" element={<OAuthCallbackPage provider="github" />} />
 
-          {/* Protected — all roles */}
-          <Route element={<AppLayout />}>
-            <Route index element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
-            <Route path="tickers" element={<TickersPage />} />
-            <Route path="tickers/:symbol" element={<TickerDetailPage />} />
-            <Route path="portfolio" element={<PortfolioPage />} />
-            <Route path="alerts" element={<AlertsPage />} />
-            <Route path="feed"   element={<SocialFeedPage />} />
-            <Route path="strategies" element={<StrategiesPage />} />
-            <Route path="strategies/:id" element={<StrategyDetailPage />} />
-            <Route path="export" element={<ExportPage />} />
-            <Route path="profile" element={<ProfilePage />} />
+            {/* Protected — all roles */}
+            <Route element={<AppLayout />}>
+              <Route index element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
+              <Route path="tickers" element={<TickersPage />} />
+              <Route path="tickers/:symbol" element={<TickerDetailPage />} />
+              <Route path="portfolio" element={<PortfolioPage />} />
+              <Route path="feed"   element={<SocialFeedPage />} />
+              <Route path="strategies" element={<StrategiesPage />} />
+              <Route path="strategies/:id" element={<StrategyDetailPage />} />
+              <Route path="profile" element={<ProfilePage />} />
 
-            {/* Analyst + Admin */}
-            <Route path="analytics"    element={<AnalystGuard><AnalyticsPage /></AnalystGuard>} />
-            <Route path="backtest"     element={<AnalystGuard><BacktestPage /></AnalystGuard>} />
-            <Route path="correlation"  element={<AnalystGuard><CorrelationPage /></AnalystGuard>} />
-            <Route path="heatmap"      element={<AnalystGuard><HeatmapPage /></AnalystGuard>} />
-            <Route path="intelligence" element={<AnalystGuard><IntelligencePage /></AnalystGuard>} />
-            <Route path="audit"        element={<AnalystGuard><AuditPage /></AnalystGuard>} />
+              {/* Analyst + Admin */}
+              <Route path="alerts"       element={<AnalystGuard><AlertsPage /></AnalystGuard>} />
+              <Route path="analytics"    element={<AnalystGuard><AnalyticsPage /></AnalystGuard>} />
+              <Route path="backtest"     element={<AnalystGuard><BacktestPage /></AnalystGuard>} />
+              <Route path="correlation"  element={<AnalystGuard><CorrelationPage /></AnalystGuard>} />
+              <Route path="heatmap"      element={<AnalystGuard><HeatmapPage /></AnalystGuard>} />
+              <Route path="intelligence" element={<AnalystGuard><IntelligencePage /></AnalystGuard>} />
+              <Route path="audit"        element={<AnalystGuard><AuditPage /></AnalystGuard>} />
+              <Route path="export"       element={<AnalystGuard><ExportPage /></AnalystGuard>} />
 
-            {/* Admin only */}
-            <Route path="admin"       element={<AdminGuard><AdminDashboardPage /></AdminGuard>} />
-            <Route path="admin/users" element={<AdminGuard><AdminUsersPage /></AdminGuard>} />
-          </Route>
+              {/* Admin only */}
+              <Route path="admin"       element={<AdminGuard><AdminDashboardPage /></AdminGuard>} />
+              <Route path="admin/users" element={<AdminGuard><AdminUsersPage /></AdminGuard>} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   )

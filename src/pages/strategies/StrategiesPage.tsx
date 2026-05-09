@@ -18,6 +18,8 @@ interface StrategyRule {
   tickers: number[]
   is_active: boolean
   updated_at: string
+  conditions?: any[]
+  actions?: any[]
 }
 
 type ModalMode = { type: 'create' } | { type: 'edit'; strategy: StrategyRule } | null
@@ -147,7 +149,23 @@ export function StrategiesPage() {
               lastRun={new Date(s.updated_at).toLocaleString()}
               active={s.is_active}
               onToggle={active => handleToggle(s.id, active)}
-              onEdit={() => { setSaveErr(undefined); setModal({ type: 'edit', strategy: s }) }}
+              onEdit={async () => {
+                setSaveErr(undefined)
+                try {
+                  const res = await api.get(`/api/strategies/${s.id}/`)
+                  const data = res.data
+                  setModal({
+                    type: 'edit',
+                    strategy: {
+                      ...s,
+                      conditions: data.conditions?.map((c: any) => ({ field: c.field, operator: c.operator, value: c.value })) || [],
+                      actions: data.actions?.map((a: any) => ({ actionType: a.action_type, target: a.config?.target })) || [],
+                    }
+                  })
+                } catch (e) {
+                  toast.error("Failed to load strategy details")
+                }
+              }}
               onDelete={() => setPendingDelete(s)}
             />
           ))}
@@ -167,7 +185,7 @@ export function StrategiesPage() {
               <button className="btn btn-sm btn-ghost" onClick={() => setModal(null)}>✕</button>
             </div>
             <StrategyForm
-              initial={modal.type === 'edit' ? { name: modal.strategy.name, desc: modal.strategy.description, tickers: [], conditions: [], actions: [] } : undefined}
+              initial={modal.type === 'edit' ? { name: modal.strategy.name, desc: modal.strategy.description, tickers: [], conditions: modal.strategy.conditions || [], actions: modal.strategy.actions || [] } : undefined}
               onSubmit={handleSave}
               loading={saving}
               error={saveErr}

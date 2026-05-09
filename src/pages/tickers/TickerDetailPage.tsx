@@ -28,7 +28,12 @@ import type { Mood } from '@/components/design-system/MoodBadge'
 
 interface MarketEvent {
   type:   string
-  price?: number
+  open?: string | number
+  high?: string | number
+  low?: string | number
+  price?: string | number
+  volume?: number
+  timestamp?: string
   signal?: Signal
   prediction_confidence?: number
 }
@@ -108,10 +113,25 @@ export function TickerDetailPage() {
   const [postSentiment, setPostSentiment] = useState<'all' | SentimentLabel>('all')
   const [postSearch,    setPostSearch]    = useState('')
   const [livePrice,     setLivePrice]     = useState<number | null>(null)
+  const [liveBar,       setLiveBar]       = useState<OHLCBar | null>(null)
 
   // Live market updates for this ticker
   const marketWs = useWSStatus<MarketEvent>(`/ws/market/${sym}/`, useCallback((data: MarketEvent) => {
-    if (typeof data?.price === 'number') setLivePrice(data.price)
+    const price = typeof data?.price === 'number' ? data.price : Number(data?.price)
+    if (Number.isFinite(price)) setLivePrice(price)
+    if (data?.type === 'price' && data.timestamp && Number.isFinite(price)) {
+      const open = Number(data.open ?? price)
+      const high = Number(data.high ?? price)
+      const low = Number(data.low ?? price)
+      setLiveBar({
+        date: new Date(data.timestamp),
+        open: Number.isFinite(open) ? open : price,
+        high: Number.isFinite(high) ? high : price,
+        low: Number.isFinite(low) ? low : price,
+        close: price,
+        volume: data.volume ?? 0,
+      })
+    }
   }, []))
 
   const isWatched = watchlist.status === 'success' && watchlist.data.some(w => w.symbol === sym)
@@ -147,9 +167,28 @@ export function TickerDetailPage() {
   const name = ticker.status === 'success' ? ticker.data.name : sym
 
   // Price chart OHLC
-  const priceChartData: OHLCBar[] = prices.status === 'success'
-    ? prices.data.map(p => ({ date: new Date(p.timestamp), open: parseFloat(p.open_price), high: parseFloat(p.high_price), low: parseFloat(p.low_price), close: parseFloat(p.price), volume: p.volume }))
-    : []
+  const priceChartData: OHLCBar[] = useMemo(() => {
+    const bars = prices.status === 'success'
+      ? prices.data.map(p => ({
+          date: new Date(p.timestamp),
+          open: parseFloat(p.open_price),
+          high: parseFloat(p.high_price),
+          low: parseFloat(p.low_price),
+          close: parseFloat(p.price),
+          volume: p.volume,
+        }))
+      : []
+    if (liveBar) {
+      const liveTime = liveBar.date.getTime()
+      const idx = bars.findIndex(b => b.date.getTime() === liveTime)
+      if (idx >= 0) bars[idx] = liveBar
+      else bars.push(liveBar)
+    }
+    return bars
+      .filter(b => Number.isFinite(b.close) && Number.isFinite(b.open) && Number.isFinite(b.high) && Number.isFinite(b.low))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(-100)
+  }, [prices, liveBar])
 
   // Sentiment + price overlay
   const sentPriceData: SentimentPricePoint[] = history.status === 'success' && prices.status === 'success'
@@ -540,6 +579,16 @@ export function TickerDetailPagePreview({ symbol = 'AAPL' }: { symbol?: string }
     { feature: 'source_weight',  importance: 0.14 },
     { feature: 'momentum_score', importance: 0.08 },
   ]
+  const pricePreview: OHLCBar[] = [
+    { date: new Date('2024-01-02'), open: 181.2, high: 184.5, low: 180.4, close: 183.9, volume: 42000000 },
+    { date: new Date('2024-01-03'), open: 183.7, high: 186.1, low: 182.8, close: 185.4, volume: 46500000 },
+    { date: new Date('2024-01-04'), open: 185.0, high: 186.4, low: 182.1, close: 183.2, volume: 39200000 },
+    { date: new Date('2024-01-05'), open: 183.4, high: 187.8, low: 183.0, close: 187.1, volume: 51000000 },
+    { date: new Date('2024-01-08'), open: 187.0, high: 190.2, low: 186.5, close: 189.4, volume: 54800000 },
+    { date: new Date('2024-01-09'), open: 189.2, high: 191.0, low: 188.2, close: 190.1, volume: 43600000 },
+    { date: new Date('2024-01-10'), open: 190.4, high: 192.3, low: 188.9, close: 189.7, volume: 47400000 },
+    { date: new Date('2024-01-11'), open: 189.8, high: 193.1, low: 189.4, close: 192.6, volume: 50100000 },
+  ]
   return (
     <div className="p-6 stack stack-6">
       <PageHeader title={symbol} subtitle="Apple Inc." actions={<WatchlistStarButton symbol={symbol} active onToggle={() => {}} />} />
@@ -553,6 +602,10 @@ export function TickerDetailPagePreview({ symbol = 'AAPL' }: { symbol?: string }
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-5)' }}>
         <QuoteCard symbol={symbol} name="Apple Inc." last={189.42} bid={189.40} ask={189.44} change={1.23} changePct={0.65} volume={52000000} />
         <SentimentSummaryCard symbol={symbol} score={0.44} label="bullish" postCount={1240} bullishCount={892} bearishCount={248} neutralCount={100} />
+      </div>
+      <div className="card stack stack-2">
+        <span style={{ fontSize: 'var(--text-label-md)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase' as const, color: 'var(--on-surface-muted)' }}>Price Chart</span>
+        <PriceChart data={pricePreview} height={320} />
       </div>
       <div className="card stack stack-2">
         <span style={{ fontSize: 'var(--text-label-md)', fontWeight: 500, letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase' as const, color: 'var(--on-surface-muted)' }}>Sentiment Trend</span>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -10,6 +11,7 @@ import { TradeHistoryTable } from '@/components/cards/TradeHistoryTable'
 import { BuySellForm } from '@/components/forms/BuySellForm'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useData } from '@/hooks/useApi'
+import { useQuotes } from '@/hooks/useQuotes'
 import { api } from '@/lib/api'
 import { useState, useCallback } from 'react'
 
@@ -25,6 +27,11 @@ const SECTION_LABEL: React.CSSProperties = {
   color: 'var(--on-surface-muted)',
 }
 
+function formatAllocationTooltip(value: ValueType | undefined, name: NameType | undefined): [string, string] {
+  const n = typeof value === 'number' ? value : Number(value ?? 0)
+  return [`$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, String(name)]
+}
+
 interface PortfolioSummary {
   cash: string; total_value: string; total_pnl: string; total_pnl_pct: number; position_count: number
 }
@@ -37,9 +44,12 @@ export function PortfolioPage() {
   const { state: summary, refetch: refetchSummary } = useData<PortfolioSummary>('/api/portfolio/summary/')
   const { state: portfolio, refetch: refetchPortfolio } = useData<PortfolioData>('/api/portfolio/')
   const { state: trades, refetch: refetchTrades }       = useData<TradeItem[]>('/api/portfolio/trades/')
+  const positionSymbols = portfolio.status === 'success' ? portfolio.data.positions.map(p => p.symbol) : []
+  const { quotes } = useQuotes(positionSymbols)
 
   const [tradeLoading, setTradeLoading] = useState(false)
   const [tradeError, setTradeError]     = useState<string | undefined>()
+  const [prefill, setPrefill]           = useState<{ symbol?: string, side?: 'buy' | 'sell', ts?: number }>({})
 
   const handleTrade = useCallback(async (v: { symbol: string; side: 'buy' | 'sell'; quantity: number; price: number }) => {
     setTradeLoading(true)
@@ -65,7 +75,7 @@ export function PortfolioPage() {
         name:      p.symbol,
         quantity:  p.quantity,
         avgPrice:  parseFloat(p.avg_price),
-        lastPrice: parseFloat(p.avg_price),
+        lastPrice: quotes[p.symbol] ? parseFloat(quotes[p.symbol]!.price) : parseFloat(p.avg_price),
       }))
     : []
 
@@ -75,7 +85,7 @@ export function PortfolioPage() {
     const cash = parseFloat(summary.data.cash)
     const slices = portfolio.data.positions.map(p => ({
       name:  p.symbol,
-      value: p.quantity * parseFloat(p.avg_price),
+      value: p.quantity * (quotes[p.symbol] ? parseFloat(quotes[p.symbol]!.price) : parseFloat(p.avg_price)),
     }))
     if (cash > 0) slices.push({ name: 'Cash', value: cash })
     return slices.filter(s => s.value > 0)
@@ -110,7 +120,10 @@ export function PortfolioPage() {
           {portfolio.status === 'success' && (
             <PositionsTable
               positions={positions}
-              onSell={sym => navigate(`/tickers/${sym}`)}
+              onSell={sym => {
+                setPrefill({ symbol: sym, side: 'sell', ts: Date.now() })
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
             />
           )}
         </div>
@@ -130,7 +143,14 @@ export function PortfolioPage() {
             </div>
           )}
           <div className="card">
-            <BuySellForm onSubmit={handleTrade} loading={tradeLoading} error={tradeError} />
+            <BuySellForm
+              key={prefill.ts}
+              defaultSymbol={prefill.symbol}
+              defaultSide={prefill.side ?? 'buy'}
+              onSubmit={handleTrade}
+              loading={tradeLoading}
+              error={tradeError}
+            />
           </div>
         </div>
       </div>
@@ -158,7 +178,7 @@ export function PortfolioPage() {
                 </Pie>
                 <Tooltip
                   contentStyle={{ background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body-sm)' }}
-                  formatter={(v: number, n: string) => [`$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, n]}
+                  formatter={formatAllocationTooltip}
                 />
                 <Legend
                   layout="vertical"

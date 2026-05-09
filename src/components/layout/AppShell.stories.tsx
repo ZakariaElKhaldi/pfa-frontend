@@ -54,7 +54,7 @@ export const UserDashboard: Story = {
 export const AnalystSignals: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('analytics')\
+    const [activeId, setActiveId] = useState('analytics')
     return (
       <AppShell activeId={activeId} username="Jane Analyst" role="analyst" onSelect={setActiveId}>
         <ShellContent title="Analytics" subtitle="Cross-ticker intelligence and backtest tools." />

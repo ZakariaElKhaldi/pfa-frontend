@@ -25,6 +25,17 @@ function ytdStartIso(): string {
   return `${new Date().getFullYear()}-01-01`
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 const PRESETS: { label: string; description: string; build: () => ExportDialogValues }[] = [
   {
     label: 'Last 7 days — All',
