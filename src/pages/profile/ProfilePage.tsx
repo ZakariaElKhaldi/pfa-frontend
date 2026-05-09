@@ -36,9 +36,9 @@ const SECTION_LABEL: React.CSSProperties = {
   color: 'var(--on-surface-muted)',
 }
 
-function initials(username: string, first?: string, last?: string): string {
-  if (first || last) return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase() || username[0].toUpperCase()
-  return username.slice(0, 2).toUpperCase()
+function initials(username: string | undefined, first?: string, last?: string): string {
+  if (first || last) return `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase() || (username?.[0] ?? '?').toUpperCase()
+  return (username ?? '?').slice(0, 2).toUpperCase()
 }
 
 export function ProfilePage() {

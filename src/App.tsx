@@ -8,8 +8,10 @@ import { RoleGate } from '@/components/layout/RoleGate'
 import { AppLayout } from '@/pages/app/Layout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage'
 
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { TickersPage } from '@/pages/tickers/TickersPage'
 import { TickerDetailPage } from '@/pages/tickers/TickerDetailPage'
 import { PortfolioPage } from '@/pages/portfolio/PortfolioPage'
@@ -59,13 +61,14 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback/google" element={<OAuthCallbackPage provider="google" />} />
+          <Route path="/auth/callback/github" element={<OAuthCallbackPage provider="github" />} />
 
           {/* Protected — all roles */}
           <Route element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
+            <Route index element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
             <Route path="tickers" element={<TickersPage />} />
             <Route path="tickers/:symbol" element={<TickerDetailPage />} />
-            <Route path="watchlist" element={<TickersPage />} />
             <Route path="portfolio" element={<PortfolioPage />} />
             <Route path="alerts" element={<AlertsPage />} />
             <Route path="feed"   element={<SocialFeedPage />} />

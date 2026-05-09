@@ -94,7 +94,7 @@ export function HeatmapPage() {
               padding: 'var(--space-2) var(--space-3)',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--outline-variant)',
-              background: 'var(--surface-container-lowest)',
+              background: 'rgba(255,255,255,0.80)',
               color: 'var(--on-surface)',
               fontSize: 'var(--text-body-md)',
             }}
@@ -113,27 +113,27 @@ export function HeatmapPage() {
         <EmptyState title="No data" description="Try different symbols or a longer window." />
       )}
       {state.status === 'success' && series.some(s => s.data.length > 0) && (
-        <div className="card stack stack-3">
+        <div className="card stack stack-3" style={{ overflow: 'hidden' }}>
           <span style={SECTION_LABEL}>Signal Index vs Price Change ({window})</span>
-          <ResponsiveContainer width="100%" height={400}>
-            <ScatterChart margin={{ top: 16, right: 16, bottom: 32, left: 32 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsla(220,15%,45%,0.22)" />
+          <ResponsiveContainer width="100%" height={380}>
+            <ScatterChart margin={{ top: 16, right: 24, bottom: 40, left: 54 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(203,213,225,0.40)" />
               <XAxis
                 dataKey="signal"
                 type="number"
                 domain={[-1, 1]}
                 name="Signal"
-                tick={{ fontSize: 11, fill: 'hsl(220,10%,58%)' }}
+                tick={{ fontSize: 11, fill: 'hsl(220,12%,52%)' }}
                 tickFormatter={v => v.toFixed(1)}
-                label={{ value: 'Signal Index (−1 bear → +1 bull)', position: 'insideBottom', offset: -16, fill: 'hsl(220,10%,58%)', fontSize: 11 }}
+                label={{ value: 'Signal Index  (−1 bearish → +1 bullish)', position: 'insideBottom', offset: -24, fill: 'hsl(220,12%,52%)', fontSize: 11 }}
               />
               <YAxis
                 dataKey="priceChange"
                 type="number"
                 name="Price Δ"
-                tick={{ fontSize: 11, fill: 'hsl(220,10%,58%)' }}
+                tick={{ fontSize: 11, fill: 'hsl(220,12%,52%)' }}
                 tickFormatter={v => `${v.toFixed(0)}%`}
-                label={{ value: 'Cumulative price change (%)', angle: -90, position: 'insideLeft', fill: 'hsl(220,10%,58%)', fontSize: 11 }}
+                label={{ value: 'Price Δ (%)', angle: -90, position: 'insideLeft', offset: 10, fill: 'hsl(220,12%,52%)', fontSize: 11 }}
               />
               <ZAxis range={[40, 40]} />
               <Tooltip

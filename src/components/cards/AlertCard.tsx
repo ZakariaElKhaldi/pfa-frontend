@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+import { staggerItem } from '@/lib/motion'
 import { Icons } from '@/components/design-system'
 import { AlertTypeBadge } from '@/components/design-system/AlertTypeBadge'
 import type { AlertType } from '@/components/design-system/AlertTypeBadge'
@@ -26,7 +28,11 @@ export function AlertCard({ type, symbol, sentiment, momentum, consistency, reso
   const iconCls  = severity === 'danger' ? 'extreme' : 'divergence'
 
   return (
-    <div className={`alert-card alert-card-${severity}${resolved ? ' alert-card-resolved' : ''}`}>
+    <motion.div
+      className={`alert-card alert-card-${severity}${resolved ? ' alert-card-resolved' : ''}`}
+      variants={staggerItem}
+      whileHover={{ y: -1, boxShadow: 'var(--shadow-md)' }}
+    >
       <div className={`alert-card-icon ${iconCls}`}>
         <Icons.AlertTriangle size={20} />
       </div>
@@ -37,7 +43,7 @@ export function AlertCard({ type, symbol, sentiment, momentum, consistency, reso
           <AlertTypeBadge type={type} />
           {resolved && <span className="badge badge-neutral">Resolved</span>}
         </div>
-        
+
         <div className="alert-card-metrics">
           <div className="alert-metric">
             <span className="alert-metric-label">Sen</span>
@@ -61,6 +67,6 @@ export function AlertCard({ type, symbol, sentiment, momentum, consistency, reso
           <span>Resolve</span>
         </button>
       )}
-    </div>
+    </motion.div>
   )
 }

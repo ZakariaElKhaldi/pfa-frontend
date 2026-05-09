@@ -8,6 +8,20 @@ import {
 } from 'react'
 import { api, tokenStore } from '@/lib/api'
 
+// ---------------------------------------------------------------------------
+// DEV BYPASS — set VITE_DEV_BYPASS_AUTH=true in pfa-frontend/.env to skip login
+// ---------------------------------------------------------------------------
+const DEV_BYPASS = import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
+
+const DEV_USER: AuthUser = {
+  id: 1,
+  email: 'dev@crowdsignal.local',
+  username: 'dev-admin',
+  role: 'admin',
+  is_active: true,
+  date_joined: new Date().toISOString(),
+}
+
 export interface AuthUser {
   id: number
   email: string
@@ -22,15 +36,17 @@ interface AuthState {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<AuthUser | null>(DEV_BYPASS ? DEV_USER : null)
+  const [loading, setLoading] = useState(!DEV_BYPASS)
 
   const fetchUser = useCallback(async () => {
+    if (DEV_BYPASS) return
     try {
       const u = await api.get<AuthUser>('/api/auth/user/')
       setUser(u)
@@ -40,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (DEV_BYPASS) return
     if (tokenStore.get()) {
       fetchUser().finally(() => setLoading(false))
     } else {
@@ -49,12 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for forced logout (401 with no refresh)
   useEffect(() => {
+    if (DEV_BYPASS) return
     const handle = () => { setUser(null) }
     window.addEventListener('cs:logout', handle)
     return () => window.removeEventListener('cs:logout', handle)
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
+    if (DEV_BYPASS) return
     const data = await api.post<{ access: string; refresh: string }>(
       '/api/auth/login/',
       { email, password },
@@ -65,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser])
 
   const logout = useCallback(async () => {
+    if (DEV_BYPASS) return
     try {
       await api.post('/api/auth/logout/', { refresh: tokenStore.getRefresh() })
     } catch { /* ignore */ }
@@ -73,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser: fetchUser }}>
       {children}
     </AuthContext.Provider>
   )

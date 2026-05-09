@@ -54,7 +54,7 @@ export const UserDashboard: Story = {
 export const AnalystSignals: Story = {
   render: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeId, setActiveId] = useState('analytics')
+    const [activeId, setActiveId] = useState('analytics')\
     return (
       <AppShell activeId={activeId} username="Jane Analyst" role="analyst" onSelect={setActiveId}>
         <ShellContent title="Analytics" subtitle="Cross-ticker intelligence and backtest tools." />
@@ -82,6 +82,54 @@ export const CollapsedSidebar: Story = {
     return (
       <AppShell activeId={activeId} username="Zakaria" role="user" defaultOpen={false} onSelect={setActiveId}>
         <ShellContent title="Dashboard" subtitle="Sidebar starts collapsed — icon-only mode." />
+      </AppShell>
+    )
+  },
+}
+
+/** New: Topbar with breadcrumb — simulates a strategy detail route */
+export const WithBreadcrumb: Story = {
+  render: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [activeId, setActiveId] = useState('strategies')
+    return (
+      <AppShell
+        activeId={activeId}
+        username="Jane Analyst"
+        role="analyst"
+        onSelect={setActiveId}
+        breadcrumb={[
+          { label: 'Strategies', href: '/strategies' },
+          { label: 'Momentum Alpha v2' },
+        ]}
+      >
+        <ShellContent title="Momentum Alpha v2" subtitle="Automated signal-driven strategy." />
+      </AppShell>
+    )
+  },
+}
+
+/** New: WebSocket connected status in topbar */
+export const WSConnected: Story = {
+  render: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [activeId, setActiveId] = useState('dashboard')
+    return (
+      <AppShell activeId={activeId} username="John Trader" role="user" wsStatus="connected" onSelect={setActiveId}>
+        <ShellContent title="Dashboard" subtitle="Live feed connected." />
+      </AppShell>
+    )
+  },
+}
+
+/** New: WebSocket disconnected — shows orange/red indicator */
+export const WSDisconnected: Story = {
+  render: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [activeId, setActiveId] = useState('dashboard')
+    return (
+      <AppShell activeId={activeId} username="John Trader" role="user" wsStatus="disconnected" onSelect={setActiveId}>
+        <ShellContent title="Dashboard" subtitle="Live feed disconnected — data may be stale." />
       </AppShell>
     )
   },

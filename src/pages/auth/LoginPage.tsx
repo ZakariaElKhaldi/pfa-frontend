@@ -29,7 +29,8 @@ export function LoginPage() {
   }
 
   function handleOAuth(provider: 'google' | 'github') {
-    window.location.href = `/api/auth/${provider}/`
+    const backendBase = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+    window.location.href = `${backendBase}/api/auth/${provider}/redirect/`
   }
 
   return (

@@ -23,7 +23,14 @@ export function useWSStatus<T = unknown>(
     function connect() {
       if (stopped) return
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const url = `${protocol}//${location.host}${path}`
+      const wsUrl = import.meta.env.VITE_WS_URL
+      const apiUrl = import.meta.env.VITE_API_URL ?? ''
+      const host = wsUrl
+        ? wsUrl.replace(/^wss?:\/\//, '').replace(/\/$/, '')
+        : apiUrl
+          ? apiUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+          : location.host
+      const url = `${protocol}//${host}${path}`
       setStatus('connecting')
       ws = new WebSocket(url)
       ws.onopen = () => {

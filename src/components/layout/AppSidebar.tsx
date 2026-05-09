@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router'
+import { motion } from 'framer-motion'
+import { staggerContainer, staggerItem } from '@/lib/motion'
 import {
   Sidebar,
   SidebarContent,
@@ -75,9 +77,9 @@ export function AppSidebar({ username = 'User', role = 'user', activeId, onSelec
         <div className="flex items-center gap-3 px-2 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
           <div
             className="flex size-8 shrink-0 items-center justify-center rounded-[10px] shadow-sm"
-            style={{ background: 'var(--gradient-primary)' }}
+            style={{ background: 'hsl(220, 22%, 16%)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            <Icons.Logo size={18} color="white" strokeWidth={2.5} />
+            <Icons.LineChart size={16} color="white" strokeWidth={2} />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div
@@ -97,12 +99,16 @@ export function AppSidebar({ username = 'User', role = 'user', activeId, onSelec
       </SidebarHeader>
 
       <SidebarContent>
-        {groups.map(({ group, items: groupItems }) => (
-          <SidebarGroup key={group}>
-            <SidebarGroupLabel>{GROUP_LABELS[group]}</SidebarGroupLabel>
-            <SidebarMenu>{groupItems.map(renderItem)}</SidebarMenu>
-          </SidebarGroup>
-        ))}
+        <motion.div variants={staggerContainer} initial="initial" animate="animate">
+          {groups.map(({ group, items: groupItems }) => (
+            <motion.div key={group} variants={staggerItem}>
+              <SidebarGroup>
+                <SidebarGroupLabel>{GROUP_LABELS[group]}</SidebarGroupLabel>
+                <SidebarMenu>{groupItems.map(renderItem)}</SidebarMenu>
+              </SidebarGroup>
+            </motion.div>
+          ))}
+        </motion.div>
       </SidebarContent>
 
       <SidebarFooter>
@@ -112,7 +118,7 @@ export function AppSidebar({ username = 'User', role = 'user', activeId, onSelec
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
             <span className="text-title-md truncate">{username}</span>
-            <span className="text-body-sm capitalize truncate" style={{ fontSize: '10px' }}>{role}</span>
+            <span className="text-body-sm capitalize truncate" style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>{role}</span>
           </div>
         </div>
       </SidebarFooter>

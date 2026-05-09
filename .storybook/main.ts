@@ -6,6 +6,8 @@ const config: StorybookConfig = {
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   "addons": [
+    // Core addons (controls, interactions, viewport, backgrounds) are
+    // bundled in Storybook 10 — no separate install needed.
     "@chromatic-com/storybook",
     "@storybook/addon-vitest",
     "@storybook/addon-a11y",

@@ -16,7 +16,6 @@ export const NAV_ITEMS: NavItem[] = [
   // ── All users ──────────────────────────────────────────────────
   { id: 'dashboard',  label: 'Dashboard',  path: '/',              icon: 'Grid',         group: 'main' },
   { id: 'tickers',    label: 'Market',     path: '/tickers',       icon: 'BarChart',     group: 'main' },
-  { id: 'watchlist',  label: 'Watchlist',  path: '/watchlist',     icon: 'Star',         group: 'main' },
   { id: 'portfolio',  label: 'Portfolio',  path: '/portfolio',     icon: 'Briefcase',    group: 'main' },
   { id: 'alerts',     label: 'Alerts',     path: '/alerts',        icon: 'Bell',         group: 'main' },
   { id: 'feed',       label: 'Social Feed',path: '/feed',          icon: 'MessageSquare', group: 'main' },
