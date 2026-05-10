@@ -98,8 +98,8 @@ export function AnalyticsPage() {
   const [forecastTicker, setForecastTicker] = useState('AAPL')
 
   const { bars: priceChartData } = useOHLCData(forecastTicker, 200)
-  const { state: volumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${forecastTicker}`)
-  const { state: breadthForecast } = useData<{ forecast: number[]; last_historical_value: number }>('/api/analytics/forecast/breadth/')
+  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${forecastTicker}`)
+  const { state: breadthForecast, refetch: refetchBreadthForecast } = useData<{ forecast: number[]; last_historical_value: number }>('/api/analytics/forecast/breadth/')
 
   const rangeDays = RANGES[rangeIdx].days
 
@@ -297,8 +297,8 @@ export function AnalyticsPage() {
           )}
           {movers.status === 'success' && movers.data.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)' }}>
-              {movers.data.slice(0, 6).map(m => (
-                <MoverCard key={m.ticker} ticker={m.ticker} signal={m.signal ?? '—'} delta={m.delta} />
+              {movers.data.slice(0, 6).map((m, idx) => (
+                <MoverCard key={`${m.ticker}-${idx}`} ticker={m.ticker} signal={m.signal ?? '—'} delta={m.delta} />
               ))}
             </div>
           )}
@@ -323,6 +323,12 @@ export function AnalyticsPage() {
             <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
               30-day projection
             </span>
+            {breadthForecast.status === 'error' && (
+              <button className="btn btn-sm btn-ghost" onClick={refetchBreadthForecast}>Retry Breadth</button>
+            )}
+            {volumeForecast.status === 'error' && (
+              <button className="btn btn-sm btn-ghost" onClick={refetchVolumeForecast}>Retry Volume</button>
+            )}
             <div style={{ position: 'relative', width: 140 }}>
               <Input
                 value={forecastTickerInput}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 
 export type ApiState<T> =
   | { status: 'idle' }
@@ -22,7 +22,11 @@ export function useData<T>(path: string | null, deps: unknown[] = []) {
       if (!ctrl.signal.aborted) setState({ status: 'success', data })
     } catch (e) {
       if (!ctrl.signal.aborted) {
-        const msg = e instanceof Error ? e.message : 'Request failed'
+        let msg = e instanceof Error ? e.message : 'Request failed'
+        if (e instanceof ApiError && e.body && typeof e.body === 'object' && 'detail' in e.body) {
+          const detail = (e.body as Record<string, unknown>).detail
+          if (typeof detail === 'string' && detail.trim()) msg = detail
+        }
         setState({ status: 'error', message: msg })
       }
     }

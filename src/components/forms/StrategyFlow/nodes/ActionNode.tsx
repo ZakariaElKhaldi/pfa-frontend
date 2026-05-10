@@ -16,7 +16,7 @@ export function ActionNode({ data }: { data: ActionNodeData }) {
         background: 'var(--surface-container)',
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ width: 8, height: 8, background: 'var(--primary)' }} />
+      <Handle id="in" type="target" position={Position.Top} style={{ width: 8, height: 8, background: 'var(--primary)' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>

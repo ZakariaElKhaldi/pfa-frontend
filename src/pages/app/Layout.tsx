@@ -34,7 +34,10 @@ export function AppLayout() {
     }
   }, [])
 
-  const wsStatus = useWSStatus<SignalEvent>('/ws/signals/', handleSignal)
+  const wsStatus = useWSStatus<SignalEvent>('/ws/signals/', handleSignal, {
+    requireAuth: true,
+    enabled: !loading && !!user,
+  })
 
   if (loading) {
     return (

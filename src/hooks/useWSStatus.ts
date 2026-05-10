@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { WSStatus } from '@/components/common/WSStatusDot'
+import { getWebSocketAuthToken } from '@/lib/api'
 
 /**
  * Open a WebSocket to `path` and track connection status.
@@ -9,19 +10,28 @@ import type { WSStatus } from '@/components/common/WSStatusDot'
 export function useWSStatus<T = unknown>(
   path: string,
   onMessage?: (data: T) => void,
+  opts?: { requireAuth?: boolean; enabled?: boolean },
 ): WSStatus {
   const [status, setStatus] = useState<WSStatus>('disconnected')
   const onMessageRef = useRef(onMessage)
   onMessageRef.current = onMessage
+  const requireAuth = opts?.requireAuth ?? false
+  const enabled = opts?.enabled ?? true
 
   useEffect(() => {
+    if (!enabled) {
+      setStatus('disconnected')
+      return
+    }
+
     let attempt   = 0
     let timer:    ReturnType<typeof setTimeout> | null = null
     let ws:       WebSocket | null = null
     let stopped   = false
+    let terminalAuthFailure = false
 
     function connect() {
-      if (stopped) return
+      if (stopped || terminalAuthFailure) return
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
       const wsUrl = import.meta.env.VITE_WS_URL
       const apiUrl = import.meta.env.VITE_API_URL ?? ''
@@ -30,7 +40,13 @@ export function useWSStatus<T = unknown>(
         : apiUrl
           ? apiUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
           : location.host
-      const url = `${protocol}//${host}${path}`
+      const token = requireAuth ? getWebSocketAuthToken() : null
+      if (requireAuth && !token) {
+        setStatus('disconnected')
+        return
+      }
+      const tokenQuery = token ? `${path.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}` : ''
+      const url = `${protocol}//${host}${path}${tokenQuery}`
       setStatus('connecting')
       ws = new WebSocket(url)
       ws.onopen = () => {
@@ -46,11 +62,17 @@ export function useWSStatus<T = unknown>(
           /* ignore non-JSON */
         }
       }
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         if (stopped) return
         setStatus('disconnected')
+        if (event.code === 4401 || event.code === 4403 || event.code === 1008) {
+          terminalAuthFailure = true
+          return
+        }
         attempt++
-        const delay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5))
+        const baseDelay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5))
+        const jitter = Math.floor(Math.random() * 250)
+        const delay = baseDelay + jitter
         timer = setTimeout(connect, delay)
       }
       ws.onerror = () => {
@@ -65,7 +87,7 @@ export function useWSStatus<T = unknown>(
       if (timer) clearTimeout(timer)
       ws?.close()
     }
-  }, [path])
+  }, [path, requireAuth, enabled])
 
   return status
 }

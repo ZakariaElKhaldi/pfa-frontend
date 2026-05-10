@@ -3,6 +3,8 @@ const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/
 const TOKEN_KEY = 'cs_access'
 const REFRESH_KEY = 'cs_refresh'
 
+let refreshInFlight: Promise<string | null> | null = null
+
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (t: string) => localStorage.setItem(TOKEN_KEY, t),
@@ -17,21 +19,27 @@ export const tokenStore = {
 }
 
 async function refreshAccessToken(): Promise<string | null> {
-  const refresh = tokenStore.getRefresh()
-  if (!refresh) return null
-  try {
-    const res = await fetch(`${BASE}/api/auth/token/refresh/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    tokenStore.set(data.access)
-    return data.access
-  } catch {
-    return null
-  }
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = (async () => {
+    const refresh = tokenStore.getRefresh()
+    if (!refresh) return null
+    try {
+      const res = await fetch(`${BASE}/api/auth/token/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      })
+      if (!res.ok) return null
+      const data = await res.json()
+      tokenStore.set(data.access)
+      return data.access
+    } catch {
+      return null
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+  return refreshInFlight
 }
 
 export class ApiError extends Error {
@@ -77,4 +85,8 @@ export const api = {
   post:   <T>(path: string, body: unknown)    => request<T>(path, { method: 'POST',  body: JSON.stringify(body) }),
   patch:  <T>(path: string, body: unknown)    => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string)                   => request<T>(path, { method: 'DELETE' }),
+}
+
+export function getWebSocketAuthToken(): string | null {
+  return tokenStore.get()
 }

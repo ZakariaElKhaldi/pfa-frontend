@@ -60,9 +60,9 @@ export function TriggerNode({ data }: { data: TriggerNodeData }) {
           <Label>Tickers</Label>
           {data.tickers.length > 0 && (
             <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap', marginBottom: 'var(--space-1)' }}>
-              {data.tickers.map((t) => (
+              {data.tickers.map((t, i) => (
                 <span
-                  key={t}
+                  key={`${t}-${i}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -114,7 +114,7 @@ export function TriggerNode({ data }: { data: TriggerNodeData }) {
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} style={{ width: 8, height: 8, background: 'var(--primary)' }} />
+      <Handle id="out" type="source" position={Position.Bottom} style={{ width: 8, height: 8, background: 'var(--primary)' }} />
     </div>
   )
 }

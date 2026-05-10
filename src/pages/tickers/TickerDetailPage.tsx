@@ -40,7 +40,16 @@ interface ExplainData {
   aggregation: { bullish_ratio: number; normalized_index: number; time_decay_score: number; source_weighted_score: number }
 }
 interface SentimentData { total: number; bullish: number; bearish: number; neutral: number; bullish_pct: number }
-interface SocialPost { id: number; source: string; content: string; sentiment_label: SentimentLabel; sentiment_score: number; posted_at: string }
+interface SocialPost {
+  id: number
+  source: string
+  content: string
+  cleaned_text?: string
+  display_content?: string
+  sentiment_label: SentimentLabel
+  sentiment_score: number
+  posted_at: string
+}
 interface WatchlistItem { symbol: string }
 interface AccuracyItem {
   id: number; predicted: Signal; actual_direction: 'UP' | 'DOWN' | 'FLAT'
@@ -76,6 +85,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+function postDisplayText(post: SocialPost): string {
+  return post.display_content ?? post.cleaned_text ?? post.content
+}
+
+function postSourceName(source: string): string {
+  if (source === 'reddit') return 'Reddit'
+  if (source === 'stocktwits') return 'StockTwits'
+  if (source === 'news_alpaca') return 'Alpaca News'
+  return source.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
+}
+
 export function TickerDetailPage() {
   const { symbol } = useParams<{ symbol: string }>()
   const navigate   = useNavigate()
@@ -93,7 +113,7 @@ export function TickerDetailPage() {
   const { state: indicators }  = useData<IndicatorsData>(`/api/tickers/${sym}/indicators/`)
   const { state: tickerMood }  = useData<MoodSnap[]>(`/api/tickers/${sym}/mood/`)
   const { state: watchlist, refetch: refetchWatchlist } = useData<WatchlistItem[]>('/api/watchlist/')
-  const { state: volumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${sym}`)
+  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${sym}`)
 
   const [tradeLoading, setTradeLoading] = useState(false)
   const [tradeError, setTradeError]     = useState<string | undefined>()
@@ -221,9 +241,10 @@ export function TickerDetailPage() {
     if (posts.status !== 'success') return []
     const q = postSearch.trim().toLowerCase()
     return posts.data.filter(p => {
+      const displayText = postDisplayText(p).toLowerCase()
       if (postSource    !== 'all' && p.source          !== postSource)    return false
       if (postSentiment !== 'all' && p.sentiment_label !== postSentiment) return false
-      if (q && !p.content.toLowerCase().includes(q)) return false
+      if (q && !displayText.includes(q)) return false
       return true
     })
   }, [posts, postSource, postSentiment, postSearch])
@@ -325,6 +346,9 @@ export function TickerDetailPage() {
             <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
               30-day zero-shot projection · Google TimesFM 200M
             </span>
+            {volumeForecast.status === 'error' && (
+              <button className="btn btn-sm btn-ghost" onClick={refetchVolumeForecast}>Retry</button>
+            )}
           </div>
           <D3VolumeForecast
             historicalData={histVol}
@@ -527,7 +551,7 @@ export function TickerDetailPage() {
         {posts.status === 'success' && filteredPosts.length > 0 && (
           <div className="stack stack-3">
             {filteredPosts.slice(0, 20).map(p => (
-              <PostCard key={p.id} source={p.source} sourceName={p.source === 'reddit' ? 'Reddit' : 'StockTwits'} time={timeAgo(p.posted_at)} content={p.content} label={p.sentiment_label} score={p.sentiment_score} />
+              <PostCard key={p.id} source={p.source} sourceName={postSourceName(p.source)} time={timeAgo(p.posted_at)} content={postDisplayText(p)} label={p.sentiment_label} score={p.sentiment_score} />
             ))}
           </div>
         )}

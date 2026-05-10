@@ -1,22 +1,27 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Icons } from '@/components/design-system'
 import { useData } from '@/hooks/useApi'
+import { api } from '@/lib/api'
 import type { SentimentLabel } from '@/design-system/tokens'
 
 interface FeedPost {
   id: number
   ticker: number
-  source: 'reddit' | 'stocktwits'
+  source: string
   external_id: string
   title: string | null
   url: string | null
   content: string
+  cleaned_text?: string
+  display_content?: string
   sentiment_score: number | null
   sentiment_label: SentimentLabel | ''
   posted_at: string
@@ -25,10 +30,15 @@ interface FeedPost {
   neutral_prob?: number
 }
 
-const SOURCES: { value: 'all' | 'reddit' | 'stocktwits'; label: string; color: string }[] = [
-  { value: 'all',        label: 'All',        color: 'var(--primary)' },
-  { value: 'reddit',     label: 'Reddit',     color: 'hsl(16, 100%, 50%)' },
-  { value: 'stocktwits', label: 'StockTwits', color: 'hsl(200, 90%, 45%)' },
+const POLL_MS = 30_000
+
+const SOURCES: { value: string; label: string; color: string }[] = [
+  { value: 'all',         label: 'All',         color: 'var(--primary)' },
+  { value: 'reddit',      label: 'Reddit',      color: 'hsl(16, 100%, 50%)' },
+  { value: 'stocktwits',  label: 'StockTwits',  color: 'hsl(200, 90%, 45%)' },
+  { value: 'news_google', label: 'Google News', color: 'hsl(212, 78%, 48%)' },
+  { value: 'news_yahoo',  label: 'Yahoo News',  color: 'hsl(268, 66%, 55%)' },
+  { value: 'news_alpaca', label: 'Alpaca News', color: 'hsl(150, 58%, 42%)' },
 ]
 const SENTIMENTS: { value: 'all' | SentimentLabel; label: React.ReactNode }[] = [
   { value: 'all',     label: 'All' },
@@ -58,6 +68,26 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d ago`
 }
 
+function sourceLabel(source: string): string {
+  return SOURCES.find(s => s.value === source)?.label
+    ?? source.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
+}
+
+function postText(post: FeedPost): string {
+  return post.display_content ?? post.cleaned_text ?? post.content
+}
+
+function mergeUniquePosts(primary: FeedPost[], secondary: FeedPost[]): FeedPost[] {
+  const seen = new Set<number>()
+  const merged: FeedPost[] = []
+  for (const post of [...primary, ...secondary]) {
+    if (seen.has(post.id)) continue
+    seen.add(post.id)
+    merged.push(post)
+  }
+  return merged
+}
+
 // ── Rich post card ────────────────────────────────────────────────────────────
 function RichPostCard({
   post, symbol, onClick,
@@ -76,9 +106,7 @@ function RichPostCard({
   const neu = post.neutral_prob ?? null
   const hasProbs = pos !== null && neg !== null && neu !== null
 
-  const text = post.title
-    ? `${post.title}\n\n${post.content}`
-    : post.content
+  const text = post.title ? `${post.title}\n\n${postText(post)}` : postText(post)
   const truncated = text.length > 220 ? text.slice(0, 220) + '…' : text
 
   return (
@@ -112,8 +140,8 @@ function RichPostCard({
           }}>
             {post.source.charAt(0).toUpperCase()}
           </span>
-          <span style={{ fontSize: 'var(--text-label-sm)', fontWeight: 600, color: srcInfo?.color }}>
-            {post.source === 'reddit' ? 'Reddit' : 'StockTwits'}
+          <span style={{ fontSize: 'var(--text-label-sm)', fontWeight: 600, color: srcInfo?.color ?? 'var(--primary)' }}>
+            {sourceLabel(post.source)}
           </span>
 
           {symbol && (
@@ -213,99 +241,266 @@ function SentimentStats({ posts }: { posts: FeedPost[] }) {
 
 export function SocialFeedPage() {
   const navigate = useNavigate()
-  const [tickerFilter, setTickerFilter] = useState('')
-  const [source, setSource] = useState<'all' | 'reddit' | 'stocktwits'>('all')
+  const [selectedTicker, setSelectedTicker] = useState('all')
+  const [source, setSource] = useState('all')
   const [sentiment, setSentiment] = useState<'all' | SentimentLabel>('all')
   const [search, setSearch] = useState('')
   const [showCount, setShowCount] = useState(30)
+  const [visiblePosts, setVisiblePosts] = useState<FeedPost[]>([])
+  const [pendingPosts, setPendingPosts] = useState<FeedPost[]>([])
+  const [notifyEnabled, setNotifyEnabled] = useState(true)
+  const [checking, setChecking] = useState(false)
+  const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null)
+  const knownIdsRef = useRef<Set<number>>(new Set())
 
-  const path = tickerFilter.trim()
-    ? `/api/social/feed/?symbol=${encodeURIComponent(tickerFilter.trim().toUpperCase())}`
+  const path = selectedTicker !== 'all'
+    ? `/api/social/feed/?symbol=${encodeURIComponent(selectedTicker)}`
     : '/api/social/feed/'
-  const { state, refetch } = useData<FeedPost[]>(path, [tickerFilter])
+  const { state, refetch } = useData<FeedPost[]>(path, [selectedTicker])
 
-  const filtered = useMemo(() => {
-    if (state.status !== 'success') return [] as FeedPost[]
-    const q = search.trim().toLowerCase()
-    return state.data.filter(p => {
-      if (source !== 'all'    && p.source         !== source)    return false
-      if (sentiment !== 'all' && p.sentiment_label !== sentiment) return false
-      if (q && !p.content.toLowerCase().includes(q) && !(p.title ?? '').toLowerCase().includes(q)) return false
-      return true
-    })
-  }, [state, source, sentiment, search])
+  useEffect(() => {
+    if (state.status !== 'success') return
+    setVisiblePosts(state.data)
+    setPendingPosts([])
+    knownIdsRef.current = new Set(state.data.map(post => post.id))
+    setLastCheckedAt(new Date())
+  }, [state, path])
 
-  const { state: tickers } = useData<Array<{ id: number; symbol: string }>>('/api/tickers/')
+  const { state: tickers } = useData<Array<{ id: number; symbol: string; name?: string }>>('/api/tickers/')
+  const tickerItems = useMemo(() => {
+    if (tickers.status !== 'success') return []
+    return [...tickers.data].sort((a, b) => a.symbol.localeCompare(b.symbol))
+  }, [tickers])
   const symbolByTickerId = useMemo(() => {
     if (tickers.status !== 'success') return new Map<number, string>()
     return new Map(tickers.data.map(t => [t.id, t.symbol]))
   }, [tickers])
 
+  const quickTickers = useMemo(() => {
+    const seen = new Set<string>()
+    const fromPosts = visiblePosts
+      .map(post => symbolByTickerId.get(post.ticker))
+      .filter((symbol): symbol is string => !!symbol)
+      .filter(symbol => {
+        if (seen.has(symbol)) return false
+        seen.add(symbol)
+        return true
+      })
+    return fromPosts.length > 0 ? fromPosts.slice(0, 10) : tickerItems.slice(0, 10).map(t => t.symbol)
+  }, [symbolByTickerId, tickerItems, visiblePosts])
+
+  const checkForNewPosts = useCallback(async (announce = true) => {
+    if (checking) return
+    setChecking(true)
+    try {
+      const latest = await api.get<FeedPost[]>(path)
+      const newItems = latest.filter(post => !knownIdsRef.current.has(post.id))
+      setLastCheckedAt(new Date())
+      if (newItems.length === 0) return
+      for (const post of newItems) knownIdsRef.current.add(post.id)
+      setPendingPosts(prev => mergeUniquePosts(newItems, prev))
+      if (announce && notifyEnabled) {
+        const scope = selectedTicker === 'all' ? 'feed' : selectedTicker
+        toast.info(`${newItems.length} new ${newItems.length === 1 ? 'post' : 'posts'} in ${scope}`, {
+          action: {
+            label: 'Show',
+            onClick: () => {
+              setVisiblePosts(current => mergeUniquePosts(newItems, current))
+              setPendingPosts(current => current.filter(post => !newItems.some(item => item.id === post.id)))
+              setShowCount(30)
+            },
+          },
+        })
+      }
+    } catch {
+      // Keep polling quiet; the visible error state handles initial load failures.
+    } finally {
+      setChecking(false)
+    }
+  }, [checking, notifyEnabled, path, selectedTicker])
+
+  useEffect(() => {
+    if (state.status !== 'success') return
+    const id = window.setInterval(() => {
+      checkForNewPosts(true)
+    }, POLL_MS)
+    return () => window.clearInterval(id)
+  }, [checkForNewPosts, state.status])
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return visiblePosts.filter(p => {
+      const displayText = postText(p).toLowerCase()
+      if (source !== 'all'    && p.source         !== source)    return false
+      if (sentiment !== 'all' && p.sentiment_label !== sentiment) return false
+      if (q && !displayText.includes(q) && !(p.title ?? '').toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [visiblePosts, source, sentiment, search])
+
   // Reset show count when filters change
-  useEffect(() => { setShowCount(30) }, [source, sentiment, search, tickerFilter])
+  useEffect(() => { setShowCount(30) }, [source, sentiment, search, selectedTicker])
 
   const visible = filtered.slice(0, showCount)
+  const showPendingPosts = () => {
+    setVisiblePosts(current => mergeUniquePosts(pendingPosts, current))
+    setPendingPosts([])
+    setShowCount(30)
+  }
 
   return (
     <div className="p-6 stack stack-5">
-      <PageHeader title="Social Feed" subtitle="Cross-ticker stream from Reddit and StockTwits, sentiment-scored." />
+      <PageHeader
+        title="Social Feed"
+        subtitle={selectedTicker === 'all' ? 'Live cross-ticker stream.' : `Tracking ${selectedTicker} posts.`}
+        actions={
+          <div className="cluster cluster-2" style={{ flexWrap: 'wrap' as const, justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className={`btn btn-sm ${notifyEnabled ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setNotifyEnabled(v => !v)}
+              aria-pressed={notifyEnabled}
+              title="Toggle new-post alerts"
+            >
+              <Icons.Bell size={15} />
+              {notifyEnabled ? 'Alerts on' : 'Alerts off'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost"
+              onClick={() => checkForNewPosts(false)}
+              disabled={checking}
+              title="Check for new posts"
+            >
+              <Icons.RefreshCw size={15} />
+              {checking ? 'Checking' : 'Check now'}
+            </button>
+          </div>
+        }
+      />
+
+      <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--space-4)', alignItems: 'start' }}>
+        <div className="stack stack-3">
+          <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-label-pro)' }}>
+            Ticker
+          </span>
+          <Select value={selectedTicker} onValueChange={(value) => { if (value) setSelectedTicker(value) }}>
+            <SelectTrigger className="w-full" style={{ fontFamily: selectedTicker === 'all' ? undefined : 'var(--font-mono)', fontWeight: 700 }}>
+              <SelectValue placeholder="All tickers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All tickers</SelectItem>
+              {tickerItems.map(t => (
+                <SelectItem key={t.symbol} value={t.symbol}>
+                  {t.symbol}{t.name ? ` — ${t.name}` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setSelectedTicker('all')}
+              className={`btn btn-sm ${selectedTicker === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ borderRadius: 'var(--radius-full)' }}
+            >
+              All
+            </button>
+            {quickTickers.map(symbol => (
+              <button
+                key={symbol}
+                type="button"
+                onClick={() => setSelectedTicker(symbol)}
+                className={`btn btn-sm ${selectedTicker === symbol ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ borderRadius: 'var(--radius-full)', fontFamily: 'var(--font-mono)' }}
+              >
+                {symbol}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="stack stack-3">
+          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Input
+              placeholder="Search posts..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ flex: 1, minWidth: 180 }}
+            />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              color: pendingPosts.length > 0 ? 'var(--secondary)' : 'var(--on-surface-muted)',
+              fontSize: 'var(--text-label-sm)',
+              fontWeight: 700,
+            }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: pendingPosts.length > 0 ? 'var(--secondary)' : checking ? 'var(--warning)' : 'var(--on-surface-muted)',
+                  boxShadow: pendingPosts.length > 0 ? '0 0 0 4px color-mix(in srgb, var(--secondary) 16%, transparent)' : undefined,
+                }}
+              />
+              {pendingPosts.length > 0 ? `${pendingPosts.length} new` : checking ? 'Checking' : lastCheckedAt ? `Checked ${lastCheckedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Waiting'}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+            {SOURCES.map(s => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setSource(s.value)}
+                className={`btn btn-sm ${source === s.value ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ borderRadius: 'var(--radius-full)' }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+            {SENTIMENTS.map(s => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setSentiment(s.value)}
+                className={`btn btn-sm ${sentiment === s.value ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ borderRadius: 'var(--radius-full)' }}
+              >
+                {s.label}
+              </button>
+            ))}
+            {state.status === 'success' && (
+              <span style={{ marginLeft: 'auto', fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
+                {filtered.length} of {visiblePosts.length}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Live stats strip */}
       {state.status === 'success' && filtered.length > 0 && (
         <SentimentStats posts={filtered} />
       )}
 
-      {/* Filters */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        {/* Ticker search + text search */}
-        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <Input
-            placeholder="Filter by ticker (e.g. AAPL)…"
-            value={tickerFilter}
-            onChange={e => setTickerFilter(e.target.value)}
-            style={{ maxWidth: 220, fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}
-          />
-          <Input
-            placeholder="Keyword search…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 180, maxWidth: 340 }}
-          />
-        </div>
-
-        {/* Source + sentiment pill filters */}
-        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>Source:</span>
-          {SOURCES.map(s => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => setSource(s.value)}
-              className={`btn btn-sm ${source === s.value ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ borderRadius: 'var(--radius-full)' }}
-            >
-              {s.label}
-            </button>
-          ))}
-          <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', marginLeft: 'var(--space-3)' }}>Sentiment:</span>
-          {SENTIMENTS.map(s => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => setSentiment(s.value)}
-              className={`btn btn-sm ${sentiment === s.value ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ borderRadius: 'var(--radius-full)' }}
-            >
-              {s.label}
-            </button>
-          ))}
-          {state.status === 'success' && (
-            <span style={{ marginLeft: 'auto', fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
-              {filtered.length} of {state.data.length} posts
-            </span>
-          )}
-        </div>
-      </div>
+      {state.status === 'success' && pendingPosts.length > 0 && (
+        <button
+          type="button"
+          onClick={showPendingPosts}
+          className="btn btn-secondary"
+          style={{ alignSelf: 'stretch', justifyContent: 'center', borderRadius: 'var(--radius-lg)' }}
+        >
+          <Icons.ArrowUp size={16} />
+          Show {pendingPosts.length} new {pendingPosts.length === 1 ? 'post' : 'posts'}
+        </button>
+      )}
 
       {state.status === 'error' && <ErrorState message={state.message} onRetry={refetch} />}
       {(state.status === 'idle' || state.status === 'loading') && (
@@ -315,8 +510,8 @@ export function SocialFeedPage() {
       )}
       {state.status === 'success' && filtered.length === 0 && (
         <EmptyState
-          title={state.data.length === 0 ? 'No posts yet' : 'No matches'}
-          description={state.data.length === 0 ? 'Posts will appear after the next pipeline run.' : 'Adjust filters to see more.'}
+          title={visiblePosts.length === 0 ? 'No posts yet' : 'No matches'}
+          description={visiblePosts.length === 0 ? 'Posts will appear after the next pipeline run.' : 'Adjust filters to see more.'}
         />
       )}
 

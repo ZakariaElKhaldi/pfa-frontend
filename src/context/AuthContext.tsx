@@ -41,6 +41,11 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+function looksLikeJwt(token: string | null): boolean {
+  if (!token) return false
+  return token.split('.').length === 3
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(DEV_BYPASS ? DEV_USER : null)
   const [loading, setLoading] = useState(!DEV_BYPASS)
@@ -57,7 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (DEV_BYPASS) return
-    if (tokenStore.get()) {
+    const access = tokenStore.get()
+    const refresh = tokenStore.getRefresh()
+    if ((access && !looksLikeJwt(access)) || (refresh && !looksLikeJwt(refresh))) {
+      tokenStore.clearAll()
+      setLoading(false)
+      return
+    }
+    if (access) {
       fetchUser().finally(() => setLoading(false))
     } else {
       setLoading(false)

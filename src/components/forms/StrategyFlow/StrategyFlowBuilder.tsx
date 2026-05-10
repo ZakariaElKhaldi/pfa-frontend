@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -58,6 +58,7 @@ const nodeTypes = {
 export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: StrategyFlowBuilderProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<StrategyAppNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  const [localError, setLocalError] = useState<string | null>(null)
 
   // Derived state to track values inside nodes without constantly re-rendering the whole graph
   // We'll update the node `data` directly when inputs change.
@@ -117,6 +118,8 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
       newEdges.push({
         id: `e-${lastNodeId}-${id}`,
         source: lastNodeId,
+        sourceHandle: 'out',
+        targetHandle: 'in',
         target: id,
         type: 'smoothstep',
         animated: true,
@@ -147,6 +150,8 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
       newEdges.push({
         id: `e-${lastNodeId}-${id}`,
         source: lastNodeId,
+        sourceHandle: 'out',
+        targetHandle: 'in',
         target: id,
         type: 'smoothstep',
         animated: true,
@@ -164,7 +169,35 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Run once on mount to populate `initial`
 
-  const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, type: 'smoothstep' }, eds)), [setEdges])
+  const nodeTypeById = useMemo(() => {
+    const map = new Map<string, StrategyAppNode['type']>()
+    for (const node of nodes) map.set(node.id, node.type)
+    return map
+  }, [nodes])
+
+  const isValidConnection = useCallback((params: Connection | Edge) => {
+    if (!params.source || !params.target) return false
+    const sourceType = nodeTypeById.get(params.source)
+    const targetType = nodeTypeById.get(params.target)
+    if (!sourceType || !targetType) return false
+    if (sourceType === 'action') return false
+    if (params.source === params.target) return false
+    return targetType === 'condition' || targetType === 'action'
+  }, [nodeTypeById])
+
+  const onConnect = useCallback((params: Connection) => {
+    if (!isValidConnection(params)) return
+    setEdges((eds) => addEdge(
+      {
+        ...params,
+        sourceHandle: params.sourceHandle ?? 'out',
+        targetHandle: params.targetHandle ?? 'in',
+        animated: true,
+        type: 'smoothstep',
+      },
+      eds,
+    ))
+  }, [isValidConnection, setEdges])
 
   const addConditionNode = useCallback(() => {
     const id = `cond-${uuidv4()}`
@@ -191,7 +224,7 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
       },
     ])
     if (lastNode) {
-      setEdges((eds) => [...eds, { id: `e-${lastNode.id}-${id}`, source: lastNode.id, target: id, type: 'smoothstep', animated: true }])
+      setEdges((eds) => [...eds, { id: `e-${lastNode.id}-${id}`, source: lastNode.id, sourceHandle: 'out', targetHandle: 'in', target: id, type: 'smoothstep', animated: true }])
     }
   }, [nodes, setNodes, setEdges])
 
@@ -218,11 +251,12 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
       },
     ])
     if (lastNode) {
-      setEdges((eds) => [...eds, { id: `e-${lastNode.id}-${id}`, source: lastNode.id, target: id, type: 'smoothstep', animated: true }])
+      setEdges((eds) => [...eds, { id: `e-${lastNode.id}-${id}`, source: lastNode.id, sourceHandle: 'out', targetHandle: 'in', target: id, type: 'smoothstep', animated: true }])
     }
   }, [nodes, setNodes, setEdges])
 
   const handleSave = () => {
+    setLocalError(null)
     // Traverse graph to build the ordered payload.
     const triggerNode = nodes.find(n => n.type === 'trigger')
     if (!triggerNode) return
@@ -230,9 +264,23 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
     const conditions: StrategyCondition[] = []
     const actions: StrategyAction[] = []
 
+    const outgoing = new Map<string, Edge[]>()
+    for (const edge of edges) {
+      if (!edge.source || !edge.target) continue
+      const curr = outgoing.get(edge.source) ?? []
+      curr.push(edge)
+      outgoing.set(edge.source, curr)
+    }
+
     let currentId: string | null = triggerNode.id
+    const visited = new Set<string>()
 
     while (currentId) {
+      if (visited.has(currentId)) {
+        setLocalError('Invalid strategy topology: cycle detected.')
+        return
+      }
+      visited.add(currentId)
       const node = nodes.find(n => n.id === currentId)
       if (node?.type === 'condition') {
         conditions.push({
@@ -248,8 +296,18 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
       }
 
       // Find next node
-      const edge = edges.find(e => e.source === currentId)
-      currentId = edge ? edge.target : null
+      const out: Edge[] = outgoing.get(currentId) ?? []
+      if (out.length > 1) {
+        setLocalError('Invalid strategy topology: branching is not supported.')
+        return
+      }
+      currentId = out.length === 1 ? out[0].target : null
+    }
+
+    const invalidEdges = edges.filter((e) => !isValidConnection({ source: e.source, sourceHandle: e.sourceHandle ?? null, target: e.target, targetHandle: e.targetHandle ?? null }))
+    if (invalidEdges.length > 0) {
+      setLocalError('Invalid strategy topology: one or more edges are not connectable.')
+      return
     }
 
     onSubmit({
@@ -269,6 +327,7 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
@@ -292,10 +351,10 @@ export function StrategyFlowBuilder({ initial = {}, onSubmit, loading, error }: 
           </Button>
         </Panel>
 
-        {error && (
+        {(error || localError) && (
           <Panel position="bottom-center" style={{ width: '100%', maxWidth: 400 }}>
             <div role="alert" style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--tertiary-container)', color: 'var(--tertiary)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body-sm)' }}>
-              {error}
+              {localError ?? error}
             </div>
           </Panel>
         )}
