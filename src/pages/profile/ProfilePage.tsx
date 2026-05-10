@@ -266,7 +266,7 @@ function PreferencesSection() {
       <div className="stack stack-3">
         <div className="stack stack-1">
           <Label htmlFor="pref-theme">Theme</Label>
-          <Select value={draft.theme} onValueChange={(val: Theme) => setDraft({ ...draft, theme: val })} disabled={busy}>
+          <Select value={draft.theme} onValueChange={(val) => { if (val) setDraft({ ...draft, theme: val as Theme }) }} disabled={busy}>
             <SelectTrigger id="pref-theme" className="w-full" style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-container-lowest)', color: 'var(--on-surface)', fontSize: 'var(--text-body-md)' }}>
               <SelectValue placeholder="Select theme" />
             </SelectTrigger>
@@ -311,7 +311,7 @@ function PreferencesSection() {
 
         <div className="stack stack-1">
           <Label htmlFor="pref-digest">Digest frequency</Label>
-          <Select value={draft.digest_frequency} onValueChange={(val: Digest) => setDraft({ ...draft, digest_frequency: val })} disabled={busy}>
+          <Select value={draft.digest_frequency} onValueChange={(val) => { if (val) setDraft({ ...draft, digest_frequency: val as Digest }) }} disabled={busy}>
             <SelectTrigger id="pref-digest" className="w-full" style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-container-lowest)', color: 'var(--on-surface)', fontSize: 'var(--text-body-md)' }}>
               <SelectValue placeholder="Select frequency" />
             </SelectTrigger>

@@ -75,7 +75,7 @@ export function D3SectorTreemap({ data, height = 300 }: Props) {
       .attr('width', width)
       .attr('height', height)
       .selectAll('g')
-      .data(root.leaves())
+      .data(root.leaves() as d3.HierarchyRectangularNode<any>[])
       .enter()
       .append('g')
       .attr('transform', d => `translate(${d.x0},${d.y0})`)

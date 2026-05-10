@@ -1,18 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router'
-import { AdminDashboardPagePreview } from './AdminDashboardPage'
+import { AdminDashboardPage } from './AdminDashboardPage'
 
-const meta: Meta<typeof AdminDashboardPagePreview> = {
+const meta: Meta<typeof AdminDashboardPage> = {
   title: 'Pages/Admin/Dashboard',
-  component: AdminDashboardPagePreview,
+  component: AdminDashboardPage,
   decorators: [(Story) => <MemoryRouter><Story /></MemoryRouter>],
   parameters: { layout: 'fullscreen' },
 }
 export default meta
-type Story = StoryObj<typeof AdminDashboardPagePreview>
+type Story = StoryObj<typeof AdminDashboardPage>
 
 export const Default: Story = {}
-
-export const HighActivity: Story = {
-  args: { stats: { total_users: 5120, total_tickers: 512, signals_today: 8200, total_posts: 420000 } },
-}

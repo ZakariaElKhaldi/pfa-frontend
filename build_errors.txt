@@ -1,0 +1,55 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/App.tsx(39,5): error TS2552: Cannot find name 'toast'. Did you mean 'Toaster'?
+src/components/charts/D3MarketBreadth.tsx(386,26): error TS2339: Property 'isForecast' does not exist on type '{ date: string; buy: number; sell: number; net: number; cumulative: number; }'.
+src/components/charts/D3MarketBreadth.tsx(491,15): error TS2339: Property 'isForecast' does not exist on type '{ date: string; buy: number; sell: number; net: number; cumulative: number; }'.
+src/components/charts/D3SectorTreemap.tsx(81,46): error TS2339: Property 'x0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(81,54): error TS2339: Property 'y0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(85,41): error TS2339: Property 'x1' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(85,48): error TS2339: Property 'x0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(86,42): error TS2339: Property 'y1' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(86,49): error TS2339: Property 'y0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(98,19): error TS2339: Property 'x1' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(98,26): error TS2339: Property 'x0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(99,19): error TS2339: Property 'y1' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SectorTreemap.tsx(99,26): error TS2339: Property 'y0' does not exist on type 'HierarchyNode<{ name: string; children: { name: string; value: number; signal: number; sentiment: number; tickers: number; }[]; }>'.
+src/components/charts/D3SignalDonut.tsx(61,19): error TS2365: Operator '>' cannot be applied to types 'string | number' and 'number'.
+src/components/layout/AppSidebar.tsx(21,3): error TS6133: 'DropdownMenuSeparator' is declared but its value is never read.
+src/components/layout/AppSidebar.tsx(125,32): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
+src/pages/admin/AdminDashboardPage.stories.tsx(3,10): error TS2724: '"./AdminDashboardPage"' has no exported member named 'AdminDashboardPagePreview'. Did you mean 'AdminDashboardPage'?
+src/pages/admin/AdminDashboardPage.tsx(1,10): error TS6133: 'useState' is declared but its value is never read.
+src/pages/admin/AdminUsersPage.stories.tsx(3,10): error TS2724: '"./AdminUsersPage"' has no exported member named 'AdminUsersPagePreview'. Did you mean 'AdminUsersPage'?
+src/pages/analytics/AnalyticsPage.stories.tsx(3,10): error TS2305: Module '"./AnalyticsPage"' has no exported member 'AnalyticsPagePreview'.
+src/pages/analytics/BacktestPage.tsx(76,10): error TS6133: 'SignalDot' is declared but its value is never read.
+src/pages/analytics/BacktestPage.tsx(147,45): error TS2345: Argument of type '(f: FormState) => { symbol: string | null; strategy: StrategyType; start: string; end: string; threshold: string; }' is not assignable to parameter of type 'SetStateAction<FormState>'.
+  Type '(f: FormState) => { symbol: string | null; strategy: StrategyType; start: string; end: string; threshold: string; }' is not assignable to type '(prevState: FormState) => FormState'.
+    Call signature return types '{ symbol: string | null; strategy: StrategyType; start: string; end: string; threshold: string; }' and 'FormState' are incompatible.
+      The types of 'symbol' are incompatible between these types.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/pages/analytics/BacktestPage.tsx(347,22): error TS6133: 'buyTimes' is declared but its value is never read.
+src/pages/analytics/BacktestPage.tsx(347,32): error TS6133: 'sellTimes' is declared but its value is never read.
+src/pages/analytics/CorrelationPage.stories.tsx(3,10): error TS2724: '"./CorrelationPage"' has no exported member named 'CorrelationPagePreview'. Did you mean 'CorrelationPage'?
+src/pages/audit/AuditPage.tsx(33,7): error TS6133: 'SIGNAL_FILTERS' is declared but its value is never read.
+src/pages/audit/AuditPage.tsx(235,9): error TS6133: 'tickers' is declared but its value is never read.
+src/pages/audit/AuditPage.tsx(362,68): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'null' is not assignable to type 'SetStateAction<string>'.
+src/pages/export/ExportPage.stories.tsx(3,10): error TS2305: Module '"./ExportPage"' has no exported member 'ExportPagePreview'.
+src/pages/intelligence/IntelligencePage.stories.tsx(3,10): error TS2724: '"./IntelligencePage"' has no exported member named 'IntelligencePagePreview'. Did you mean 'IntelligencePage'?
+src/pages/portfolio/PortfolioPage.tsx(43,9): error TS6133: 'navigate' is declared but its value is never read.
+src/pages/profile/ProfilePage.tsx(269,39): error TS2322: Type '(val: Theme) => void' is not assignable to type '(value: "light" | "dark" | "system" | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'val' and 'value' are incompatible.
+    Type '"light" | "dark" | "system" | null' is not assignable to type 'Theme'.
+      Type 'null' is not assignable to type 'Theme'.
+src/pages/profile/ProfilePage.tsx(314,50): error TS2322: Type '(val: Digest) => void' is not assignable to type '(value: "off" | "daily" | "weekly" | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'val' and 'value' are incompatible.
+    Type '"off" | "daily" | "weekly" | null' is not assignable to type 'Digest'.
+      Type 'null' is not assignable to type 'Digest'.
+src/pages/social/SocialFeedPage.stories.tsx(3,10): error TS2724: '"./SocialFeedPage"' has no exported member named 'SocialFeedPagePreview'. Did you mean 'SocialFeedPage'?
+src/pages/social/SocialFeedPage.tsx(1,29): error TS6133: 'useRef' is declared but its value is never read.
+src/pages/social/SocialFeedPage.tsx(175,9): error TS6133: 'total' is declared but its value is never read.
+src/pages/strategies/StrategiesPage.tsx(156,32): error TS18046: 'res' is of type 'unknown'.
+src/pages/tickers/TickersPage.stories.tsx(3,10): error TS2305: Module '"./TickersPage"' has no exported member 'TickersPagePreview'.

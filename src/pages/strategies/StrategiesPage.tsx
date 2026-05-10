@@ -152,8 +152,10 @@ export function StrategiesPage() {
               onEdit={async () => {
                 setSaveErr(undefined)
                 try {
-                  const res = await api.get(`/api/strategies/${s.id}/`)
-                  const data = res.data
+                  const data = await api.get<{
+                    conditions?: Array<{ field: string; operator: string; value: unknown }>
+                    actions?: Array<{ action_type: string; config?: { target?: string } }>
+                  }>(`/api/strategies/${s.id}/`)
                   setModal({
                     type: 'edit',
                     strategy: {

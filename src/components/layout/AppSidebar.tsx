@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/design-system'
 import { pathToNavId, visibleNav, type NavItem } from '@/router/nav'
@@ -122,7 +121,7 @@ export function AppSidebar({ username = 'User', role = 'user', activeId, onSelec
 
       <SidebarFooter>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <div className="flex cursor-pointer hover:bg-accent hover:text-accent-foreground items-center gap-3 px-1 py-1 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center rounded-md transition-colors">
               <div className="avatar avatar-sm shrink-0" aria-label={`User: ${initials}`}>
                 {initials}

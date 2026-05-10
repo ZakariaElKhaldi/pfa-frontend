@@ -30,7 +30,6 @@ const DATE_PRESETS = [
   { label: 'All',    start: '2020-01-01',                                   end: today },
 ]
 
-const SIGNAL_FILTERS = ['all', 'BUY', 'SELL', 'HOLD'] as const
 const METHOD_FILTERS = ['all', 'rule_based', 'xgboost', 'ensemble'] as const
 const PAGE_SIZE = 20
 
@@ -232,7 +231,7 @@ function PayloadPanel({ data, label }: { data: Record<string, unknown>; label: s
 // ── Page ────────────────────────────────────────────────────────────────
 export function AuditPage() {
   const { state, refetch } = useData<DecisionItem[]>('/api/audit/decisions/')
-  const { state: tickers } = useData<Array<{ symbol: string }>>('/api/tickers/')
+  useData<Array<{ symbol: string }>>('/api/tickers/')
 
   const [datePreset, setDatePreset] = useState(1) // default 7D
   const [from, setFrom] = useState(DATE_PRESETS[1].start)
@@ -359,7 +358,7 @@ export function AuditPage() {
           {/* Ticker dropdown */}
           <div className="stack stack-1" style={{ minWidth: 140 }}>
             <Label>Ticker</Label>
-            <Select value={ticker} onValueChange={v => { setTicker(v); setPage(1) }}>
+            <Select value={ticker} onValueChange={v => { if (v) { setTicker(v); setPage(1) } }}>
               <SelectTrigger style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
                 <SelectValue placeholder="All tickers" />
               </SelectTrigger>

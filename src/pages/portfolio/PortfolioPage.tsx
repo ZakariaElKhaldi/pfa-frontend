@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent'
@@ -40,7 +39,6 @@ interface PortfolioData  { cash: string; positions: PositionItem[] }
 interface TradeItem { symbol: string; side: 'buy' | 'sell'; quantity: number; price: string; executed_at: string }
 
 export function PortfolioPage() {
-  const navigate = useNavigate()
   const { state: summary, refetch: refetchSummary } = useData<PortfolioSummary>('/api/portfolio/summary/')
   const { state: portfolio, refetch: refetchPortfolio } = useData<PortfolioData>('/api/portfolio/')
   const { state: trades, refetch: refetchTrades }       = useData<TradeItem[]>('/api/portfolio/trades/')

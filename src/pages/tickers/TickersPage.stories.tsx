@@ -1,22 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router'
-import { TickersPagePreview } from './TickersPage'
+import { TickersPage } from './TickersPage'
 
-const meta: Meta<typeof TickersPagePreview> = {
+const meta: Meta<typeof TickersPage> = {
   title: 'Pages/Tickers',
-  component: TickersPagePreview,
+  component: TickersPage,
   decorators: [(Story) => <MemoryRouter><Story /></MemoryRouter>],
   parameters: { layout: 'fullscreen' },
 }
 export default meta
-type Story = StoryObj<typeof TickersPagePreview>
+type Story = StoryObj<typeof TickersPage>
 
 export const Default: Story = {}
-
-export const NoneWatched: Story = {
-  args: { watchlist: [] },
-}
-
-export const Empty: Story = {
-  args: { tickers: [] },
-}

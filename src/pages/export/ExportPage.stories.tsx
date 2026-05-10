@@ -1,15 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router'
-import { ExportPagePreview } from './ExportPage'
+import { ExportPage } from './ExportPage'
 
-const meta: Meta<typeof ExportPagePreview> = {
+const meta: Meta<typeof ExportPage> = {
   title: 'Pages/Export',
-  component: ExportPagePreview,
+  component: ExportPage,
   decorators: [(Story) => <MemoryRouter><Story /></MemoryRouter>],
   parameters: { layout: 'fullscreen' },
 }
 export default meta
-type Story = StoryObj<typeof ExportPagePreview>
+type Story = StoryObj<typeof ExportPage>
 
 export const Default: Story = {}
-export const Loading: Story = { args: { loading: true } }

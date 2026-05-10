@@ -84,7 +84,7 @@ export function D3MarketBreadth({
       }
   
       let cumulative = 0
-      const processed = Object.entries(byDay)
+      const processed: BreadthPoint[] = Object.entries(byDay)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([date, counts]) => {
           const net = counts.BUY - counts.SELL
@@ -99,7 +99,7 @@ export function D3MarketBreadth({
         })
         
       // Prepare combined series with forecast dates
-      let combined = [...processed]
+      let combined: BreadthPoint[] = [...processed]
       if (forecastData && forecastData.length > 0 && processed.length > 0) {
         const lastDate = new Date(processed[processed.length - 1].date)
         const forecastSeries = forecastData.map((val, i) => {

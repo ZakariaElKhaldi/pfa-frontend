@@ -73,11 +73,6 @@ function formatEquityTooltip(value: ValueType | undefined, _name: NameType | und
   return [`$${n.toFixed(2)}`, 'Equity']
 }
 
-function SignalDot({ trade, cx, cy }: { trade: { side: string }; cx?: number; cy?: number }) {
-  const color = trade.side === 'buy' ? 'var(--secondary)' : 'var(--tertiary)'
-  return <circle cx={cx} cy={cy} r={4} fill={color} stroke="#fff" strokeWidth={1.5} />
-}
-
 export function BacktestPage() {
   const { state: history, refetch } = useData<BacktestRun[]>('/api/analytics/backtest/')
   const { state: tickers } = useData<TickerItem[]>('/api/tickers/')
@@ -121,10 +116,6 @@ export function BacktestPage() {
     ts: p.ts,
   })), [selected])
 
-  // Find trade timestamps for annotation
-  const buyTimes  = new Set((selected?.trades ?? []).filter(t => t.side === 'buy').map(t => t.ts))
-  const sellTimes = new Set((selected?.trades ?? []).filter(t => t.side === 'sell').map(t => t.ts))
-
   return (
     <div className="p-6 stack stack-6">
       <PageMeta title="Backtest" description="Run trading strategies against historical data." />
@@ -144,7 +135,7 @@ export function BacktestPage() {
             ) : (
               <Select
                 value={form.symbol}
-                onValueChange={v => setForm(f => ({ ...f, symbol: v }))}
+                onValueChange={v => { if (v) setForm(f => ({ ...f, symbol: v })) }}
                 disabled={running}
               >
                 <SelectTrigger id="bt-symbol" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
@@ -167,7 +158,7 @@ export function BacktestPage() {
             <Label htmlFor="bt-strategy">Strategy</Label>
             <Select
               value={form.strategy}
-              onValueChange={v => setForm(f => ({ ...f, strategy: v as StrategyType }))}
+              onValueChange={v => { if (v) setForm(f => ({ ...f, strategy: v as StrategyType })) }}
               disabled={running}
             >
               <SelectTrigger id="bt-strategy">
@@ -270,7 +261,7 @@ export function BacktestPage() {
         {/* ── Results + History ───────────────────────────────────────── */}
         <div className="stack stack-5">
           {selected
-            ? <BacktestResult run={selected} equityPoints={equityPoints} buyTimes={buyTimes} sellTimes={sellTimes} onClose={() => setSelected(null)} />
+            ? <BacktestResult run={selected} equityPoints={equityPoints} onClose={() => setSelected(null)} />
             : (
               <div className="card" style={{ padding: 'var(--space-10)', textAlign: 'center', color: 'var(--on-surface-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <span style={{ fontSize: 32, opacity: 0.4 }}>📈</span>
@@ -344,12 +335,10 @@ export function BacktestPage() {
 }
 
 function BacktestResult({
-  run, equityPoints, buyTimes, sellTimes, onClose,
+  run, equityPoints, onClose,
 }: {
   run: BacktestRun
   equityPoints: Array<{ label: string; equity: number; ts: string }>
-  buyTimes: Set<string>
-  sellTimes: Set<string>
   onClose: () => void
 }) {
   if (run.status === 'error') {

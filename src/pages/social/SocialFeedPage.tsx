@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
@@ -172,7 +172,6 @@ function SentimentStats({ posts }: { posts: FeedPost[] }) {
     const l = (p.sentiment_label || 'neutral') as SentimentLabel
     if (l in counts) counts[l as keyof typeof counts]++
   })
-  const total = posts.length || 1
   const avgScore = posts.length > 0
     ? posts.reduce((s, p) => s + (p.sentiment_score ?? 0), 0) / posts.length
     : 0

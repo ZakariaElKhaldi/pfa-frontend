@@ -54,11 +54,12 @@ export function D3SignalDonut({ data, size = 220 }: Props) {
       .outerRadius(outerRadius + 4)
       .cornerRadius(4)
 
-    const entries: [string, number][] = [
+    const rawEntries: Array<[string, number]> = [
       ['BUY', data.BUY],
       ['SELL', data.SELL],
       ['HOLD', data.HOLD],
-    ].filter(d => d[1] > 0) as [string, number][]
+    ]
+    const entries = rawEntries.filter((d): d is [string, number] => d[1] > 0)
 
     const arcs = g.selectAll('path')
       .data(pie(entries))
@@ -96,7 +97,9 @@ export function D3SignalDonut({ data, size = 220 }: Props) {
 
   const centerLabel = hovered ?? 'Total'
   const centerValue = hovered ? data[hovered as keyof SignalDonutData] : total
-  const centerPct = total > 0 && hovered ? ((centerValue / total) * 100).toFixed(0) + '%' : ''
+  const centerPct = total > 0 && hovered && typeof centerValue === 'number'
+    ? ((centerValue / total) * 100).toFixed(0) + '%'
+    : ''
   const centerColor = hovered ? COLORS[hovered] : 'var(--on-surface)'
 
   return (
