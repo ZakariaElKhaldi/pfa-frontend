@@ -6,11 +6,21 @@ export interface SignalEntry {
   created_at: string
 }
 
+export interface BreadthHistoryPoint {
+  bucket: string
+  buy: number
+  sell: number
+  hold: number
+  net: number
+  cumulative: number
+}
+
 interface Props {
-  data: SignalEntry[]
+  history: BreadthHistoryPoint[]
   days?: number
   height?: number
   forecastData?: number[]
+  forecastLabel?: string
 }
 
 interface BreadthPoint {
@@ -39,10 +49,11 @@ const POSITIVE = 'hsl(160, 72%, 45%)'
 const NEGATIVE = 'hsl(0, 72%, 56%)'
 
 export function D3MarketBreadth({
-  data,
+  history,
   days = 30,
   height = 340,
   forecastData,
+  forecastLabel = 'Forecast',
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -72,41 +83,28 @@ export function D3MarketBreadth({
   // Process data
   // ─────────────────────────────────────────────
     const { breadthData, currentBreadth, insightText, combinedSeries, analysis } = useMemo(() => {
-      const cutoff = Date.now() - days * 86_400_000
-      const filtered = data.filter(d => new Date(d.created_at).getTime() >= cutoff)
-  
-      const byDay: Record<string, { BUY: number; SELL: number }> = {}
-      for (const d of filtered) {
-        const day = new Date(d.created_at).toISOString().slice(0, 10)
-        if (!byDay[day]) byDay[day] = { BUY: 0, SELL: 0 }
-        if (d.signal === 'BUY') byDay[day].BUY++
-        if (d.signal === 'SELL') byDay[day].SELL++
-      }
-  
-      let cumulative = 0
-      const processed: BreadthPoint[] = Object.entries(byDay)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([date, counts]) => {
-          const net = counts.BUY - counts.SELL
-          cumulative += net
-          return {
-            date,
-            buy: counts.BUY,
-            sell: counts.SELL,
-            net,
-            cumulative,
-          }
-        })
+      const processed: BreadthPoint[] = [...history]
+        .sort((a, b) => new Date(a.bucket).getTime() - new Date(b.bucket).getTime())
+        .map(point => ({
+          date: point.bucket,
+          buy: point.buy,
+          sell: point.sell,
+          net: point.net,
+          cumulative: point.cumulative,
+        }))
         
       // Prepare combined series with forecast dates
       let combined: BreadthPoint[] = [...processed]
       if (forecastData && forecastData.length > 0 && processed.length > 0) {
         const lastDate = new Date(processed[processed.length - 1].date)
+        const prevDate = processed.length > 1 ? new Date(processed[processed.length - 2].date) : null
+        const stepMs = prevDate
+          ? Math.max(3_600_000, lastDate.getTime() - prevDate.getTime())
+          : 86_400_000
         const forecastSeries = forecastData.map((val, i) => {
-          const d = new Date(lastDate)
-          d.setDate(d.getDate() + i + 1)
+          const d = new Date(lastDate.getTime() + stepMs * (i + 1))
           return {
-            date: d.toISOString().slice(0, 10),
+            date: d.toISOString(),
             buy: 0,
             sell: 0,
             net: 0,
@@ -175,7 +173,7 @@ export function D3MarketBreadth({
         insightText: insight,
         analysis: { headline, regime }
       }
-    }, [data, days, forecastData])
+    }, [history, forecastData])
 
   // ─────────────────────────────────────────────
   // Chart
@@ -275,7 +273,7 @@ export function D3MarketBreadth({
         .attr('font-weight', 700)
         .attr('letter-spacing', '0.05em')
         .attr('opacity', 0.8)
-        .text('AI FORECAST')
+        .text(forecastLabel.toUpperCase())
     }
 
     // ─────────────────────────────────────────
@@ -410,9 +408,7 @@ export function D3MarketBreadth({
               .map(d => d.date)
           )
           .tickFormat(d => {
-            const dt = new Date(
-              d + 'T00:00:00'
-            )
+            const dt = new Date(d)
 
             return dt.toLocaleDateString(
               'en-US',
@@ -510,9 +506,23 @@ export function D3MarketBreadth({
         hoverDot.style('display', 'none')
         setTooltip(null)
       })
-  }, [breadthData, combinedSeries, width, height, forecastData])
+  }, [breadthData, combinedSeries, width, height, forecastData, forecastLabel])
 
-  if (breadthData.length < 2) return null
+  if (breadthData.length < 2) {
+    return (
+      <div style={{
+        minHeight: height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--on-surface-muted)',
+        padding: 20,
+        textAlign: 'center',
+      }}>
+        Not enough breadth history to chart this window.
+      </div>
+    )
+  }
 
   const netColor = currentBreadth.recentNet >= 0 ? POSITIVE : NEGATIVE
   const regimeColor =
@@ -711,8 +721,7 @@ export function D3MarketBreadth({
                 }}
               >
                 {new Date(
-                  tooltip.date +
-                  'T00:00:00'
+                  tooltip.date
                 ).toLocaleDateString(
                   'en-US',
                   {

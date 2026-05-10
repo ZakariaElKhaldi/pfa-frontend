@@ -2,6 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import type { WSStatus } from '@/components/common/WSStatusDot'
 import { getWebSocketAuthToken } from '@/lib/api'
 
+export const TERMINAL_CLOSE_CODES = new Set([4401, 4403, 1008])
+
+export function isTerminalWebSocketClose(code: number): boolean {
+  return TERMINAL_CLOSE_CODES.has(code)
+}
+
+export function shouldMarkWsUnavailable(attempt: number, maxRetries: number): boolean {
+  return attempt > maxRetries
+}
+
 /**
  * Open a WebSocket to `path` and track connection status.
  * If `onMessage` is provided, parses each message as JSON and invokes the callback.
@@ -10,13 +20,14 @@ import { getWebSocketAuthToken } from '@/lib/api'
 export function useWSStatus<T = unknown>(
   path: string,
   onMessage?: (data: T) => void,
-  opts?: { requireAuth?: boolean; enabled?: boolean },
+  opts?: { requireAuth?: boolean; enabled?: boolean; maxRetries?: number },
 ): WSStatus {
   const [status, setStatus] = useState<WSStatus>('disconnected')
   const onMessageRef = useRef(onMessage)
   onMessageRef.current = onMessage
   const requireAuth = opts?.requireAuth ?? false
   const enabled = opts?.enabled ?? true
+  const maxRetries = opts?.maxRetries ?? 6
 
   useEffect(() => {
     if (!enabled) {
@@ -42,7 +53,7 @@ export function useWSStatus<T = unknown>(
           : location.host
       const token = requireAuth ? getWebSocketAuthToken() : null
       if (requireAuth && !token) {
-        setStatus('disconnected')
+        setStatus('unavailable')
         return
       }
       const tokenQuery = token ? `${path.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}` : ''
@@ -64,12 +75,17 @@ export function useWSStatus<T = unknown>(
       }
       ws.onclose = (event) => {
         if (stopped) return
-        setStatus('disconnected')
-        if (event.code === 4401 || event.code === 4403 || event.code === 1008) {
+        if (isTerminalWebSocketClose(event.code)) {
           terminalAuthFailure = true
+          setStatus('unavailable')
           return
         }
         attempt++
+        if (shouldMarkWsUnavailable(attempt, maxRetries)) {
+          setStatus('unavailable')
+          return
+        }
+        setStatus('disconnected')
         const baseDelay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5))
         const jitter = Math.floor(Math.random() * 250)
         const delay = baseDelay + jitter
@@ -87,7 +103,7 @@ export function useWSStatus<T = unknown>(
       if (timer) clearTimeout(timer)
       ws?.close()
     }
-  }, [path, requireAuth, enabled])
+  }, [path, requireAuth, enabled, maxRetries])
 
   return status
 }

@@ -1,9 +1,10 @@
-export type WSStatus = 'connected' | 'connecting' | 'disconnected'
+export type WSStatus = 'connected' | 'connecting' | 'disconnected' | 'unavailable'
 
 const CONFIG: Record<WSStatus, { color: string; label: string; pulse: boolean }> = {
-  connected:    { color: 'var(--secondary)',       label: 'Live',         pulse: true  },
-  connecting:   { color: 'var(--warning)',          label: 'Connecting…',  pulse: true  },
-  disconnected: { color: 'var(--on-surface-muted)', label: 'Disconnected', pulse: false },
+  connected:    { color: 'var(--secondary)',       label: 'Live',             pulse: true  },
+  connecting:   { color: 'var(--warning)',         label: 'Connecting…',      pulse: true  },
+  disconnected: { color: 'var(--warning)',         label: 'Reconnecting…',    pulse: true  },
+  unavailable:  { color: 'var(--on-surface-muted)', label: 'Live unavailable', pulse: false },
 }
 
 export function WSStatusDot({ status }: { status: WSStatus }) {

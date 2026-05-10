@@ -23,12 +23,30 @@ interface TopMover { ticker: string; signal: string; prev_signal: string; delta:
 interface LeaderboardItem { ticker: string; bullish_ratio: number; post_count: number; sentiment_score: string }
 interface SectorItem { sector: string; ticker_count: number; avg_signal: number; avg_sentiment: number }
 interface RecentSignal { id: number; signal: 'BUY' | 'SELL' | 'HOLD'; created_at: string; ticker_symbol: string }
+interface ForecastResponse {
+  forecast: number[]
+  method?: 'timesfm'
+  model_status?: string
+  detail?: string
+}
+interface BreadthHistoryPoint {
+  bucket: string
+  buy: number
+  sell: number
+  hold: number
+  net: number
+  cumulative: number
+}
+interface BreadthForecastResponse extends ForecastResponse {
+  history: BreadthHistoryPoint[]
+  last_historical_value: number
+}
 
 const RANGES = [
-  { label: '1D', days: 1 },
-  { label: '1W', days: 7 },
-  { label: '1M', days: 30 },
-  { label: '3M', days: 90 },
+  { label: '1D', days: 1, window: '1d' },
+  { label: '1W', days: 7, window: '7d' },
+  { label: '1M', days: 30, window: '30d' },
+  { label: '3M', days: 90, window: '90d' },
 ] as const
 
 const SIGNAL_COLOR = {
@@ -98,8 +116,9 @@ export function AnalyticsPage() {
   const [forecastTicker, setForecastTicker] = useState('AAPL')
 
   const { bars: priceChartData } = useOHLCData(forecastTicker, 200)
-  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${forecastTicker}`)
-  const { state: breadthForecast, refetch: refetchBreadthForecast } = useData<{ forecast: number[]; last_historical_value: number }>('/api/analytics/forecast/breadth/')
+  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<ForecastResponse>(`/api/analytics/forecast/volume/?ticker=${forecastTicker}`)
+  const breadthWindow = RANGES[rangeIdx].window
+  const { state: breadthForecast, refetch: refetchBreadthForecast } = useData<BreadthForecastResponse>(`/api/analytics/forecast/breadth/?window=${breadthWindow}`)
 
   const rangeDays = RANGES[rangeIdx].days
 
@@ -155,6 +174,11 @@ export function AnalyticsPage() {
       volume: p.volume,
     }))
   }, [priceChartData])
+  const volumeForecastMethod = volumeForecast.status === 'success'
+    ? volumeForecast.data.method
+    : undefined
+  const volumeForecastLabel = volumeForecastMethod === 'timesfm' ? 'TIMESFM AI' : 'FORECAST'
+  const volumeForecastLineLabel = volumeForecastMethod === 'timesfm' ? 'TimesFM Projection' : 'Projection'
 
   return (
     <div className="p-6 stack stack-6">
@@ -233,15 +257,20 @@ export function AnalyticsPage() {
       )}
 
       {/* ─── Row 2b: Market Breadth ──────────────────────────────────── */}
-      {recentSignals.status === 'success' && recentSignals.data.length > 10 && (
+      {(breadthForecast.status === 'loading' || breadthForecast.status === 'idle') && <Skeleton className="h-96 w-full" />}
+      {breadthForecast.status === 'error' && (
+        <ErrorState message={breadthForecast.message} onRetry={refetchBreadthForecast} />
+      )}
+      {breadthForecast.status === 'success' && (
         <div className="stack stack-3">
           <SectionLabel subtitle={`BUY (green) vs SELL (red) proportion over time · ${RANGES[rangeIdx].label}`}>Market Breadth</SectionLabel>
           <div className="card" style={{ overflow: 'hidden' }}>
             <D3MarketBreadth 
-              data={recentSignals.data} 
               days={rangeDays} 
               height={340}
-              forecastData={breadthForecast.status === 'success' ? breadthForecast.data.forecast : undefined}
+              history={breadthForecast.data.history}
+              forecastData={breadthForecast.data.model_status === 'ready' ? breadthForecast.data.forecast : undefined}
+              forecastLabel={breadthForecast.data.method === 'timesfm' ? 'TimesFM Forecast' : 'Forecast'}
             />
           </div>
         </div>
@@ -316,7 +345,7 @@ export function AnalyticsPage() {
               padding: '2px 7px', borderRadius: 'var(--radius-full)',
               border: '1px solid hsla(160, 70%, 45%, 0.2)',
             }}>
-              TIMESFM AI
+              {volumeForecastLabel}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -355,6 +384,7 @@ export function AnalyticsPage() {
             forecastData={volumeForecast.status === 'success' ? volumeForecast.data.forecast : null}
             isLoading={volumeForecast.status === 'loading'}
             error={volumeForecast.status === 'error' ? volumeForecast.message : null}
+            forecastLabel={volumeForecastLineLabel}
             height={300}
           />
         ) : priceChartData.length === 0 ? (

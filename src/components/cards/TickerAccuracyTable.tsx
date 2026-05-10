@@ -155,8 +155,8 @@ export function TickerAccuracyTable({ rows }: TickerAccuracyTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sorted.map(row => (
-            <TableRow key={row.symbol}>
+          {sorted.map((row, index) => (
+            <TableRow key={`${row.symbol}-${row.bestSignal ?? 'unknown'}-${index}`}>
               <TableCell
                 style={{
                   fontFamily:  'var(--font-mono)',

@@ -17,7 +17,7 @@ export interface UseOHLCDataReturn {
   bars: OHLCBar[]
   loading: boolean
   error: string | null
-  status: 'connected' | 'connecting' | 'disconnected'
+  status: 'connected' | 'connecting' | 'disconnected' | 'unavailable'
 }
 
 /**
@@ -30,6 +30,7 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [liveBar, setLiveBar] = useState<OHLCBar | null>(null)
+  const [historyReady, setHistoryReady] = useState(false)
 
   // 1. Fetch historical data
   useEffect(() => {
@@ -37,6 +38,7 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
     const fetchHistory = async () => {
       setLoading(true)
       setError(null)
+      setHistoryReady(false)
       try {
         const data = await api.get<any[]>(`/api/tickers/${symbol.toUpperCase()}/prices/`)
         if (aborted) return
@@ -54,6 +56,7 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
         .slice(-limit)
 
         setBars(formatted)
+        setHistoryReady(true)
       } catch (err) {
         if (aborted) return
         setError(err instanceof Error ? err.message : 'Failed to fetch price history')
@@ -86,7 +89,9 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
     }
   }, [])
 
-  const status = useWSStatus<MarketEvent>(`/ws/market/${symbol.toUpperCase()}/`, onMessage)
+  const status = useWSStatus<MarketEvent>(`/ws/market/${symbol.toUpperCase()}/`, onMessage, {
+    enabled: historyReady,
+  })
 
   // 3. Merge historical bars with the live bar
   const mergedBars = useMemo(() => {

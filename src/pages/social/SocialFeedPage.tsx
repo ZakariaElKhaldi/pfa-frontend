@@ -11,10 +11,12 @@ import { Icons } from '@/components/design-system'
 import { useData } from '@/hooks/useApi'
 import { api } from '@/lib/api'
 import type { SentimentLabel } from '@/design-system/tokens'
+import { composePostText, getPostBodyText } from './postText'
 
 interface FeedPost {
   id: number
   ticker: number
+  ticker_symbol?: string
   source: string
   external_id: string
   title: string | null
@@ -73,10 +75,6 @@ function sourceLabel(source: string): string {
     ?? source.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
 }
 
-function postText(post: FeedPost): string {
-  return post.display_content ?? post.cleaned_text ?? post.content
-}
-
 function mergeUniquePosts(primary: FeedPost[], secondary: FeedPost[]): FeedPost[] {
   const seen = new Set<number>()
   const merged: FeedPost[] = []
@@ -106,7 +104,7 @@ function RichPostCard({
   const neu = post.neutral_prob ?? null
   const hasProbs = pos !== null && neg !== null && neu !== null
 
-  const text = post.title ? `${post.title}\n\n${postText(post)}` : postText(post)
+  const text = composePostText(post)
   const truncated = text.length > 220 ? text.slice(0, 220) + '…' : text
 
   return (
@@ -253,10 +251,15 @@ export function SocialFeedPage() {
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null)
   const knownIdsRef = useRef<Set<number>>(new Set())
 
-  const path = selectedTicker !== 'all'
-    ? `/api/social/feed/?symbol=${encodeURIComponent(selectedTicker)}`
-    : '/api/social/feed/'
-  const { state, refetch } = useData<FeedPost[]>(path, [selectedTicker])
+  const path = useMemo(() => {
+    const params = new URLSearchParams()
+    if (selectedTicker !== 'all') params.set('symbol', selectedTicker)
+    if (source !== 'all') params.set('source', source)
+    if (sentiment !== 'all') params.set('sentiment', sentiment)
+    const query = params.toString()
+    return query ? `/api/social/feed/?${query}` : '/api/social/feed/'
+  }, [selectedTicker, source, sentiment])
+  const { state, refetch } = useData<FeedPost[]>(path, [path])
 
   useEffect(() => {
     if (state.status !== 'success') return
@@ -279,7 +282,7 @@ export function SocialFeedPage() {
   const quickTickers = useMemo(() => {
     const seen = new Set<string>()
     const fromPosts = visiblePosts
-      .map(post => symbolByTickerId.get(post.ticker))
+      .map(post => post.ticker_symbol ?? symbolByTickerId.get(post.ticker))
       .filter((symbol): symbol is string => !!symbol)
       .filter(symbol => {
         if (seen.has(symbol)) return false
@@ -330,7 +333,7 @@ export function SocialFeedPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return visiblePosts.filter(p => {
-      const displayText = postText(p).toLowerCase()
+      const displayText = getPostBodyText(p).toLowerCase()
       if (source !== 'all'    && p.source         !== source)    return false
       if (sentiment !== 'all' && p.sentiment_label !== sentiment) return false
       if (q && !displayText.includes(q) && !(p.title ?? '').toLowerCase().includes(q)) return false
@@ -518,7 +521,7 @@ export function SocialFeedPage() {
       {state.status === 'success' && visible.length > 0 && (
         <div className="stack stack-2">
           {visible.map(p => {
-            const symbol = symbolByTickerId.get(p.ticker) ?? ''
+            const symbol = p.ticker_symbol ?? symbolByTickerId.get(p.ticker) ?? ''
             return (
               <RichPostCard
                 key={p.id}

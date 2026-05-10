@@ -8,7 +8,7 @@ const meta: Meta<typeof WSStatusDot> = {
   component: WSStatusDot,
   tags: ['autodocs'],
   argTypes: {
-    status: { control: 'radio', options: ['connected', 'connecting', 'disconnected'] satisfies WSStatus[] },
+    status: { control: 'radio', options: ['connected', 'connecting', 'disconnected', 'unavailable'] satisfies WSStatus[] },
   },
 }
 export default meta
@@ -18,6 +18,7 @@ type Story = StoryObj<typeof WSStatusDot>
 export const Connected:    Story = { args: { status: 'connected'    } }
 export const Connecting:   Story = { args: { status: 'connecting'   } }
 export const Disconnected: Story = { args: { status: 'disconnected' } }
+export const Unavailable:  Story = { args: { status: 'unavailable'  } }
 
 export const AllStates: Story = {
   render: () => (
@@ -25,6 +26,7 @@ export const AllStates: Story = {
       <WSStatusDot status="connected" />
       <WSStatusDot status="connecting" />
       <WSStatusDot status="disconnected" />
+      <WSStatusDot status="unavailable" />
     </div>
   ),
 }

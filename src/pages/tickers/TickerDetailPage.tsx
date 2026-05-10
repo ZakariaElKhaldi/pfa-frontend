@@ -66,6 +66,12 @@ interface MoodSnap {
   dominant_mood: Mood; confidence: number
   window_start: string; window_end: string; created_at: string
 }
+interface VolumeForecastData {
+  forecast: number[]
+  method?: 'timesfm'
+  model_status?: string
+  detail?: string
+}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -113,7 +119,7 @@ export function TickerDetailPage() {
   const { state: indicators }  = useData<IndicatorsData>(`/api/tickers/${sym}/indicators/`)
   const { state: tickerMood }  = useData<MoodSnap[]>(`/api/tickers/${sym}/mood/`)
   const { state: watchlist, refetch: refetchWatchlist } = useData<WatchlistItem[]>('/api/watchlist/')
-  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<{ forecast: number[] }>(`/api/analytics/forecast/volume/?ticker=${sym}`)
+  const { state: volumeForecast, refetch: refetchVolumeForecast } = useData<VolumeForecastData>(`/api/analytics/forecast/volume/?ticker=${sym}`)
 
   const [tradeLoading, setTradeLoading] = useState(false)
   const [tradeError, setTradeError]     = useState<string | undefined>()
@@ -232,6 +238,14 @@ export function TickerDetailPage() {
     })),
     [priceChartData],
   )
+  const volumeForecastMethod = volumeForecast.status === 'success'
+    ? volumeForecast.data.method
+    : undefined
+  const volumeForecastLabel = volumeForecastMethod === 'timesfm' ? 'TimesFM AI' : 'Forecast'
+  const volumeForecastLineLabel = volumeForecastMethod === 'timesfm' ? 'TimesFM Projection' : 'Projection'
+  const volumeForecastSubtitle = volumeForecastMethod === 'timesfm'
+    ? '30-day zero-shot projection · Google TimesFM 200M'
+    : '30-day projection'
 
   // Latest signal indicators
   const latestSignal = history.status === 'success' ? history.data[0] : null
@@ -281,12 +295,19 @@ export function TickerDetailPage() {
           aria-hidden
           style={{
             display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-            background: marketWs === 'connected' ? 'var(--secondary)' : marketWs === 'connecting' ? 'var(--warning)' : 'var(--on-surface-muted)',
-            animation: marketWs === 'connected' ? 'ws-pulse 1.8s ease-in-out infinite' : 'none',
+            background:
+              marketWs === 'connected'
+                ? 'var(--secondary)'
+                : marketWs === 'unavailable'
+                  ? 'var(--on-surface-muted)'
+                  : 'var(--warning)',
+            animation: marketWs === 'connected' || marketWs === 'connecting' || marketWs === 'disconnected'
+              ? 'ws-pulse 1.8s ease-in-out infinite'
+              : 'none',
           }}
         />
         <span>
-          {marketWs === 'connected' ? 'Live market data' : marketWs === 'connecting' ? 'Connecting…' : 'Disconnected'}
+          {marketWs === 'connected' ? 'Live market data' : marketWs === 'unavailable' ? 'Live unavailable' : 'Reconnecting…'}
           {livePrice !== null && marketWs === 'connected' && (
             <span style={{ marginLeft: 'var(--space-2)', color: 'var(--on-surface)', fontVariantNumeric: 'tabular-nums' }}>
               · last ${livePrice.toFixed(2)}
@@ -340,11 +361,11 @@ export function TickerDetailPage() {
                 padding: '2px 7px', borderRadius: 'var(--radius-full)',
                 border: '1px solid hsla(160, 70%, 45%, 0.2)',
               }}>
-                TIMESFM AI
+                {volumeForecastLabel}
               </span>
             </div>
             <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
-              30-day zero-shot projection · Google TimesFM 200M
+              {volumeForecastSubtitle}
             </span>
             {volumeForecast.status === 'error' && (
               <button className="btn btn-sm btn-ghost" onClick={refetchVolumeForecast}>Retry</button>
@@ -355,6 +376,7 @@ export function TickerDetailPage() {
             forecastData={volumeForecast.status === 'success' ? volumeForecast.data.forecast : null}
             isLoading={volumeForecast.status === 'loading'}
             error={volumeForecast.status === 'error' ? volumeForecast.message : null}
+            forecastLabel={volumeForecastLineLabel}
             height={300}
           />
         </div>

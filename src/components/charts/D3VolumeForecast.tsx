@@ -13,6 +13,7 @@ interface Props {
   isLoading: boolean
   error?: string | null
   height?: number
+  forecastLabel?: string
 }
 
 interface DataPoint {
@@ -34,6 +35,7 @@ export function D3VolumeForecast({
   isLoading,
   error,
   height = 280,
+  forecastLabel = 'TimesFM Projection',
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -359,7 +361,7 @@ export function D3VolumeForecast({
         .attr('font-weight', '700')
         .attr('letter-spacing', '0.06em')
         .attr('fill-opacity', 0.7)
-        .text('TIMESFM FORECAST')
+        .text(forecastLabel.toUpperCase())
     }
 
     // ── Hover interaction ───────────────────────────────────────
@@ -416,7 +418,7 @@ export function D3VolumeForecast({
       hoverCircle.style('display', 'none')
       setTooltip(null)
     })
-  }, [combinedData, histData, fcData, avgVolume, width, height])
+  }, [combinedData, histData, fcData, avgVolume, width, height, forecastLabel])
 
   // ── Loading / error states ─────────────────────────────────────
   if (isLoading && historicalData.length === 0) {
@@ -499,7 +501,7 @@ export function D3VolumeForecast({
                 animation: 'ws-pulse 1.2s ease-in-out infinite',
               }}
             />
-            Loading TimesFM forecast…
+            Loading forecast…
           </span>
         )}
         {error && (
@@ -553,7 +555,7 @@ export function D3VolumeForecast({
                 'repeating-linear-gradient(90deg, hsl(160,70%,45%) 0 6px, transparent 6px 10px)',
             }}
           />
-          TimesFM Projection
+          {forecastLabel}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span

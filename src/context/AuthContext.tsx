@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import { api, tokenStore } from '@/lib/api'
+import { api, isJwtExpired, refreshAccessToken, tokenStore } from '@/lib/api'
 
 // ---------------------------------------------------------------------------
 // DEV BYPASS — set VITE_DEV_BYPASS_AUTH=true in pfa-frontend/.env to skip login
@@ -41,11 +41,6 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null)
 
-function looksLikeJwt(token: string | null): boolean {
-  if (!token) return false
-  return token.split('.').length === 3
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(DEV_BYPASS ? DEV_USER : null)
   const [loading, setLoading] = useState(!DEV_BYPASS)
@@ -62,18 +57,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (DEV_BYPASS) return
-    const access = tokenStore.get()
-    const refresh = tokenStore.getRefresh()
-    if ((access && !looksLikeJwt(access)) || (refresh && !looksLikeJwt(refresh))) {
-      tokenStore.clearAll()
-      setLoading(false)
-      return
+    let cancelled = false
+    const initAuth = async () => {
+      const access = tokenStore.get()
+      const refresh = tokenStore.getRefresh()
+
+      if (!refresh || isJwtExpired(refresh, 5)) {
+        tokenStore.clearAll()
+        if (!cancelled) setLoading(false)
+        return
+      }
+
+      if (!access || isJwtExpired(access, 5)) {
+        const fresh = await refreshAccessToken()
+        if (!fresh) {
+          tokenStore.clearAll()
+          if (!cancelled) setLoading(false)
+          return
+        }
+      }
+
+      await fetchUser()
+      if (!cancelled) setLoading(false)
     }
-    if (access) {
-      fetchUser().finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    initAuth()
+    return () => { cancelled = true }
   }, [fetchUser])
 
   // Listen for forced logout (401 with no refresh)

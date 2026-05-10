@@ -49,11 +49,18 @@ export function FeaturedMarketChart({ symbol = 'AAPL' }: { symbol?: string }) {
               aria-hidden
               style={{
                 display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                background: status === 'connected' ? 'var(--secondary)' : status === 'connecting' ? 'var(--warning)' : 'var(--on-surface-muted)',
-                animation: status === 'connected' ? 'ws-pulse 1.8s ease-in-out infinite' : 'none',
+                background:
+                  status === 'connected'
+                    ? 'var(--secondary)'
+                    : status === 'unavailable'
+                      ? 'var(--on-surface-muted)'
+                      : 'var(--warning)',
+                animation: status === 'connected' || status === 'connecting' || status === 'disconnected'
+                  ? 'ws-pulse 1.8s ease-in-out infinite'
+                  : 'none',
               }}
             />
-            <span>{status === 'connected' ? 'Live' : status === 'connecting' ? 'Connecting…' : 'Offline'}</span>
+            <span>{status === 'connected' ? 'Live' : status === 'unavailable' ? 'Live unavailable' : 'Reconnecting…'}</span>
           </div>
         </div>
       </div>
