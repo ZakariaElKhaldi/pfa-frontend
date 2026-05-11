@@ -1,15 +1,21 @@
 import { Icons } from '@/components/design-system'
 import { Toggle } from '@/components/design-system'
 
+export type StrategyHealth = 'inactive' | 'working' | 'idle' | 'failing' | 'never_run'
+
 export interface StrategyCardProps {
   id:         string
   name:       string
   desc:       string
   tickers:    string[]
   executions: number
-  lastRun:    string
+  lastRun:    string | null
+  lastTriggered?: string | null
+  lastEventType?: string | null
+  health:     StrategyHealth
   active:     boolean
   onToggle:   (v: boolean) => void
+  onOpen?:     () => void
   /** Wires to PATCH /api/strategies/<pk>/ — opens StrategyForm */
   onEdit?:    () => void
   /** Wires to DELETE /api/strategies/<pk>/ */
@@ -18,17 +24,35 @@ export interface StrategyCardProps {
 
 export function StrategyCard({
   id, name, desc, tickers, executions, lastRun,
-  active, onToggle, onEdit, onDelete,
+  lastTriggered, lastEventType, health, active, onToggle, onOpen, onEdit, onDelete,
 }: StrategyCardProps) {
+  const status = HEALTH_META[health]
   return (
-    <div className="card card-interactive">
+    <div
+      className="card card-interactive"
+      onClick={onOpen}
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (!onOpen) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      style={{ cursor: onOpen ? 'pointer' : undefined }}
+    >
       <div className="cluster cluster-4" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div className="stack stack-2" style={{ flex: 1, minWidth: 0 }}>
-          <div className="cluster cluster-3">
+          <div className="cluster cluster-3" style={{ alignItems: 'center' }}>
             <span className="text-headline-sm">{name}</span>
-            {active && (
-              <span className="badge badge-buy" style={{ fontSize: '10px', padding: '2px 8px' }}>Active</span>
-            )}
+            <span
+              className={`strategy-health-badge strategy-health-${health}`}
+              style={{ ['--health-color' as string]: status.color }}
+            >
+              <span className={health === 'working' ? 'strategy-health-dot is-live' : 'strategy-health-dot'} />
+              {status.label}
+            </span>
           </div>
           <p
             className="text-body-sm"
@@ -41,14 +65,14 @@ export function StrategyCard({
           >
             {desc}
           </p>
-          <div className="cluster cluster-2" style={{ marginTop: 'var(--space-2)' }}>
+          <div className="cluster cluster-2" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
             {tickers.map((t) => <span key={t} className="tag">{t}</span>)}
-            <span
-              className="text-body-sm text-muted"
-              style={{ marginLeft: 'var(--space-2)', color: 'var(--on-surface-muted)', fontSize: 'var(--text-label-sm)' }}
-            >
-              {executions} executions · Last: {lastRun}
-            </span>
+          </div>
+          <div className="strategy-card-metrics">
+            <span><Icons.Activity size={13} aria-hidden /> {executions} checks</span>
+            <span><Icons.RefreshCw size={13} aria-hidden /> Last checked: {lastRun ?? 'Never'}</span>
+            <span><Icons.Zap size={13} aria-hidden /> Last triggered: {lastTriggered ?? 'Never'}</span>
+            {lastEventType && <span><Icons.Flag size={13} aria-hidden /> {lastEventType.replace(/_/g, ' ')}</span>}
           </div>
         </div>
 
@@ -56,7 +80,7 @@ export function StrategyCard({
           {onEdit && (
             <button
               type="button"
-              onClick={onEdit}
+              onClick={(event) => { event.stopPropagation(); onEdit() }}
               aria-label={`Edit ${name}`}
               style={{
                 background: 'transparent',
@@ -77,7 +101,7 @@ export function StrategyCard({
           {onDelete && (
             <button
               type="button"
-              onClick={onDelete}
+              onClick={(event) => { event.stopPropagation(); onDelete() }}
               aria-label={`Delete ${name}`}
               style={{
                 background: 'transparent',
@@ -95,9 +119,19 @@ export function StrategyCard({
               <Icons.X size={16} aria-hidden />
             </button>
           )}
-          <Toggle id={`toggle-${id}`} checked={active} onChange={onToggle} label={`Toggle ${name}`} />
+          <div onClick={(event) => event.stopPropagation()}>
+            <Toggle id={`toggle-${id}`} checked={active} onChange={onToggle} label={`Toggle ${name}`} />
+          </div>
         </div>
       </div>
     </div>
   )
+}
+
+const HEALTH_META: Record<StrategyHealth, { label: string; color: string }> = {
+  working: { label: 'Working', color: 'var(--secondary)' },
+  idle: { label: 'Idle', color: 'var(--warning)' },
+  failing: { label: 'Failing', color: 'var(--tertiary)' },
+  never_run: { label: 'Never run', color: 'var(--on-surface-muted)' },
+  inactive: { label: 'Inactive', color: 'var(--on-surface-muted)' },
 }

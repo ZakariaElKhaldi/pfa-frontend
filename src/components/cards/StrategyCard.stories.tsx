@@ -29,6 +29,9 @@ const base = {
   tickers:    ['AAPL', 'MSFT', 'GOOGL'],
   executions: 48,
   lastRun:    '2h ago',
+  lastTriggered: '18m ago',
+  lastEventType: 'signal_generated',
+  health: 'working' as const,
 }
 
 export const Active: Story = {
@@ -44,6 +47,8 @@ export const Inactive: Story = {
     tickers: ['GME', 'AMC'],
     executions: 12,
     lastRun: '3d ago',
+    lastTriggered: null,
+    health: 'inactive',
     active: false,
   },
 }

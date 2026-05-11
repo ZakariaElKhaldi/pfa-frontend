@@ -50,6 +50,7 @@ export interface StrategyCondition {
   field: ConditionField
   operator: ConditionOperator
   value: string | number
+  logical_op?: 'AND' | 'OR'
 }
 
 export interface StrategyAction {

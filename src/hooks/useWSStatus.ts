@@ -20,7 +20,7 @@ export function shouldMarkWsUnavailable(attempt: number, maxRetries: number): bo
 export function useWSStatus<T = unknown>(
   path: string,
   onMessage?: (data: T) => void,
-  opts?: { requireAuth?: boolean; enabled?: boolean; maxRetries?: number },
+  opts?: { requireAuth?: boolean; enabled?: boolean; maxRetries?: number; heartbeat?: boolean },
 ): WSStatus {
   const [status, setStatus] = useState<WSStatus>('disconnected')
   const onMessageRef = useRef(onMessage)
@@ -28,6 +28,7 @@ export function useWSStatus<T = unknown>(
   const requireAuth = opts?.requireAuth ?? false
   const enabled = opts?.enabled ?? true
   const maxRetries = opts?.maxRetries ?? 6
+  const heartbeat = opts?.heartbeat ?? false
 
   useEffect(() => {
     if (!enabled) {
@@ -36,7 +37,8 @@ export function useWSStatus<T = unknown>(
     }
 
     let attempt   = 0
-    let timer:    ReturnType<typeof setTimeout> | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let heartbeatTimer: ReturnType<typeof setInterval> | null = null
     let ws:       WebSocket | null = null
     let stopped   = false
     let terminalAuthFailure = false
@@ -64,6 +66,13 @@ export function useWSStatus<T = unknown>(
         if (stopped) return
         attempt = 0
         setStatus('connected')
+        if (heartbeat) {
+          heartbeatTimer = setInterval(() => {
+            if (ws?.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'heartbeat' }))
+            }
+          }, 30_000)
+        }
       }
       ws.onmessage = e => {
         if (stopped || !onMessageRef.current) return
@@ -77,19 +86,22 @@ export function useWSStatus<T = unknown>(
         if (stopped) return
         if (isTerminalWebSocketClose(event.code)) {
           terminalAuthFailure = true
+          if (heartbeatTimer) clearInterval(heartbeatTimer)
           setStatus('unavailable')
           return
         }
         attempt++
         if (shouldMarkWsUnavailable(attempt, maxRetries)) {
+          if (heartbeatTimer) clearInterval(heartbeatTimer)
           setStatus('unavailable')
           return
         }
         setStatus('disconnected')
+        if (heartbeatTimer) clearInterval(heartbeatTimer)
         const baseDelay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5))
         const jitter = Math.floor(Math.random() * 250)
         const delay = baseDelay + jitter
-        timer = setTimeout(connect, delay)
+        reconnectTimer = setTimeout(connect, delay)
       }
       ws.onerror = () => {
         if (stopped) return
@@ -100,10 +112,11 @@ export function useWSStatus<T = unknown>(
 
     return () => {
       stopped = true
-      if (timer) clearTimeout(timer)
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      if (heartbeatTimer) clearInterval(heartbeatTimer)
       ws?.close()
     }
-  }, [path, requireAuth, enabled, maxRetries])
+  }, [path, requireAuth, enabled, maxRetries, heartbeat])
 
   return status
 }

@@ -13,6 +13,7 @@ import { api } from '@/lib/api'
 interface StrategyRule {
   id: number; name: string; description: string; is_active: boolean
   created_at?: string; updated_at: string
+  execution_count?: number; last_execution_at?: string | null; last_triggered_at?: string | null; health?: string
 }
 interface BackendExecution {
   id: number; triggered_at: string; event_type: string; event_data: Record<string, unknown>
@@ -61,12 +62,12 @@ export function StrategyDetailPage() {
     ? execs.data.map(e => ({
         id:           e.id,
         executedAt:   new Date(e.triggered_at).toLocaleString(),
-        ticker:       (e.event_data?.symbol as string) ?? e.event_type,
-        triggered:    e.success,
+        ticker:       (e.event_data?.ticker as string) ?? (e.event_data?.symbol as string) ?? e.event_type,
+        triggered:    e.actions_taken.length > 0,
         actionsTaken: Array.isArray(e.actions_taken) ? e.actions_taken.map(String) : [],
         notes:        Array.isArray(e.conditions_matched) && e.conditions_matched.length > 0
           ? `${e.conditions_matched.length} condition(s) matched`
-          : undefined,
+          : e.success ? 'Evaluated; conditions not met' : 'Evaluation failed',
       }))
     : []
 
@@ -138,7 +139,10 @@ export function StrategyDetailPage() {
               Updated {new Date(strategy.data.updated_at).toLocaleString()}
             </span>
             <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
-              {execs.status === 'success' ? `${execs.data.length} execution${execs.data.length === 1 ? '' : 's'}` : ''}
+              Health: {strategy.data.health?.replace('_', ' ') ?? (isActive ? 'never run' : 'inactive')}
+            </span>
+            <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
+              {execs.status === 'success' ? `${execs.data.length} check${execs.data.length === 1 ? '' : 's'}` : ''}
             </span>
           </div>
 

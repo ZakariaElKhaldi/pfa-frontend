@@ -2627,6 +2627,194 @@
 .badge-buy.is-new  { animation: cs-signal-pulse-buy  1.4s var(--ease-out) 3; }
 .badge-sell.is-new { animation: cs-signal-pulse-sell 1.4s var(--ease-out) 3; }
 
+.strategy-health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  background: color-mix(in srgb, var(--health-color) 12%, transparent);
+  color: var(--health-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-label-pro);
+  text-transform: uppercase;
+}
+
+.strategy-health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.strategy-health-dot.is-live {
+  animation: cs-live-dot 1.4s var(--ease-out) infinite;
+}
+
+.strategy-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+  color: var(--on-surface-muted);
+  font-size: var(--text-label-sm);
+}
+
+.strategy-card-metrics span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.strategy-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.strategy-editor-modal {
+  width: min(960px, 100%);
+  max-height: min(92vh, 860px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--outline) 38%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--surface-bright);
+  color: var(--on-surface);
+  box-shadow: var(--shadow-xl);
+}
+
+.strategy-editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--outline-variant);
+  background: var(--surface-bright);
+}
+
+.strategy-editor-body {
+  overflow: auto;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  background: var(--surface-bright);
+}
+
+.strategy-ticker-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.strategy-ticker-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.strategy-selection-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-lowest);
+}
+
+.strategy-ticker-list {
+  max-height: 340px;
+  overflow: auto;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--surface-bright);
+}
+
+.strategy-ticker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--outline-variant);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.strategy-ticker-row:last-child {
+  border-bottom: 0;
+}
+
+.strategy-ticker-row:hover {
+  background: var(--surface-container-low);
+}
+
+.strategy-ticker-row.is-selected {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface-bright));
+}
+
+.strategy-ticker-symbol {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--on-surface);
+  font-weight: 700;
+}
+
+.strategy-query-builder .queryBuilder {
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--surface-container-low);
+}
+
+.strategy-query-builder .ruleGroup,
+.strategy-query-builder .rule {
+  gap: var(--space-2);
+}
+
+.strategy-query-builder select,
+.strategy-query-builder input {
+  min-height: 32px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  background: var(--surface);
+  color: var(--on-surface);
+}
+
+.strategy-query-builder button {
+  min-height: 30px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-size: var(--text-label-sm);
+}
+
+.strategy-query-builder .queryBuilder-invalid select,
+.strategy-query-builder .queryBuilder-invalid input {
+  border-color: var(--tertiary);
+}
+
+@keyframes cs-live-dot {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 35%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 0%, transparent); }
+}
+
 /* Price tick flashes — swap class on the cell, remove after 700ms */
 .price-tick-up   { animation: cs-tick-up   700ms var(--ease-out) forwards; }
 .price-tick-down { animation: cs-tick-down 700ms var(--ease-out) forwards; }

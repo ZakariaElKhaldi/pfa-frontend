@@ -80,6 +80,7 @@ export function StrategyExecutionLog({ executions }: StrategyExecutionLogProps) 
               </TableCell>
               <TableCell>
                 <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  {ex.actionsTaken.length === 0 && <span style={{ color: 'var(--on-surface-muted)' }}>—</span>}
                   {ex.actionsTaken.map((a, i) => (
                     <span
                       key={i}

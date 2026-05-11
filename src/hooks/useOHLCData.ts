@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
 import { useWSStatus } from '@/hooks/useWSStatus'
 import { useMarketClock } from '@/hooks/useMarketClock'
@@ -6,12 +6,17 @@ import type { OHLCBar } from '@/components/charts/PriceChart'
 
 export interface MarketEvent {
   type: string
+  symbol?: string
   open?: string | number
   high?: string | number
   low?: string | number
+  close?: string | number
   price?: string | number
   volume?: number
+  size?: number
   timestamp?: string
+  trade_timestamp?: string
+  bar_timestamp?: string
 }
 
 export interface UseOHLCDataReturn {
@@ -31,14 +36,19 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
   const [bars, setBars] = useState<OHLCBar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [liveBar, setLiveBar] = useState<OHLCBar | null>(null)
   const [historyReady, setHistoryReady] = useState(false)
 
-  // 1. Fetch historical data
-  const fetchHistory = useCallback(async (abortedRef?: { value: boolean }) => {
-    setLoading(true)
+  // 1. Fetch historical data once; trade ticks are the live update path.
+  const fetchHistory = useCallback(async (
+    abortedRef?: { value: boolean },
+    options?: { background?: boolean },
+  ) => {
+    const isBackground = options?.background ?? false
+    if (!isBackground) {
+      setLoading(true)
+      setHistoryReady(false)
+    }
     setError(null)
-    setHistoryReady(false)
     try {
       const data = await api.get<any[]>(`/api/tickers/${symbol.toUpperCase()}/prices/`)
       if (abortedRef?.value) return
@@ -59,7 +69,9 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
       setHistoryReady(true)
     } catch (err) {
       if (abortedRef?.value) return
-      setError(err instanceof Error ? err.message : 'Failed to fetch price history')
+      if (!isBackground) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch price history')
+      }
     } finally {
       if (!abortedRef?.value) setLoading(false)
     }
@@ -71,63 +83,52 @@ export function useOHLCData(symbol: string, limit: number = 100): UseOHLCDataRet
     return () => { abortedRef.value = true }
   }, [fetchHistory])
 
-  useEffect(() => {
-    if (!historyReady) return
-    if (!clock?.is_open) return
-    const id = setInterval(() => {
-      const abortedRef = { value: false }
-      fetchHistory(abortedRef)
-    }, 15_000)
-    return () => clearInterval(id)
-  }, [clock?.is_open, fetchHistory, historyReady])
-
   // 2. Real-time updates via WebSocket
   const onMessage = useCallback((data: MarketEvent) => {
-    const price = typeof data?.price === 'number' ? data.price : Number(data?.price)
+    const rawClose = data?.close ?? data?.price
+    const price = typeof rawClose === 'number' ? rawClose : Number(rawClose)
 
-    if (data?.type === 'price' && data.timestamp && Number.isFinite(price)) {
+    if ((data?.type === 'trade' || data?.type === 'price') && Number.isFinite(price)) {
       const open = Number(data.open ?? price)
       const high = Number(data.high ?? price)
       const low = Number(data.low ?? price)
+      const timestamp = data.bar_timestamp ?? data.timestamp ?? data.trade_timestamp
 
-      setLiveBar({
-        date: new Date(data.timestamp),
+      if (!timestamp) return
+      const liveBar = {
+        date: new Date(timestamp),
         open: Number.isFinite(open) ? open : price,
         high: Number.isFinite(high) ? high : price,
         low: Number.isFinite(low) ? low : price,
         close: price,
-        volume: data.volume ?? 0,
+        volume: data.volume ?? data.size ?? 0,
+      }
+
+      setBars(prev => {
+        const liveTime = liveBar.date.getTime()
+        const next = [...prev]
+        const idx = next.findIndex(b => b.date.getTime() === liveTime)
+
+        if (idx >= 0) {
+          next[idx] = liveBar
+        } else {
+          next.push(liveBar)
+          next.sort((a, b) => a.date.getTime() - b.date.getTime())
+          if (next.length > limit) next.splice(0, next.length - limit)
+        }
+
+        return next
       })
     }
-  }, [])
+  }, [limit])
 
   const status = useWSStatus<MarketEvent>(`/ws/market/${symbol.toUpperCase()}/`, onMessage, {
     enabled: historyReady && !!clock?.is_open,
+    heartbeat: true,
   })
 
-  // 3. Merge historical bars with the live bar
-  const mergedBars = useMemo(() => {
-    if (!liveBar) return bars
-
-    const next = [...bars]
-    const liveTime = liveBar.date.getTime()
-    const idx = next.findIndex(b => b.date.getTime() === liveTime)
-
-    if (idx >= 0) {
-      next[idx] = liveBar
-    } else {
-      // Only append if it's newer than the latest bar
-      const lastBar = next[next.length - 1]
-      if (!lastBar || liveTime > lastBar.date.getTime()) {
-        next.push(liveBar)
-        if (next.length > limit) next.shift()
-      }
-    }
-    return next
-  }, [bars, liveBar, limit])
-
   return {
-    bars: mergedBars,
+    bars,
     loading,
     error,
     status: clock?.is_open ? status : 'unavailable',
