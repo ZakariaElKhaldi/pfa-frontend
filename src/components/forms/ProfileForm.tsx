@@ -16,9 +16,10 @@ export interface ProfileFormProps {
   loading?: boolean
   error?: string
   success?: string
+  showHeader?: boolean
 }
 
-export function ProfileForm({ initial, onSubmit, loading, error, success }: ProfileFormProps) {
+export function ProfileForm({ initial, onSubmit, loading, error, success, showHeader = true }: ProfileFormProps) {
   const [values, setValues] = useState<ProfileFormValues>(initial)
 
   useEffect(() => {
@@ -42,14 +43,16 @@ export function ProfileForm({ initial, onSubmit, loading, error, success }: Prof
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
-      <header className="flex flex-col gap-1">
-        <h2 className="text-headline-sm font-semibold" style={{ color: 'var(--on-surface)' }}>
-          Profile
-        </h2>
-        <p className="text-body-sm" style={{ color: 'var(--on-surface-variant)' }}>
-          Update your account details
-        </p>
-      </header>
+      {showHeader && (
+        <header className="flex flex-col gap-1">
+          <h2 className="text-headline-sm font-semibold" style={{ color: 'var(--on-surface)' }}>
+            Profile
+          </h2>
+          <p className="text-body-sm" style={{ color: 'var(--on-surface-variant)' }}>
+            Update your account details
+          </p>
+        </header>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">

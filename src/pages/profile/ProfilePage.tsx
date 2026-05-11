@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect, type FormEvent } from 'react'
+import { useState, useCallback, useEffect, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { ProfileForm, type ProfileFormValues } from '@/components/forms/ProfileForm'
+import { Icons } from '@/components/design-system'
 import { RoleBadge, type UserRole } from '@/components/design-system/RoleBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
@@ -32,7 +33,7 @@ interface UserData {
   first_name?: string; last_name?: string
 }
 
-const SECTION_LABEL: React.CSSProperties = {
+const SECTION_LABEL: CSSProperties = {
   fontSize: 'var(--text-label-md)', fontWeight: 500,
   letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
   color: 'var(--on-surface-muted)',
@@ -81,50 +82,56 @@ export function ProfilePage() {
         </div>
       )}
       {state.status === 'success' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(320px, 2fr)', gap: 'var(--space-6)', alignItems: 'start' }}>
-          {/* Account meta sidebar */}
-          <aside className="card stack stack-5">
-            <div className="stack stack-3" style={{ alignItems: 'center', textAlign: 'center' }}>
+        <div className="profile-layout">
+          <aside className="profile-overview" aria-label="Account overview">
+            <div className="profile-identity">
               <div
+                className="profile-avatar"
                 aria-hidden
-                style={{
-                  width: 88, height: 88, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'color-mix(in srgb, var(--primary) 18%, transparent)',
-                  color: 'var(--primary)',
-                  fontSize: 'var(--text-headline-md)', fontWeight: 600,
-                  letterSpacing: 'var(--tracking-label-pro)',
-                }}
               >
                 {initials(state.data.username, state.data.first_name, state.data.last_name)}
               </div>
-              <div className="stack stack-1" style={{ alignItems: 'center' }}>
-                <span style={{ fontSize: 'var(--text-headline-sm)', fontWeight: 600 }}>
+              <div className="profile-identity-copy">
+                <h2>
                   {state.data.first_name || state.data.last_name
                     ? `${state.data.first_name ?? ''} ${state.data.last_name ?? ''}`.trim()
                     : state.data.username}
-                </span>
-                <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
+                </h2>
+                <span>
                   @{state.data.username}
                 </span>
               </div>
-              <RoleBadge role={state.data.role} />
             </div>
 
-            <div style={{ height: 1, background: 'var(--outline-variant)' }} />
+            <div className="profile-badge-row">
+              <RoleBadge role={state.data.role} />
+              <span className={`profile-status ${state.data.is_active ? 'is-active' : ''}`}>
+                <span aria-hidden />
+                {state.data.is_active ? 'Active' : 'Inactive'}
+              </span>
+            </div>
 
-            <div className="stack stack-3">
+            <div className="profile-meta-card">
               <span style={SECTION_LABEL}>Account</span>
-              <MetaRow label="Email"        value={state.data.email} />
-              <MetaRow label="Member since" value={new Date(state.data.date_joined).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} />
-              <MetaRow label="Status"       value={state.data.is_active ? 'Active' : 'Inactive'} valueColor={state.data.is_active ? 'var(--secondary)' : 'var(--on-surface-muted)'} />
-              <MetaRow label="User ID"      value={`#${state.data.id}`} mono />
+              <MetaRow icon={<Icons.Mail size={15} />} label="Email" value={state.data.email} />
+              <MetaRow icon={<Icons.Calendar size={15} />} label="Member since" value={new Date(state.data.date_joined).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} />
+              <MetaRow icon={<Icons.Hash size={15} />} label="User ID" value={`#${state.data.id}`} mono />
+            </div>
+
+            <div className="profile-capability-grid" aria-label="Access summary">
+              <Capability label="Signals" active />
+              <Capability label="Export" active={state.data.role === 'analyst' || state.data.role === 'admin'} />
+              <Capability label="Admin" active={state.data.role === 'admin'} />
             </div>
           </aside>
 
-          {/* Form column */}
-          <div className="stack stack-5">
-            <div className="card">
+          <div className="profile-settings">
+            <section className="profile-section">
+              <SectionHeader
+                icon={<Icons.User size={18} />}
+                title="Personal Details"
+                description="Keep your account identity and contact details current."
+              />
               <ProfileForm
                 initial={{
                   username:  state.data.username,
@@ -135,11 +142,12 @@ export function ProfilePage() {
                 onSubmit={handleSubmit}
                 loading={saving}
                 error={error}
+                showHeader={false}
               />
-            </div>
+            </section>
 
-            <PasswordChangeSection />
             <PreferencesSection />
+            <PasswordChangeSection />
           </div>
         </div>
       )}
@@ -184,11 +192,12 @@ function PasswordChangeSection() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card stack stack-4">
-      <div className="stack stack-1">
-        <h2 className="text-headline-sm font-semibold" style={{ color: 'var(--on-surface)' }}>Password</h2>
-        <p className="text-body-sm" style={{ color: 'var(--on-surface-variant)' }}>Change your account password.</p>
-      </div>
+    <form onSubmit={handleSubmit} className="profile-section stack stack-4">
+      <SectionHeader
+        icon={<Icons.Lock size={18} />}
+        title="Password"
+        description="Use a strong password you do not reuse elsewhere."
+      />
 
       <div className="stack stack-3">
         <div className="stack stack-1">
@@ -257,11 +266,12 @@ function PreferencesSection() {
   }
 
   return (
-    <div className="card stack stack-4">
-      <div className="stack stack-1">
-        <h2 className="text-headline-sm font-semibold" style={{ color: 'var(--on-surface)' }}>Preferences</h2>
-        <p className="text-body-sm" style={{ color: 'var(--on-surface-variant)' }}>Notifications, default ticker, and digest frequency.</p>
-      </div>
+    <div className="profile-section stack stack-4">
+      <SectionHeader
+        icon={<Icons.Settings size={18} />}
+        title="Preferences"
+        description="Tune notifications, default ticker, and digest frequency."
+      />
 
       <div className="stack stack-3">
         <div className="stack stack-1">
@@ -336,19 +346,42 @@ function PreferencesSection() {
   )
 }
 
-function MetaRow({ label, value, mono = false, valueColor }: { label: string; value: string; mono?: boolean; valueColor?: string }) {
+function SectionHeader({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
   return (
-    <div className="cluster cluster-3" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-      <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-label-pro)' }}>
+    <header className="profile-section-header">
+      <span className="profile-section-icon" aria-hidden>{icon}</span>
+      <div>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+    </header>
+  )
+}
+
+function Capability({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className={`profile-capability ${active ? 'is-active' : ''}`}>
+      <span aria-hidden>{active ? <Icons.Check size={14} /> : <Icons.Minus size={14} />}</span>
+      <strong>{label}</strong>
+    </div>
+  )
+}
+
+function MetaRow({ icon, label, value, mono = false, valueColor }: { icon?: ReactNode; label: string; value: string; mono?: boolean; valueColor?: string }) {
+  return (
+    <div className="profile-meta-row">
+      {icon && <span className="profile-meta-icon" aria-hidden>{icon}</span>}
+      <span className="profile-meta-label">
         {label}
       </span>
-      <span style={{
-        fontSize: 'var(--text-body-sm)',
-        color: valueColor ?? 'var(--on-surface)',
-        fontFamily: mono ? 'var(--font-mono)' : undefined,
-        fontVariantNumeric: mono ? 'tabular-nums' : undefined,
-        textAlign: 'right',
-      }}>
+      <span
+        className="profile-meta-value"
+        style={{
+          color: valueColor ?? undefined,
+          fontFamily: mono ? 'var(--font-mono)' : undefined,
+          fontVariantNumeric: mono ? 'tabular-nums' : undefined,
+        }}
+      >
         {value}
       </span>
     </div>

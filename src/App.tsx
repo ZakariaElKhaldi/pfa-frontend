@@ -11,6 +11,8 @@ import { AppLayout } from '@/pages/app/Layout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage'
+import { PasswordResetConfirmPage } from '@/pages/auth/PasswordResetConfirmPage'
+import { PasswordResetRequestPage } from '@/pages/auth/PasswordResetRequestPage'
 
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
@@ -71,6 +73,8 @@ export default function App() {
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/password/reset" element={<PasswordResetRequestPage />} />
+            <Route path="/password/reset/confirm" element={<PasswordResetConfirmPage />} />
             <Route path="/auth/callback/google" element={<OAuthCallbackPage provider="google" />} />
             <Route path="/auth/callback/github" element={<OAuthCallbackPage provider="github" />} />
 

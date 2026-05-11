@@ -212,7 +212,7 @@ export function DashboardPage() {
                 </button>
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
               {watchlist.data.slice(0, 8).map(w => {
                 const q       = quotes[w.symbol]
                 const last    = q ? parseFloat(q.price)      : null

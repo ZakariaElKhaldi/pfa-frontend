@@ -127,6 +127,7 @@ export function ExportPage() {
     setPreviewRows(null)
     try {
       const params = buildParams()
+      params.set('format', 'json')
       const sym = symbol.trim().toUpperCase()
       const url = sym ? `/api/export/${sym}/?${params}&limit=5` : `/api/export/bulk/?${params}&limit=5`
       const data = await api.get<unknown>(url)
