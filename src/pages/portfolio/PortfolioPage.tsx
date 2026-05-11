@@ -49,12 +49,17 @@ export function PortfolioPage() {
   const [tradeError, setTradeError]     = useState<string | undefined>()
   const [prefill, setPrefill]           = useState<{ symbol?: string, side?: 'buy' | 'sell', ts?: number }>({})
 
-  const handleTrade = useCallback(async (v: { symbol: string; side: 'buy' | 'sell'; quantity: number; price: number }) => {
+  const handleTrade = useCallback(async (v: { symbol: string; side: 'buy' | 'sell'; quantity: number; orderType: 'market' | 'limit'; limitPrice?: number; price: number }) => {
     setTradeLoading(true)
     setTradeError(undefined)
     try {
-      await api.post(`/api/portfolio/${v.side}/`, { symbol: v.symbol, quantity: v.quantity, price: v.price })
-      toast.success(`${v.side === 'buy' ? 'Bought' : 'Sold'} ${v.quantity} ${v.symbol} @ $${v.price.toFixed(2)}`)
+      await api.post(`/api/portfolio/${v.side}/`, {
+        symbol: v.symbol,
+        quantity: v.quantity,
+        order_type: v.orderType,
+        limit_price: v.limitPrice,
+      })
+      toast.success(`${v.side === 'buy' ? 'Bought' : 'Sold'} ${v.quantity} ${v.symbol}`)
       refetchSummary()
       refetchPortfolio()
       refetchTrades()

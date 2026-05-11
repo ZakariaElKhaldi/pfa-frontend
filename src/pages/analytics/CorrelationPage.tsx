@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
@@ -15,7 +15,7 @@ interface TickerItem { symbol: string; name: string }
 
 interface CorrelationResult {
   symbols: string[]
-  matrix:  number[][]
+  matrix:  Array<Array<number | null>>
 }
 
 type ApiState =
@@ -48,20 +48,29 @@ export function CorrelationPage() {
   const [state, setState]               = useState<ApiState>({ status: 'idle' })
 
   const { state: tickersState } = useData<TickerItem[]>('/api/tickers/')
+  const validSymbols = useMemo(
+    () => tickersState.status === 'success' ? new Set(tickersState.data.map(t => t.symbol)) : null,
+    [tickersState],
+  )
 
   const fetchMatrix = useCallback(async (symsToFetch: string[] = symbols) => {
-    if (symsToFetch.length < 2) {
+    const cleaned = Array.from(new Set(symsToFetch.map(s => s.toUpperCase().trim()).filter(Boolean)))
+    const validated = validSymbols ? cleaned.filter(s => validSymbols.has(s)) : cleaned
+    const invalid = validSymbols ? cleaned.filter(s => !validSymbols.has(s)) : []
+    if (invalid.length > 0) toast.error(`Unknown ticker: ${invalid[0]}`)
+    if (validated.length < 2) {
       toast.error('Need at least 2 symbols')
       return
     }
-    if (symsToFetch.length > 10) {
+    if (validated.length > 10) {
       toast.error('Maximum 10 symbols allowed')
       return
     }
+    if (validated.join(',') !== symbols.join(',')) setSymbols(validated)
     setState({ status: 'loading' })
     try {
       const data = await api.get<CorrelationResult>(
-        `/api/analytics/correlation/?symbols=${symsToFetch.join(',')}&window=${window}&metric=${metric}`,
+        `/api/analytics/correlation/?symbols=${validated.join(',')}&window=${window}&metric=${metric}`,
       )
       setState({ status: 'success', data })
     } catch (e) {
@@ -69,9 +78,14 @@ export function CorrelationPage() {
       setState({ status: 'error', message: msg })
       toast.error(msg)
     }
-  }, [symbols, window, metric])
+  }, [symbols, window, metric, validSymbols])
 
   useEffect(() => { fetchMatrix() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (symbols.length < 2) return
+    const id = globalThis.setTimeout(() => fetchMatrix(), 450)
+    return () => globalThis.clearTimeout(id)
+  }, [symbols, window, metric]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddSymbol = (e: React.KeyboardEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
     if ('key' in e && e.key !== 'Enter' && e.key !== ',') return
@@ -95,8 +109,9 @@ export function CorrelationPage() {
   }
 
   const handlePreset = (presetSymbols: string[]) => {
-    setSymbols(presetSymbols)
-    fetchMatrix(presetSymbols)
+    const available = validSymbols ? presetSymbols.filter(s => validSymbols.has(s)) : presetSymbols
+    setSymbols(available)
+    fetchMatrix(available)
   }
 
   return (
@@ -204,7 +219,7 @@ export function CorrelationPage() {
               type="button"
               className="btn btn-sm btn-ghost"
               onClick={() => handlePreset(p.symbols)}
-              disabled={state.status === 'loading'}
+              disabled={state.status === 'loading' || (validSymbols ? p.symbols.filter(s => validSymbols.has(s)).length < 2 : false)}
               style={{ fontSize: 'var(--text-label-sm)' }}
             >
               {p.label}

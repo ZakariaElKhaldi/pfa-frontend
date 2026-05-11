@@ -5,11 +5,12 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { StrategyCard } from '@/components/cards/StrategyCard'
-import { StrategyForm, type StrategyFormValues } from '@/components/forms/StrategyForm'
+import { GuidedStrategyForm, type GuidedStrategyFormValues, type StrategyTickerOption } from '@/components/forms/GuidedStrategyForm'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useData } from '@/hooks/useApi'
 import { api } from '@/lib/api'
+import type { ActionType, ConditionField, ConditionOperator } from '@/components/forms/StrategyFlow/types'
 
 interface StrategyRule {
   id: number
@@ -18,22 +19,41 @@ interface StrategyRule {
   tickers: number[]
   is_active: boolean
   updated_at: string
-  conditions?: any[]
-  actions?: any[]
+  conditions?: StrategyConditionPayload[]
+  actions?: StrategyActionPayload[]
 }
 
 type ModalMode = { type: 'create' } | { type: 'edit'; strategy: StrategyRule } | null
 type ActiveFilter = 'all' | 'active' | 'inactive'
+const PREVIEW_UPDATED_AT = '2026-05-11T12:00:00.000Z'
+const PREVIEW_OLDER_UPDATED_AT = '2026-05-11T10:00:00.000Z'
+
+interface StrategyConditionPayload {
+  field: ConditionField
+  operator: ConditionOperator
+  value: string | number
+  logical_op?: 'AND' | 'OR'
+  order?: number
+}
+
+interface StrategyActionPayload {
+  action_type: ActionType
+  config?: { target?: string }
+  order?: number
+}
 
 export function StrategiesPage() {
   useNavigate() // reserved for future strategy detail navigation
   const { state, refetch } = useData<StrategyRule[]>('/api/strategies/')
+  const { state: tickersState } = useData<StrategyTickerOption[]>('/api/tickers/')
   const [modal, setModal]   = useState<ModalMode>(null)
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState<string | undefined>()
   const [pendingDelete, setPendingDelete] = useState<StrategyRule | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [filter, setFilter] = useState<ActiveFilter>('all')
+  const tickerOptions = tickersState.status === 'success' ? tickersState.data : []
+  const tickerById = new Map(tickerOptions.map(ticker => [ticker.id, ticker]))
 
   const handleToggle = useCallback(async (id: number, active: boolean) => {
     try {
@@ -60,21 +80,22 @@ export function StrategiesPage() {
     }
   }, [pendingDelete, refetch])
 
-  const handleSave = useCallback(async (values: StrategyFormValues) => {
+  const handleSave = useCallback(async (values: GuidedStrategyFormValues) => {
     setSaving(true)
     setSaveErr(undefined)
     try {
       const payload = {
         name:        values.name,
         description: values.desc,
-        conditions:  values.conditions.map(c => ({ field: c.field, operator: c.operator, value: c.value })),
-        actions:     values.actions.map(a => ({ action_type: a.actionType, config: { target: a.target } })),
+        tickers:     values.tickers,
+        conditions:  values.conditions.map((c, order) => ({ field: c.field, operator: c.operator, value: c.value, logical_op: 'AND', order })),
+        actions:     values.actions.map((a, order) => ({ action_type: a.actionType, config: { target: a.target }, order })),
       }
       if (modal?.type === 'edit') {
         await api.patch(`/api/strategies/${modal.strategy.id}/`, payload)
         toast.success('Strategy updated')
       } else {
-        await api.post('/api/strategies/', payload)
+        await api.post('/api/strategies/', { ...payload, is_active: false })
         toast.success('Strategy created')
       }
       setModal(null)
@@ -144,7 +165,7 @@ export function StrategiesPage() {
               id={String(s.id)}
               name={s.name}
               desc={s.description}
-              tickers={[]}
+              tickers={s.tickers.length > 0 ? s.tickers.map(id => tickerById.get(id)?.symbol ?? `#${id}`) : ['All tickers']}
               executions={0}
               lastRun={new Date(s.updated_at).toLocaleString()}
               active={s.is_active}
@@ -153,18 +174,20 @@ export function StrategiesPage() {
                 setSaveErr(undefined)
                 try {
                   const data = await api.get<{
-                    conditions?: Array<{ field: string; operator: string; value: unknown }>
-                    actions?: Array<{ action_type: string; config?: { target?: string } }>
+                    tickers?: number[]
+                    conditions?: StrategyConditionPayload[]
+                    actions?: StrategyActionPayload[]
                   }>(`/api/strategies/${s.id}/`)
                   setModal({
                     type: 'edit',
                     strategy: {
                       ...s,
-                      conditions: data.conditions?.map((c: any) => ({ field: c.field, operator: c.operator, value: c.value })) || [],
-                      actions: data.actions?.map((a: any) => ({ actionType: a.action_type, target: a.config?.target })) || [],
+                      tickers: data.tickers ?? s.tickers,
+                      conditions: data.conditions ?? [],
+                      actions: data.actions ?? [],
                     }
                   })
-                } catch (e) {
+                } catch {
                   toast.error("Failed to load strategy details")
                 }
               }}
@@ -186,8 +209,15 @@ export function StrategiesPage() {
               <span className="text-headline-sm">{modal.type === 'create' ? 'New Strategy' : 'Edit Strategy'}</span>
               <button className="btn btn-sm btn-ghost" onClick={() => setModal(null)}>✕</button>
             </div>
-            <StrategyForm
-              initial={modal.type === 'edit' ? { name: modal.strategy.name, desc: modal.strategy.description, tickers: [], conditions: modal.strategy.conditions || [], actions: modal.strategy.actions || [] } : undefined}
+            <GuidedStrategyForm
+              initial={modal.type === 'edit' ? {
+                name: modal.strategy.name,
+                desc: modal.strategy.description,
+                tickers: modal.strategy.tickers,
+                conditions: modal.strategy.conditions || [],
+                actions: (modal.strategy.actions || []).map(action => ({ actionType: action.action_type, target: action.config?.target })),
+              } : undefined}
+              tickerOptions={tickerOptions}
               onSubmit={handleSave}
               loading={saving}
               error={saveErr}
@@ -213,15 +243,15 @@ export function StrategiesPage() {
 export function StrategiesPagePreview() {
   const [modal, setModal] = useState<ModalMode>(null)
   const strategies: StrategyRule[] = [
-    { id: 1, name: 'Bullish Momentum Catch', description: 'BUY when sentiment > 0.6 AND RSI < 65', tickers: [1, 2, 3], is_active: true,  updated_at: new Date().toISOString() },
-    { id: 2, name: 'Panic Sell Detector',    description: 'SELL when extreme_sentiment AND consistency < 0.3', tickers: [4, 5], is_active: false, updated_at: new Date(Date.now() - 7200000).toISOString() },
+    { id: 1, name: 'Bullish Momentum Catch', description: 'BUY when sentiment > 0.6 AND RSI < 65', tickers: [1, 2, 3], is_active: true,  updated_at: PREVIEW_UPDATED_AT },
+    { id: 2, name: 'Panic Sell Detector',    description: 'SELL when extreme_sentiment AND consistency < 0.3', tickers: [4, 5], is_active: false, updated_at: PREVIEW_OLDER_UPDATED_AT },
   ]
   return (
     <div className="p-6 stack stack-5">
       <PageHeader title="Strategies" subtitle="Your automated trading rules." actions={<button className="btn btn-sm btn-primary" onClick={() => setModal({ type: 'create' })}>+ New Strategy</button>} />
       <div className="stack stack-4">
         {strategies.map(s => (
-          <StrategyCard key={s.id} id={String(s.id)} name={s.name} desc={s.description} tickers={[]} executions={0} lastRun={new Date(s.updated_at).toLocaleString()} active={s.is_active} onToggle={() => {}} onEdit={() => setModal({ type: 'edit', strategy: s })} />
+          <StrategyCard key={s.id} id={String(s.id)} name={s.name} desc={s.description} tickers={s.tickers.length > 0 ? s.tickers.map(id => `#${id}`) : ['All tickers']} executions={0} lastRun={new Date(s.updated_at).toLocaleString()} active={s.is_active} onToggle={() => {}} onEdit={() => setModal({ type: 'edit', strategy: s })} />
         ))}
       </div>
       {modal && (
@@ -231,7 +261,17 @@ export function StrategiesPagePreview() {
               <span className="text-headline-sm">{modal.type === 'create' ? 'New Strategy' : 'Edit Strategy'}</span>
               <button className="btn btn-sm btn-ghost" onClick={() => setModal(null)}>✕</button>
             </div>
-            <StrategyForm initial={modal.type === 'edit' ? { name: modal.strategy.name, desc: modal.strategy.description } : undefined} onSubmit={() => setModal(null)} />
+            <GuidedStrategyForm
+              initial={modal.type === 'edit' ? { name: modal.strategy.name, desc: modal.strategy.description, tickers: modal.strategy.tickers } : undefined}
+              tickerOptions={[
+                { id: 1, symbol: 'AAPL', name: 'Apple Inc.' },
+                { id: 2, symbol: 'MSFT', name: 'Microsoft Corp.' },
+                { id: 3, symbol: 'NVDA', name: 'NVIDIA Corp.' },
+                { id: 4, symbol: 'TSLA', name: 'Tesla Inc.' },
+                { id: 5, symbol: 'AMD', name: 'Advanced Micro Devices' },
+              ]}
+              onSubmit={() => setModal(null)}
+            />
           </div>
         </div>
       )}

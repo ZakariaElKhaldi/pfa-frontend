@@ -20,6 +20,13 @@ interface DecisionItem {
   alerts_triggered: string[]
 }
 
+interface Paginated<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 const isoDay = (d: Date) => d.toISOString().slice(0, 10)
 const today = isoDay(new Date())
 
@@ -230,9 +237,6 @@ function PayloadPanel({ data, label }: { data: Record<string, unknown>; label: s
 
 // ── Page ────────────────────────────────────────────────────────────────
 export function AuditPage() {
-  const { state, refetch } = useData<DecisionItem[]>('/api/audit/decisions/')
-  useData<Array<{ symbol: string }>>('/api/tickers/')
-
   const [datePreset, setDatePreset] = useState(1) // default 7D
   const [from, setFrom] = useState(DATE_PRESETS[1].start)
   const [to, setTo]     = useState(today)
@@ -240,6 +244,15 @@ export function AuditPage() {
   const [signal, setSignal] = useState<'all' | 'BUY' | 'SELL' | 'HOLD'>('all')
   const [method, setMethod] = useState<'all' | 'rule_based' | 'xgboost' | 'ensemble'>('all')
   const [page, setPage]     = useState(1)
+  const { state: tickersState } = useData<Array<{ symbol: string }>>('/api/tickers/')
+  const query = useMemo(() => {
+    const params = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE), from, to })
+    if (ticker !== 'all') params.set('ticker', ticker)
+    if (signal !== 'all') params.set('signal', signal)
+    if (method !== 'all') params.set('method', method)
+    return `/api/audit/decisions/?${params.toString()}`
+  }, [from, to, ticker, signal, method, page])
+  const { state, refetch } = useData<Paginated<DecisionItem>>(query, [query])
 
   // Sync date preset
   useEffect(() => {
@@ -248,48 +261,21 @@ export function AuditPage() {
   }, [datePreset])
 
   const tickerSymbols = useMemo(() => {
-    if (state.status !== 'success') return []
-    return [...new Set(state.data.map(d => d.ticker_symbol))].sort()
-  }, [state])
+    if (tickersState.status !== 'success') return []
+    return tickersState.data.map(t => t.symbol).sort()
+  }, [tickersState])
 
-  const filtered = useMemo(() => {
-    if (state.status !== 'success') return [] as DecisionItem[]
-    const fromT = new Date(from + 'T00:00:00').getTime()
-    const toT = new Date(to + 'T23:59:59').getTime()
-    return state.data.filter(d => {
-      const t = new Date(d.timestamp).getTime()
-      if (Number.isFinite(fromT) && t < fromT) return false
-      if (Number.isFinite(toT) && t > toT) return false
-      if (ticker !== 'all' && d.ticker_symbol !== ticker) return false
-      const sig = (d.engine_output?.signal ?? d.scoring_detail?.signal ?? '') as string
-      if (signal !== 'all' && sig !== signal) return false
-      const meth = (d.scoring_detail?.method ?? d.engine_output?.method ?? '') as string
-      if (method !== 'all' && meth !== method) return false
-      return true
-    })
-  }, [state, from, to, ticker, signal, method])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const counts = useMemo(() => {
-    if (state.status !== 'success') return { BUY: 0, SELL: 0, HOLD: 0, total: 0 }
-    const c = { BUY: 0, SELL: 0, HOLD: 0, total: state.data.length }
-    state.data.forEach(d => {
-      const s = (d.engine_output?.signal ?? '') as string
-      if (s === 'BUY' || s === 'SELL' || s === 'HOLD') c[s]++
-    })
-    return c
-  }, [state])
+  const rows = state.status === 'success' ? state.data.results : []
+  const totalPages = state.status === 'success' ? Math.max(1, Math.ceil(state.data.count / PAGE_SIZE)) : 1
 
   const avgConfidence = useMemo(() => {
-    if (filtered.length === 0) return null
-    const vals = filtered.map(d => typeof d.engine_output?.confidence === 'number' ? d.engine_output.confidence : null).filter(Boolean) as number[]
+    if (rows.length === 0) return null
+    const vals = rows.map(d => typeof d.engine_output?.confidence === 'number' ? d.engine_output.confidence : null).filter(Boolean) as number[]
     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null
-  }, [filtered])
+  }, [rows])
 
   const rangeStart = (page - 1) * PAGE_SIZE + 1
-  const rangeEnd = Math.min(page * PAGE_SIZE, filtered.length)
+  const rangeEnd = state.status === 'success' ? Math.min(page * PAGE_SIZE, state.data.count) : 0
 
   return (
     <div className="p-6 stack stack-5">
@@ -299,10 +285,10 @@ export function AuditPage() {
       {/* Signal stat cards — clickable to filter */}
       {state.status === 'success' && (
         <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <StatCard label="All" value={counts.total} color="var(--primary)" active={signal === 'all'} onClick={() => { setSignal('all'); setPage(1) }} />
-          <StatCard label="Buy" value={counts.BUY} color="var(--secondary)" active={signal === 'BUY'} onClick={() => { setSignal('BUY'); setPage(1) }} />
-          <StatCard label="Sell" value={counts.SELL} color="var(--tertiary)" active={signal === 'SELL'} onClick={() => { setSignal('SELL'); setPage(1) }} />
-          <StatCard label="Hold" value={counts.HOLD} color="var(--warning)" active={signal === 'HOLD'} onClick={() => { setSignal('HOLD'); setPage(1) }} />
+          <StatCard label="Matches" value={state.data.count} color="var(--primary)" active={signal === 'all'} onClick={() => { setSignal('all'); setPage(1) }} />
+          <StatCard label="Buy" value={rows.filter(d => (d.engine_output?.signal ?? d.scoring_detail?.signal) === 'BUY').length} color="var(--secondary)" active={signal === 'BUY'} onClick={() => { setSignal('BUY'); setPage(1) }} />
+          <StatCard label="Sell" value={rows.filter(d => (d.engine_output?.signal ?? d.scoring_detail?.signal) === 'SELL').length} color="var(--tertiary)" active={signal === 'SELL'} onClick={() => { setSignal('SELL'); setPage(1) }} />
+          <StatCard label="Hold" value={rows.filter(d => (d.engine_output?.signal ?? d.scoring_detail?.signal) === 'HOLD').length} color="var(--warning)" active={signal === 'HOLD'} onClick={() => { setSignal('HOLD'); setPage(1) }} />
           {avgConfidence !== null && (
             <div style={{
               flex: 1, minWidth: 140, padding: 'var(--space-4)', borderRadius: 'var(--radius-lg)',
@@ -388,8 +374,7 @@ export function AuditPage() {
         {/* Active filters summary */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--on-surface-muted)' }}>
-            Showing {filtered.length === 0 ? 0 : rangeStart}–{rangeEnd} of {filtered.length} decisions
-            {state.status === 'success' && filtered.length !== state.data.length && ` (filtered from ${state.data.length})`}
+            Showing {state.status === 'success' && state.data.count === 0 ? 0 : rangeStart}–{rangeEnd} of {state.status === 'success' ? state.data.count : 0} decisions
           </span>
           {(ticker !== 'all' || signal !== 'all' || method !== 'all') && (
             <button
@@ -411,15 +396,15 @@ export function AuditPage() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
         </div>
       )}
-      {state.status === 'success' && paginated.length === 0 && (
+      {state.status === 'success' && rows.length === 0 && (
         <EmptyState
-          title={state.data.length === 0 ? 'No decision logs' : 'No matches'}
-          description={state.data.length === 0 ? 'Decisions will appear after the next pipeline run.' : 'Try widening the date range or clearing filters.'}
+          title={state.data.count === 0 ? 'No matches' : 'No decision logs'}
+          description={state.data.count === 0 ? 'Try widening the date range or clearing filters.' : 'Decisions will appear after the next pipeline run.'}
         />
       )}
-      {state.status === 'success' && paginated.length > 0 && (
+      {state.status === 'success' && rows.length > 0 && (
         <div className="stack stack-2">
-          {paginated.map(d => <AuditRow key={d.id} d={d} />)}
+          {rows.map(d => <AuditRow key={d.id} d={d} />)}
         </div>
       )}
 

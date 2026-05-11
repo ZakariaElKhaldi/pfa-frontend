@@ -1,9 +1,10 @@
 interface TotalDisplayProps {
-  total:     number
-  isBuy:     boolean
+  total:   number
+  isBuy:   boolean
+  label?:  string
 }
 
-export function TotalDisplay({ total, isBuy }: TotalDisplayProps) {
+export function TotalDisplay({ total, isBuy, label = 'Estimated total' }: TotalDisplayProps) {
   if (total <= 0) return null
 
   const accentVar = isBuy ? 'var(--secondary)' : 'var(--tertiary)'
@@ -21,7 +22,7 @@ export function TotalDisplay({ total, isBuy }: TotalDisplayProps) {
       }}
     >
       <span style={{ fontSize: 'var(--text-label-md)', color: accentVar, fontWeight: 500 }}>
-        Estimated total
+        {label}
       </span>
       <span
         style={{

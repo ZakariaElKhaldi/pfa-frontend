@@ -1,8 +1,10 @@
 export interface BuySellFormValues {
-  symbol:   string
-  side:     'buy' | 'sell'
-  quantity: number
-  price:    number
+  symbol:      string
+  side:        'buy' | 'sell'
+  quantity:    number
+  orderType:   'market' | 'limit'
+  limitPrice?: number
+  price:       number
 }
 
 export interface BuySellFormProps {

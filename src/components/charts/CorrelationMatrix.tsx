@@ -2,11 +2,11 @@ import { SectionLabel } from '@/components/design-system'
 
 export interface CorrelationMatrixProps {
   symbols: string[]
-  matrix: number[][]
+  matrix: Array<Array<number | null>>
 }
 
-function corrColor(v: number): string {
-  if (Number.isNaN(v)) return 'var(--surface-container)'
+function corrColor(v: number | null): string {
+  if (v === null || Number.isNaN(v)) return 'var(--surface-container)'
   const clamped = Math.max(-1, Math.min(1, v))
   if (clamped >= 0) {
     const alpha = clamped * 0.85
@@ -55,7 +55,7 @@ export function CorrelationMatrix({ symbols, matrix }: CorrelationMatrixProps) {
                 {row.map((v, j) => (
                   <td
                     key={j}
-                    title={`${symbols[i]} ↔ ${symbols[j]}: ${Number.isNaN(v) ? 'N/A' : v.toFixed(3)}`}
+                    title={`${symbols[i]} ↔ ${symbols[j]}: ${v === null || Number.isNaN(v) ? 'Insufficient data' : v.toFixed(3)}`}
                     style={{
                       width: 64, height: 48,
                       background: corrColor(v),
@@ -63,12 +63,12 @@ export function CorrelationMatrix({ symbols, matrix }: CorrelationMatrixProps) {
                       textAlign: 'center',
                       fontFamily: 'var(--font-mono)',
                       fontVariantNumeric: 'tabular-nums',
-                      color: Math.abs(v) > 0.5 && !Number.isNaN(v) ? 'var(--on-surface)' : 'var(--on-surface-muted)',
+                      color: v !== null && Math.abs(v) > 0.5 && !Number.isNaN(v) ? 'var(--on-surface)' : 'var(--on-surface-muted)',
                       fontWeight: i === j ? 600 : 400,
                       cursor: 'default',
                     }}
                   >
-                    {Number.isNaN(v) ? '—' : v.toFixed(2)}
+                    {v === null || Number.isNaN(v) ? '—' : v.toFixed(2)}
                   </td>
                 ))}
               </tr>

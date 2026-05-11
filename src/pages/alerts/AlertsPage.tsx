@@ -33,10 +33,16 @@ interface AlertFlagItem {
 export function AlertsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { state, refetch } = useData<AlertFlagItem[]>('/api/alerts/')
   const [resolving, setResolving] = useState<Set<number>>(new Set())
   const [typeFilter, setTypeFilter] = useState<AlertType | 'all'>('all')
   const [search,     setSearch]     = useState('')
+  const query = useMemo(() => {
+    const params = new URLSearchParams({ resolved: 'all' })
+    if (typeFilter !== 'all') params.set('type', typeFilter)
+    if (search.trim()) params.set('ticker', search.trim().toUpperCase())
+    return `/api/alerts/?${params.toString()}`
+  }, [typeFilter, search])
+  const { state, refetch } = useData<AlertFlagItem[]>(query, [query])
 
   const handleResolve = useCallback(async (id: number) => {
     setResolving(s => new Set(s).add(id))
@@ -51,15 +57,7 @@ export function AlertsPage() {
     }
   }, [refetch])
 
-  const filtered = useMemo(() => {
-    if (state.status !== 'success') return [] as AlertFlagItem[]
-    const q = search.trim().toUpperCase()
-    return state.data.filter(a => {
-      if (typeFilter !== 'all' && a.type !== typeFilter) return false
-      if (q && !a.ticker_symbol.toUpperCase().includes(q)) return false
-      return true
-    })
-  }, [state, typeFilter, search])
+  const filtered = state.status === 'success' ? state.data : []
 
   const active   = filtered.filter(a => !a.resolved)
   const resolved = filtered.filter(a => a.resolved)
@@ -70,7 +68,7 @@ export function AlertsPage() {
       <PageHeader title="Alerts" subtitle="Manipulation flags and signal divergences." />
 
       {/* Filter bar */}
-      {state.status === 'success' && state.data.length > 0 && (
+      {state.status === 'success' && (
         <div className="cluster cluster-3" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="cluster cluster-2" style={{ flexWrap: 'wrap' }}>
             {TYPE_FILTERS.map(f => (
@@ -104,7 +102,7 @@ export function AlertsPage() {
       )}
 
       {state.status === 'success' && active.length === 0 && (
-        <EmptyState title="No active alerts" description="All signals are within expected ranges." />
+        <EmptyState title={filtered.length === 0 ? 'No matching alerts' : 'No active alerts'} description={filtered.length === 0 ? 'Clear filters or broaden the ticker search.' : 'All signals are within expected ranges.'} />
       )}
 
       {active.length > 0 && (

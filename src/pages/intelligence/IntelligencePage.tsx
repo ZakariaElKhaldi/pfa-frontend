@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { PageHeader }       from '@/components/layout/PageHeader'
 import { ErrorState }       from '@/components/layout/ErrorState'
 import { EmptyState }       from '@/components/layout/EmptyState'
@@ -13,6 +13,9 @@ import { RetrainLogRow }       from '@/components/cards/RetrainLogRow'
 import type { RetrainLogEntry } from '@/components/cards/RetrainLogRow'
 import { MoodCard }            from '@/components/cards/MoodCard'
 import type { Mood }           from '@/components/design-system/MoodBadge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useAuth } from '@/context/AuthContext'
 
 // ── Backend response shapes ───────────────────────────────────────────────────
 
@@ -119,6 +122,7 @@ function StatChip({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function IntelligencePage() {
+  const { user } = useAuth()
   const { state: retrainState, refetch: refetchRetrain } =
     useData<RetrainLogResponse[]>('/api/intelligence/retrain-logs/')
 
@@ -127,6 +131,11 @@ export function IntelligencePage() {
 
   const { state: moodState } =
     useData<MoodSnapshotResponse[]>('/api/intelligence/mood/')
+  const [tickerFilter, setTickerFilter] = useState('')
+  const [flagState, setFlagState] = useState<'all' | 'pending' | 'reviewed'>('pending')
+  const [retrainFilter, setRetrainFilter] = useState<'all' | 'running' | 'success' | 'failed'>('all')
+  const [moodFilter, setMoodFilter] = useState<'all' | Mood>('all')
+  const isAdmin = user?.role === 'admin'
 
   // ── handlers ──────────────────────────────────────────────────────────────
 
@@ -144,7 +153,11 @@ export function IntelligencePage() {
 
   const retrainEntries = useMemo<RetrainLogEntry[]>(() => {
     if (retrainState.status !== 'success') return []
-    return retrainState.data.map(r => ({
+    return retrainState.data.filter(r => {
+      if (retrainFilter !== 'all' && r.status !== retrainFilter) return false
+      if (tickerFilter.trim() && !(r.ticker_symbol ?? '').includes(tickerFilter.trim().toUpperCase())) return false
+      return true
+    }).map(r => ({
       id:              r.id,
       ticker:          r.ticker_symbol ?? undefined,
       triggerReason:   r.trigger_reason,
@@ -156,19 +169,19 @@ export function IntelligencePage() {
       completedAt:     r.completed_at ? new Date(r.completed_at).toLocaleString() : undefined,
       status:          r.status,
     }))
-  }, [retrainState])
+  }, [retrainState, retrainFilter, tickerFilter])
 
   const pendingFlags = useMemo(() =>
     flagsState.status === 'success'
-      ? flagsState.data.filter(f => !f.reviewed)
+      ? flagsState.data.filter(f => !f.reviewed && (!tickerFilter.trim() || f.ticker_symbol.includes(tickerFilter.trim().toUpperCase())))
       : [],
-  [flagsState])
+  [flagsState, tickerFilter])
 
   const resolvedFlags = useMemo(() =>
     flagsState.status === 'success'
-      ? flagsState.data.filter(f => f.reviewed)
+      ? flagsState.data.filter(f => f.reviewed && (!tickerFilter.trim() || f.ticker_symbol.includes(tickerFilter.trim().toUpperCase())))
       : [],
-  [flagsState])
+  [flagsState, tickerFilter])
 
   // quick-stat helpers
   const latestRetrain = retrainState.status === 'success' ? retrainState.data[0] : null
@@ -176,7 +189,15 @@ export function IntelligencePage() {
     ? ((latestRetrain.new_accuracy - latestRetrain.old_accuracy) * 100)
     : null
 
-  const moodSnapshots = moodState.status === 'success' ? moodState.data : []
+  const moodSnapshots = moodState.status === 'success'
+    ? moodState.data.filter(m => {
+        if (tickerFilter.trim() && !m.ticker_symbol.includes(tickerFilter.trim().toUpperCase())) return false
+        if (moodFilter !== 'all' && m.dominant_mood !== moodFilter) return false
+        return true
+      })
+    : []
+  const visiblePendingFlags = flagState === 'reviewed' ? [] : pendingFlags
+  const visibleResolvedFlags = flagState === 'pending' ? [] : resolvedFlags
 
   // ── render ────────────────────────────────────────────────────────────────
 
@@ -187,6 +208,37 @@ export function IntelligencePage() {
         title="Intelligence"
         subtitle="Monitor model retraining, manipulation alerts, and market mood snapshots."
       />
+
+      <div className="card cluster cluster-3" style={{ alignItems: 'end', flexWrap: 'wrap' }}>
+        <div className="stack stack-1" style={{ minWidth: 180 }}>
+          <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>Ticker</span>
+          <Input value={tickerFilter} onChange={e => setTickerFilter(e.target.value.toUpperCase())} placeholder="All tickers" />
+        </div>
+        <Select value={flagState} onValueChange={v => setFlagState(v as typeof flagState)}>
+          <SelectTrigger style={{ width: 170 }}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All flags</SelectItem>
+            <SelectItem value="pending">Pending flags</SelectItem>
+            <SelectItem value="reviewed">Reviewed flags</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={retrainFilter} onValueChange={v => setRetrainFilter(v as typeof retrainFilter)}>
+          <SelectTrigger style={{ width: 170 }}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All retrains</SelectItem>
+            <SelectItem value="running">Running</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={moodFilter} onValueChange={v => setMoodFilter(v as typeof moodFilter)}>
+          <SelectTrigger style={{ width: 170 }}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All moods</SelectItem>
+            {(['bullish', 'bearish', 'euphoric', 'panic', 'uncertain'] as const).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* ── Quick Stats ── */}
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
@@ -287,36 +339,17 @@ export function IntelligencePage() {
           )}
 
           {/* Pending flags */}
-          {pendingFlags.length > 0 && (
+          {visiblePendingFlags.length > 0 && (
             <div className="stack stack-2">
-              {pendingFlags.map(f => (
-                <ManipulationFlagCard
-                  key={f.id}
-                  symbol={f.ticker_symbol}
-                  patternType={f.pattern_type}
-                  confidence={f.confidence}
-                  detectedAt={new Date(f.detected_at).toLocaleString()}
-                  reviewed={false}
-                  onMarkReviewed={() => handleReviewFlag(f.id)}
-                />
-              ))}
+              {visiblePendingFlags.map(f => <FlagWithEvidence key={f.id} flag={f} onReview={isAdmin ? () => handleReviewFlag(f.id) : undefined} />)}
             </div>
           )}
 
           {/* Resolved flags */}
-          {resolvedFlags.length > 0 && (
+          {visibleResolvedFlags.length > 0 && (
             <div className="stack stack-2" style={{ marginTop: 'var(--space-4)' }}>
               <SectionLabel as="h3">Recently Reviewed</SectionLabel>
-              {resolvedFlags.slice(0, 8).map(f => (
-                <ManipulationFlagCard
-                  key={f.id}
-                  symbol={f.ticker_symbol}
-                  patternType={f.pattern_type}
-                  confidence={f.confidence}
-                  detectedAt={new Date(f.detected_at).toLocaleString()}
-                  reviewed
-                />
-              ))}
+              {visibleResolvedFlags.slice(0, 8).map(f => <FlagWithEvidence key={f.id} flag={f} />)}
             </div>
           )}
         </section>
@@ -363,6 +396,37 @@ export function IntelligencePage() {
         )}
       </section>
 
+    </div>
+  )
+}
+
+function FlagWithEvidence({ flag, onReview }: { flag: ManipulationFlagResponse; onReview?: () => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="stack stack-2">
+      <ManipulationFlagCard
+        symbol={flag.ticker_symbol}
+        patternType={flag.pattern_type}
+        confidence={flag.confidence}
+        detectedAt={new Date(flag.detected_at).toLocaleString()}
+        reviewed={flag.reviewed}
+        onMarkReviewed={onReview}
+      />
+      <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(v => !v)} style={{ alignSelf: 'flex-start' }}>
+        {open ? 'Hide evidence' : 'Show evidence'}
+      </button>
+      {open && (
+        <pre style={{
+          margin: 0,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          padding: 'var(--space-3)',
+          borderRadius: 'var(--radius-md)',
+          background: 'var(--surface-container)',
+          fontSize: 'var(--text-mono-sm)',
+          color: 'var(--on-surface)',
+        }}>{JSON.stringify(flag.evidence, null, 2)}</pre>
+      )}
     </div>
   )
 }

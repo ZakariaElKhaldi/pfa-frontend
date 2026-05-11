@@ -3,7 +3,7 @@ import { SectionLabel } from '@/components/design-system'
 
 export interface CorrelationPairsCardProps {
   symbols: string[]
-  matrix: number[][]
+  matrix: Array<Array<number | null>>
 }
 
 export function CorrelationPairsCard({ symbols, matrix }: CorrelationPairsCardProps) {
@@ -14,7 +14,7 @@ export function CorrelationPairsCard({ symbols, matrix }: CorrelationPairsCardPr
     for (let i = 0; i < symbols.length; i++) {
       for (let j = i + 1; j < symbols.length; j++) {
         const v = matrix[i][j]
-        if (!Number.isNaN(v)) {
+        if (v !== null && !Number.isNaN(v)) {
           pairs.push({ s1: symbols[i], s2: symbols[j], v })
         }
       }

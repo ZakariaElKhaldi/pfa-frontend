@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
-import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -11,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 
-interface Bucket { ts: string; signal: number; price_change: number }
+interface Bucket { ts: string; bucket_start?: string; signal: number | null; signal_avg?: number | null; price_change: number | null; count?: number }
 interface HeatmapRow { ticker: string; buckets: Bucket[] }
 interface HeatmapResult { rows: HeatmapRow[] }
 
@@ -27,22 +25,19 @@ const WINDOWS = [
   { value: '90d', label: '90 days' },
 ]
 
-const PALETTE = [
-  'hsl(158, 60%, 45%)', 'hsl(220, 65%, 55%)', 'hsl(38, 88%, 50%)',
-  'hsl(280, 60%, 55%)', 'hsl(4, 68%, 50%)',  'hsl(190, 60%, 50%)',
-  'hsl(330, 65%, 55%)', 'hsl(100, 50%, 45%)',
-]
-
 const SECTION_LABEL: React.CSSProperties = {
   fontSize: 'var(--text-label-md)', fontWeight: 500,
   letterSpacing: 'var(--tracking-label-pro)', textTransform: 'uppercase',
   color: 'var(--on-surface-muted)',
 }
 
-function formatHeatmapTooltip(value: ValueType | undefined, name: NameType | undefined): [string, string] {
-  const label = String(name)
-  const n = typeof value === 'number' ? value : Number(value ?? 0)
-  return [label === 'Signal' ? n.toFixed(3) : `${n.toFixed(2)}%`, label]
+function cellColor(bucket?: Bucket): string {
+  if (!bucket || bucket.signal === null || bucket.price_change === null) return 'var(--surface-container)'
+  const agreement = bucket.signal * bucket.price_change >= 0
+  const strength = Math.min(85, Math.max(12, Math.abs(bucket.signal) * 55 + Math.abs(bucket.price_change) * 180))
+  return agreement
+    ? `color-mix(in srgb, var(--secondary) ${strength}%, var(--surface-container))`
+    : `color-mix(in srgb, var(--tertiary) ${strength}%, var(--surface-container))`
 }
 
 export function HeatmapPage() {
@@ -69,17 +64,10 @@ export function HeatmapPage() {
 
   useEffect(() => { fetchHeatmap() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const series = state.status === 'success'
-    ? state.data.rows.map((r, i) => ({
-        name:  r.ticker,
-        color: PALETTE[i % PALETTE.length],
-        data:  r.buckets.map(b => ({
-          signal: b.signal,
-          priceChange: b.price_change * 100,
-          ts: b.ts,
-        })),
-      }))
+  const bucketKeys = state.status === 'success'
+    ? Array.from(new Set(state.data.rows.flatMap(r => r.buckets.map(b => b.bucket_start ?? b.ts)))).sort()
     : []
+  const bucketLabel = (ts: string) => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
   return (
     <div className="p-6 stack stack-6">
@@ -116,49 +104,58 @@ export function HeatmapPage() {
 
       {state.status === 'error'                                && <ErrorState message={state.message} onRetry={fetchHeatmap} />}
       {(state.status === 'idle' || state.status === 'loading') && <Skeleton className="h-96 w-full" />}
-      {state.status === 'success' && series.every(s => s.data.length === 0) && (
+      {state.status === 'success' && state.data.rows.every(r => r.buckets.length === 0) && (
         <EmptyState title="No data" description="Try different symbols or a longer window." />
       )}
-      {state.status === 'success' && series.some(s => s.data.length > 0) && (
+      {state.status === 'success' && state.data.rows.some(r => r.buckets.length > 0) && (
         <div className="card stack stack-3" style={{ overflow: 'hidden' }}>
-          <span style={SECTION_LABEL}>Signal Index vs Price Change ({window})</span>
-          <ResponsiveContainer width="100%" height={380}>
-            <ScatterChart margin={{ top: 16, right: 24, bottom: 40, left: 54 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(203,213,225,0.40)" />
-              <XAxis
-                dataKey="signal"
-                type="number"
-                domain={[-1, 1]}
-                name="Signal"
-                tick={{ fontSize: 11, fill: 'hsl(220,12%,52%)' }}
-                tickFormatter={v => v.toFixed(1)}
-                label={{ value: 'Signal Index  (−1 bearish → +1 bullish)', position: 'insideBottom', offset: -24, fill: 'hsl(220,12%,52%)', fontSize: 11 }}
-              />
-              <YAxis
-                dataKey="priceChange"
-                type="number"
-                name="Price Δ"
-                tick={{ fontSize: 11, fill: 'hsl(220,12%,52%)' }}
-                tickFormatter={v => `${v.toFixed(0)}%`}
-                label={{ value: 'Price Δ (%)', angle: -90, position: 'insideLeft', offset: 10, fill: 'hsl(220,12%,52%)', fontSize: 11 }}
-              />
-              <ZAxis range={[40, 40]} />
-              <Tooltip
-                cursor={{ strokeDasharray: '3 3' }}
-                contentStyle={{ background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-body-sm)' }}
-                formatter={formatHeatmapTooltip}
-              />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              {series.map(s => (
-                <Scatter key={s.name} name={s.name} data={s.data} fill={s.color} />
+          <div className="cluster cluster-3" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={SECTION_LABEL}>Ticker × Day Signal Agreement ({window})</span>
+            <div className="cluster cluster-2" style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>
+              <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--secondary)' }} />
+              Aligned
+              <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--tertiary)' }} />
+              Diverged
+            </div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `88px repeat(${bucketKeys.length}, minmax(54px, 1fr))`, gap: 6, minWidth: Math.max(520, 88 + bucketKeys.length * 60) }}>
+              <span />
+              {bucketKeys.map(k => (
+                <span key={k} style={{ textAlign: 'center', fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)' }}>{bucketLabel(k)}</span>
               ))}
-            </ScatterChart>
-          </ResponsiveContainer>
-          <p style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', textAlign: 'center', margin: 0 }}>
-            Top-right quadrant = bullish signal preceded a price rise (model agreed with market).
-            Bottom-left = bearish signal preceded a fall.
-            Off-diagonals = the model disagreed.
-          </p>
+              {state.data.rows.map(row => {
+                const byBucket = new Map(row.buckets.map(b => [b.bucket_start ?? b.ts, b]))
+                return (
+                  <div key={row.ticker} style={{ display: 'contents' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, alignSelf: 'center' }}>{row.ticker}</span>
+                    {bucketKeys.map(k => {
+                      const bucket = byBucket.get(k)
+                      return (
+                        <span
+                          key={k}
+                          title={bucket ? `${row.ticker} ${bucketLabel(k)} | signal ${bucket.signal?.toFixed(3) ?? '—'} | price ${bucket.price_change === null ? '—' : `${(bucket.price_change * 100).toFixed(2)}%`} | ${bucket.count ?? 0} snapshots` : 'No bucket data'}
+                          style={{
+                            minHeight: 42,
+                            borderRadius: 'var(--radius-sm)',
+                            background: cellColor(bucket),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 'var(--text-mono-sm)',
+                            color: bucket ? 'var(--on-surface)' : 'var(--on-surface-muted)',
+                          }}
+                        >
+                          {bucket?.price_change == null ? '—' : `${(bucket.price_change * 100).toFixed(1)}%`}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

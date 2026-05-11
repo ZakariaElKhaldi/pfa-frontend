@@ -11,7 +11,7 @@ const meta: Meta<typeof BuySellForm> = {
     docs: {
       description: {
         component:
-          'Order entry form. Side toggle switches between buy (green) and sell (red). Live estimated total updates as qty × price. Calls `POST /api/portfolio/buy/` or `/sell/`.',
+          'Order entry form. Side toggle switches between buy (green) and sell (red). Market orders use the latest quote; limit orders expose the max buy or min sell price and submit price protection.',
       },
     },
   },

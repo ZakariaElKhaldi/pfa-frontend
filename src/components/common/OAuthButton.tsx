@@ -34,6 +34,7 @@ export function OAuthButton({ provider, onClick, loading, disabled }: OAuthButto
   const { logo, label } = PROVIDER_CONFIG[provider]
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={loading || disabled}
       aria-label={label}

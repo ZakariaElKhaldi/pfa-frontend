@@ -82,12 +82,18 @@ export function BacktestPage() {
   })
   const [running, setRunning] = useState(false)
   const [selected, setSelected] = useState<BacktestRun | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const tickerOptions = tickers.status === 'success' ? tickers.data : []
 
   const handleRun = useCallback(async (e: FormEvent) => {
     e.preventDefault()
-    if (!form.symbol.trim()) { toast.error('Select a ticker symbol'); return }
+    setFormError(null)
+    if (!form.symbol.trim()) { setFormError('Select a ticker symbol'); return }
+    if (!form.start || !form.end || form.start >= form.end) {
+      setFormError('Choose a date range with the start before the end.')
+      return
+    }
     setRunning(true)
     try {
       const params = form.strategy === 'sentiment_threshold'
@@ -96,15 +102,17 @@ export function BacktestPage() {
       const run = await api.post<BacktestRun>('/api/analytics/backtest/', {
         symbol: form.symbol.toUpperCase().trim(),
         strategy: form.strategy,
-        start: new Date(form.start).toISOString(),
-        end: new Date(form.end).toISOString(),
+        start: new Date(`${form.start}T00:00:00`).toISOString(),
+        end: new Date(`${form.end}T23:59:59`).toISOString(),
         params,
       })
       toast.success(`Backtest done — ${(run.total_return ?? 0) >= 0 ? '+' : ''}${((run.total_return ?? 0) * 100).toFixed(2)}%`)
       setSelected(run)
       refetch()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Backtest failed')
+      const msg = err instanceof Error ? err.message : 'Backtest failed'
+      setFormError(msg)
+      toast.error(msg)
     } finally {
       setRunning(false)
     }
@@ -126,6 +134,11 @@ export function BacktestPage() {
         {/* ── Form ──────────────────────────────────────────────────── */}
         <form onSubmit={handleRun} className="card stack stack-5">
           <span style={SECTION_LABEL}>Configure Run</span>
+          <div className="cluster cluster-2" style={{ flexWrap: 'wrap' }}>
+            {['$10k start', 'Full allocation', 'No fees', 'No slippage'].map(item => (
+              <span key={item} className="tag tag-primary" style={{ fontSize: 'var(--text-label-sm)' }}>{item}</span>
+            ))}
+          </div>
 
           {/* Ticker dropdown */}
           <div className="stack stack-1">
@@ -256,6 +269,11 @@ export function BacktestPage() {
                 </span>
               : '▶ Run Backtest'}
           </Button>
+          {formError && (
+            <div role="alert" style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--tertiary-container)', color: 'var(--on-tertiary-container)', fontSize: 'var(--text-body-sm)' }}>
+              {formError}
+            </div>
+          )}
         </form>
 
         {/* ── Results + History ───────────────────────────────────────── */}
@@ -264,7 +282,7 @@ export function BacktestPage() {
             ? <BacktestResult run={selected} equityPoints={equityPoints} onClose={() => setSelected(null)} />
             : (
               <div className="card" style={{ padding: 'var(--space-10)', textAlign: 'center', color: 'var(--on-surface-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <span style={{ fontSize: 32, opacity: 0.4 }}>📈</span>
+                <span style={{ fontSize: 32, opacity: 0.4 }}>↗</span>
                 <span style={{ fontSize: 'var(--text-body-sm)' }}>Configure and run a backtest to see metrics, equity curve, and trades.</span>
               </div>
             )
@@ -366,6 +384,10 @@ function BacktestResult({
           <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', textTransform: 'capitalize' }}>
             {run.strategy.replace('_', ' ')} · {new Date(run.window_start).toLocaleDateString()} → {new Date(run.window_end).toLocaleDateString()}
           </span>
+          <div className="cluster cluster-2" style={{ flexWrap: 'wrap' }}>
+            {['$10k start', 'Full allocation', 'No fees/slippage'].map(item => <span key={item} className="tag tag-primary">{item}</span>)}
+            {run.trades.length > 0 && run.trades[run.trades.length - 1].side === 'buy' && <span className="badge badge-neutral">Open position</span>}
+          </div>
         </div>
         <button className="btn btn-sm btn-ghost" onClick={onClose}>✕</button>
       </div>
@@ -438,6 +460,9 @@ function BacktestResult({
       )}
 
       {/* Trades table */}
+      {run.trades.length === 0 && (
+        <EmptyState title="No trades" description="The selected strategy did not trigger an entry in this window." />
+      )}
       {run.trades.length > 0 && (
         <div className="stack stack-2">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>

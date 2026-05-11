@@ -6,7 +6,6 @@ import { ErrorState } from '@/components/layout/ErrorState'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Icons } from '@/components/design-system'
 import { useData } from '@/hooks/useApi'
 import { api } from '@/lib/api'
@@ -30,6 +29,12 @@ interface FeedPost {
   positive_prob?: number
   negative_prob?: number
   neutral_prob?: number
+}
+
+interface TickerOption {
+  id: number
+  symbol: string
+  name?: string
 }
 
 const POLL_MS = 30_000
@@ -237,9 +242,156 @@ function SentimentStats({ posts }: { posts: FeedPost[] }) {
   )
 }
 
+function TickerFilter({
+  tickers,
+  selectedTicker,
+  query,
+  onQueryChange,
+  onSelect,
+}: {
+  tickers: TickerOption[]
+  selectedTicker: string
+  query: string
+  onQueryChange: (value: string) => void
+  onSelect: (symbol: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const normalizedQuery = query.trim().toLowerCase()
+  const selected = tickers.find(ticker => ticker.symbol === selectedTicker)
+  const filteredTickers = useMemo(() => {
+    if (!normalizedQuery) return tickers
+    return tickers.filter(ticker => {
+      return ticker.symbol.toLowerCase().includes(normalizedQuery)
+        || (ticker.name ?? '').toLowerCase().includes(normalizedQuery)
+    })
+  }, [normalizedQuery, tickers])
+
+  useEffect(() => {
+    if (!open) return
+
+    function handleClickOutside(event: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  function handleSelect(symbol: string) {
+    onSelect(symbol)
+    onQueryChange('')
+    setOpen(false)
+  }
+
+  return (
+    <section ref={rootRef} className="feed-ticker-filter" aria-label="Ticker filter">
+      <div className="feed-filter-heading">
+        <span>Ticker</span>
+        <span>{tickers.length} available</span>
+      </div>
+
+      <div className="feed-ticker-combobox">
+        <button
+          type="button"
+          className="feed-ticker-trigger"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => setOpen(value => !value)}
+        >
+          <span className={selectedTicker === 'all' ? undefined : 'feed-ticker-trigger-symbol'}>
+            {selectedTicker === 'all' ? 'All tickers' : selectedTicker}
+          </span>
+          {selected?.name && <span>{selected.name}</span>}
+          <Icons.ChevronDown size={16} aria-hidden />
+        </button>
+
+        {open && (
+          <div className="feed-ticker-menu">
+            <div className="feed-ticker-search">
+              <Icons.Search size={16} aria-hidden />
+              <Input
+                value={query}
+                onChange={event => onQueryChange(event.target.value)}
+                placeholder="Search ticker or company"
+                aria-label="Search ticker or company"
+                autoFocus
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="btn btn-icon btn-sm btn-ghost"
+                  onClick={() => onQueryChange('')}
+                  aria-label="Clear ticker search"
+                  title="Clear ticker search"
+                >
+                  <Icons.X size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className="feed-ticker-options" role="listbox" aria-label="Ticker options">
+              <button
+                type="button"
+                role="option"
+                aria-selected={selectedTicker === 'all'}
+                onClick={() => handleSelect('all')}
+                className={`feed-ticker-option ${selectedTicker === 'all' ? 'is-active' : ''}`}
+              >
+                <span>All tickers</span>
+                <span>Full social feed</span>
+              </button>
+
+              {filteredTickers.map(ticker => (
+                <button
+                  key={ticker.symbol}
+                  type="button"
+                  role="option"
+                  aria-selected={selectedTicker === ticker.symbol}
+                  onClick={() => handleSelect(ticker.symbol)}
+                  className={`feed-ticker-option ${selectedTicker === ticker.symbol ? 'is-active' : ''}`}
+                >
+                  <span>{ticker.symbol}</span>
+                  <span>{ticker.name || 'Tracked ticker'}</span>
+                </button>
+              ))}
+            </div>
+
+            {filteredTickers.length === 0 && (
+              <div className="feed-ticker-empty">No ticker matches.</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {selectedTicker !== 'all' && (
+        <button
+          type="button"
+          className="feed-ticker-clear"
+          onClick={() => handleSelect('all')}
+        >
+          <Icons.X size={14} aria-hidden />
+          Clear ticker
+        </button>
+      )}
+    </section>
+  )
+}
+
 export function SocialFeedPage() {
   const navigate = useNavigate()
   const [selectedTicker, setSelectedTicker] = useState('all')
+  const [tickerQuery, setTickerQuery] = useState('')
   const [source, setSource] = useState('all')
   const [sentiment, setSentiment] = useState<'all' | SentimentLabel>('all')
   const [search, setSearch] = useState('')
@@ -269,7 +421,7 @@ export function SocialFeedPage() {
     setLastCheckedAt(new Date())
   }, [state, path])
 
-  const { state: tickers } = useData<Array<{ id: number; symbol: string; name?: string }>>('/api/tickers/')
+  const { state: tickers } = useData<TickerOption[]>('/api/tickers/')
   const tickerItems = useMemo(() => {
     if (tickers.status !== 'success') return []
     return [...tickers.data].sort((a, b) => a.symbol.localeCompare(b.symbol))
@@ -278,19 +430,6 @@ export function SocialFeedPage() {
     if (tickers.status !== 'success') return new Map<number, string>()
     return new Map(tickers.data.map(t => [t.id, t.symbol]))
   }, [tickers])
-
-  const quickTickers = useMemo(() => {
-    const seen = new Set<string>()
-    const fromPosts = visiblePosts
-      .map(post => post.ticker_symbol ?? symbolByTickerId.get(post.ticker))
-      .filter((symbol): symbol is string => !!symbol)
-      .filter(symbol => {
-        if (seen.has(symbol)) return false
-        seen.add(symbol)
-        return true
-      })
-    return fromPosts.length > 0 ? fromPosts.slice(0, 10) : tickerItems.slice(0, 10).map(t => t.symbol)
-  }, [symbolByTickerId, tickerItems, visiblePosts])
 
   const checkForNewPosts = useCallback(async (announce = true) => {
     if (checking) return
@@ -382,46 +521,14 @@ export function SocialFeedPage() {
         }
       />
 
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--space-4)', alignItems: 'start' }}>
-        <div className="stack stack-3">
-          <span style={{ fontSize: 'var(--text-label-sm)', color: 'var(--on-surface-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-label-pro)' }}>
-            Ticker
-          </span>
-          <Select value={selectedTicker} onValueChange={(value) => { if (value) setSelectedTicker(value) }}>
-            <SelectTrigger className="w-full" style={{ fontFamily: selectedTicker === 'all' ? undefined : 'var(--font-mono)', fontWeight: 700 }}>
-              <SelectValue placeholder="All tickers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tickers</SelectItem>
-              {tickerItems.map(t => (
-                <SelectItem key={t.symbol} value={t.symbol}>
-                  {t.symbol}{t.name ? ` — ${t.name}` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => setSelectedTicker('all')}
-              className={`btn btn-sm ${selectedTicker === 'all' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ borderRadius: 'var(--radius-full)' }}
-            >
-              All
-            </button>
-            {quickTickers.map(symbol => (
-              <button
-                key={symbol}
-                type="button"
-                onClick={() => setSelectedTicker(symbol)}
-                className={`btn btn-sm ${selectedTicker === symbol ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ borderRadius: 'var(--radius-full)', fontFamily: 'var(--font-mono)' }}
-              >
-                {symbol}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="card feed-filter-card">
+        <TickerFilter
+          tickers={tickerItems}
+          selectedTicker={selectedTicker}
+          query={tickerQuery}
+          onQueryChange={setTickerQuery}
+          onSelect={setSelectedTicker}
+        />
 
         <div className="stack stack-3">
           <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
